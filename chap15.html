@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 15 章 生存研究的样本量要求 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="当感兴趣的响应变量是生存时间时，医学研究计划的设计需要考虑许多方面。这些因素包括研究参与者的纳入和排除标准、研究时间起点和终点的明确定义以及患者随访的持续时间等因素。在临床试验中，还必须指定治疗的规范、将患者分配到治疗组时采用的随机方法以及盲法的使用。还可以考虑研究是否应该基于固定数量的患者，或者是否应该采用序贯设计 (sequential...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 15 章 生存研究的样本量要求 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="当感兴趣的响应变量是生存时间时，医学研究计划的设计需要考虑许多方面。这些因素包括研究参与者的纳入和排除标准、研究时间起点和终点的明确定义以及患者随访的持续时间等因素。在临床试验中，还必须指定治疗的规范、将患者分配到治疗组时采用的随机方法以及盲法的使用。还可以考虑研究是否应该基于固定数量的患者，或者是否应该采用序贯设计 (sequential...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 15 章 生存研究的样本量要求 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="当感兴趣的响应变量是生存时间时，医学研究计划的设计需要考虑许多方面。这些因素包括研究参与者的纳入和排除标准、研究时间起点和终点的明确定义以及患者随访的持续时间等因素。在临床试验中，还必须指定治疗的规范、将患者分配到治疗组时采用的随机方法以及盲法的使用。还可以考虑研究是否应该基于固定数量的患者，或者是否应该采用序贯设计 (sequential...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="active" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap15" class="section level1" number="15">
+<h1>
+<span class="header-section-number">第 15 章</span> 生存研究的样本量要求<a class="anchor" aria-label="anchor" href="#chap15"><i class="fas fa-link"></i></a>
+</h1>
+<p>当感兴趣的响应变量是生存时间时，医学研究计划的设计需要考虑许多方面。这些因素包括研究参与者的纳入和排除标准、研究时间起点和终点的明确定义以及患者随访的持续时间等因素。在临床试验中，还必须指定治疗的规范、将患者分配到治疗组时采用的随机方法以及盲法的使用。还可以考虑研究是否应该基于固定数量的患者，或者是否应该采用序贯设计 (sequential analysis)，在这种设计中，研究将持续进行，直到有足够数量的事件能够区分不同的治疗。还需要讨论是否需要进行中期分析或适应性设计，以允许在数据积累时对样本量或治疗的分配进行有计划的修改。</p>
+<p>其中许多考虑因素并不是以生存为关注结局的研究所独有的，并且在许多有关临床试验设计和分析的文本中进行了讨论，例如 Friedman, Furberg and DeMets (2010), Matthews (2006) 和 Pocock (1983). 然而，这里将讨论固定样本量研究设计中的一个问题。这是生存研究中所需患者数量的关键问题。如果招募的患者太少，数据中的信息可能不足以使治疗差异显著。另一方面，在不必要的大型研究中浪费资源也是不道德的。本章将介绍生存数据的样本量计算。</p>
+<div id="sec15-1" class="section level2" number="15.1">
+<h2>
+<span class="header-section-number">15.1</span> 区分两个治疗组<a class="anchor" aria-label="anchor" href="#sec15-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>许多生存研究都关注区分两种替代疗法。因此，本章的重点将是一项对接受新疗法的患者与接受标准疗法的患者的生存时间进行比较的研究。当然，同样的公式也可用于其他情况和其他终点。</p>
+<p>假设有两组患者，标准疗法分配给第一组患者，而新疗法分配给第二组患者。假定生存时间的比例风险模型，新疗法患者在时间 <span class="math inline">\(t\)</span> 的死亡风险 <span class="math inline">\(h_{N}(t)\)</span> 可以写成</p>
+<p><span class="math display">\[\begin{aligned}h_N(t)=\psi h_S(t)\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(h_S(t)\)</span> 是标准疗法中患者在 <span class="math inline">\(t\)</span> 时的风险函数，<span class="math inline">\(\psi\)</span> 是未知的风险比。我们还将 <span class="math inline">\(\theta=\log\psi\)</span> 定义为对数风险比。如果 <span class="math inline">\(\theta\)</span> 为零，则没有治疗差异。另一方面，负的 <span class="math inline">\(\theta\)</span> 值表示在新疗法下生存时间更长，而正的 <span class="math inline">\(\theta\)</span> 值表示患者在标准疗法下生存更长。</p>
+<p>为检验 <span class="math inline">\(\theta=0\)</span> 的零假设，可以使用 <a href="chap2.html#sec2-6">2.6</a> 节中描述的 log-rank 检验。如 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-14">3.14</a> 节所示，这相当于使用在 Cox 回归模型中的等风险零假设的得分检验。在本章中，样本量要求将基于 log-rank 检验统计量，但当设想基于 Cox 回归模型的分析时，也可以使用所提供的公式。</p>
+<p>在生存研究中，删失的发生意味着通常不可能测量研究中所有患者的实际生存时间。然而，在分析中重要的是实际死亡人数，而不是患者总数。因此，确定研究中患者人数的第一步是计算必须观察到的死亡人数。然后我们再确定所需的患者数量。</p>
+</div>
+<div id="sec15-2" class="section level2" number="15.2">
+<h2>
+<span class="header-section-number">15.2</span> 计算所需的死亡人数<a class="anchor" aria-label="anchor" href="#sec15-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>为了确定研究所需的样本量，我们需要计算所需的病人数量，以确保在真实但未知的对数风险比为 <span class="math inline">\(\theta_R\)</span> 时，有某种机会宣称 <span class="math inline">\(\theta\)</span> 与零有显著差异。这里的 <span class="math inline">\(\theta_R\)</span> 是 <span class="math inline">\(\theta\)</span> 的<strong>参考值</strong> (reference value). 它将通过显著性检验来反映治疗差异的程度，这是我们所关心的<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;It will be a reflection of the magnitude of the treatment difference that it is important to detect, using the test of significance.&lt;/p&gt;"><sup>30</sup></a>。在比较新疗法与标准疗法的研究中，可能存在一个最小的值得改进 (minimum worthwhile improvement) 和一个最大的预期改进 (maximum envisaged improvement). <span class="math inline">\(\theta_R\)</span> 的实际选择将介于这两个值之间。在实践中，<span class="math inline">\(\theta_R\)</span> 的选择可能基于期望的风险比、需检出的中位生存期变化，或者在给定时间的生存概率的差异。这将在后面的<a href="chap15.html#exm:ex15-1">示例 15.1</a> 中进行讨论和说明。</p>
+<p>更正式地说，所需的死亡人数取为，当实际 <span class="math inline">\(\theta = \theta_R\)</span> 时，使用具有指定显著性水平 <span class="math inline">\(\alpha\)</span> 的假设检验，有 <span class="math inline">\(1 − \beta\)</span> 的概率宣称观测对数风险比与零显著不同。项 <span class="math inline">\(1 − \beta\)</span> 表示当原假设实际为假时拒绝它的概率，称为检验的<strong>功效</strong> (power). <span class="math inline">\(\beta\)</span> 表示当原假设为假时未拒绝它的概率，有时称为<strong>第 II 类错误</strong> (type II error). <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 都取较小的值。典型的值为 <span class="math inline">\(\alpha = 0.05\)</span> 和 <span class="math inline">\(\beta = 0.1\)</span>，此时，有 90% 的机会在 5% 的水平上宣称两种治疗之间存在显著差异。<span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 的具体指定在一定程度上取决于具体情况。如果在较低的显著性水平上检出显著的差异很重要，或者如果需要更高的机会宣称显著的结果，则需要相应地修改 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span>。</p>
+<p>生存研究中所需的死亡人数 <span class="math inline">\(d\)</span> 可通过下式计算</p>
+<p><span class="math display" id="eq:15-1">\[\begin{align}
+d=\frac{4(z_{\alpha/2}+z_\beta)^2}{\theta_R^2}
+\tag{15.1}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(z_{\alpha/2}\)</span> 和 <span class="math inline">\(z_\beta\)</span> 分别为标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点和上 <span class="math inline">\(\beta\)</span> 分位点。方便起见，记 <span class="math inline">\((\alpha,\beta)=(z_{\alpha/2}+z_\beta)^2\)</span>，式 <a href="chap15.html#eq:15-1">(15.1)</a> 得变为</p>
+<p><span class="math display" id="eq:15-2">\[\begin{align}
+d=4c(\alpha,\beta)/\theta_R^2
+\tag{15.2}
+\end{align}\]</span></p>
+<p>表 15.1 给出了显著性水平 <span class="math inline">\(\alpha\)</span> 和功效 <span class="math inline">\(1−\beta\)</span> 的常用值的 <span class="math inline">\(c(\alpha, \beta)\)</span> 值。</p>
+<details><summary><font color="#8B2232">表 15.1</font>
+</summary><img src="figure/table%2015.1.png#center" style="width:80.0%"></details><p><br>
+计算所需的死亡人数需要确定 <span class="math inline">\(\theta_R\)</span> 的值，并选择适当的 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 值。然后将表 15.1 与式 <a href="chap15.html#eq:15-2">(15.2)</a> 结合使用，给出研究中所需的死亡人数。</p>
+<p>式 <a href="chap15.html#eq:15-2">(15.2)</a> 中结果的推导假定了每个治疗组有相同数量的个体。如果情况并非如此，则必须进行修改。具体来说，如果分配到 Group I 的个体比例为 <span class="math inline">\(\pi\)</span>，则分配到 Group II 的比例为 <span class="math inline">\(1 − \pi\)</span>，则所需的死亡总数为</p>
+<p><span class="math display">\[d=\frac{c(\alpha,\beta)}{\pi(1-\pi)\theta_R^2}\]</span></p>
+<p>请注意，两个治疗组中个体数量的不均衡将增加所需死亡总数。此外，推导过程中还涉及一次近似，这意味着计算出的死亡人数可能被低估。因此，建议对计算出的值进行明智的向上取整，以弥补这一低估。</p>
+<p>所需死亡人数公式的实际推导非常重要，因此下面 <a href="chap15.html#sec15-2-1">15.2.1</a> 节给出了详细信息，可以省略而不失连续性。然后说明了一个计算示例。</p>
+<div id="sec15-2-1" class="section level3" number="15.2.1">
+<h3>
+<span class="header-section-number">15.2.1</span> 所需死亡人数的推导<a class="anchor" aria-label="anchor" href="#sec15-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>现在根据 log-rank 检验得出用于比较两个治疗组所需死亡人数的表达式。如 <a href="chap2.html#sec2-6">2.6</a> 节所述，假设研究中的个体中有 <span class="math inline">\(r\)</span> 个不同的死亡时间，<span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;\cdots&lt;t_{(r)}\)</span>，并且在第 <span class="math inline">\(i(i=1,2)\)</span> 组第 <span class="math inline">\(j(j=1,2,\ldots,r)\)</span> 个有序死亡时间 <span class="math inline">\(t_{(j)}\)</span> 有 <span class="math inline">\(d_{ij}\)</span> 个死亡。还假设第 <span class="math inline">\(i\)</span> 组中 <span class="math inline">\(t_{(j)}\)</span> 时处于的风险人数为 <span class="math inline">\(n_{ij}\)</span> ，<span class="math inline">\(t_{(j)}\)</span> 处的风险总数记作 <span class="math inline">\(n_j = n_{1j} +n_{2j}\)</span> ，<span class="math inline">\(t_{(j)}\)</span> 处的死亡人数记作 <span class="math inline">\(d_j = d_{1j} + d_{2j}\)</span>。那么 log-rank 统计量为</p>
+<p><span class="math display">\[\begin{aligned}U&amp;=\sum_{j=1}^r(d_{1j}-e_{1j})\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(e_{1j}\)</span> 是 <span class="math inline">\(t_{(j)}\)</span> 时 Group I 的预期死亡数，由 <span class="math inline">\(e_{1j}=n_{1j}d_j/n_j\)</span> 给出，log-rank 统计量的方差为</p>
+<p><span class="math display" id="eq:15-3">\[\begin{align}
+V&amp;=\sum_{j=1}^r\frac{n_{1j}n_{2j}d_j(n_j-d_j)}{n_j^2(n_j-1)}
+\tag{15.3}
+\end{align}\]</span></p>
+<p>当使用 log-rank 检验时，如果 <span class="math inline">\(U\)</span> 的绝对值足够大，即如果 <span class="math inline">\(|U|&gt;k\)</span>，其中 <span class="math inline">\(k\)</span> 为某个正的常数，则拒绝 <span class="math inline">\(\theta=0\)</span> 的零假设。因此，对于功效为 <span class="math inline">\(1−\beta\)</span> 的双侧 <span class="math inline">\(100\alpha\%\)</span> 显著性检验，我们要求</p>
+<p><span class="math display" id="eq:15-4">\[\begin{align}
+\mathrm{P}(|U|&gt;k;\theta=0)=\alpha
+\tag{15.4}
+\end{align}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\mathrm{P}(|U|&gt;k;\theta=\theta_R)=1-\beta\]</span></p>
+<p>我们现在不加证明地引用 Sellke and Siegmund (1983) 中的一个结果，根据该结果，对于较小的 <span class="math inline">\(\theta\)</span> 值，log-rank 统计量 <span class="math inline">\(U\)</span> 具有均值 <span class="math inline">\(\theta V\)</span> 和方差为 <span class="math inline">\(V\)</span> 的近似正态分布。事实上，在原假设 <span class="math inline">\(\theta = 0\)</span> 下 <span class="math inline">\(U \sim N(0, V )\)</span> 这一结果用作 log-rank 检验的基础。那么，由于</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(|U|&gt;k;\theta=0)=\text{P}(U&gt;k;\theta=0)+\text{P}(U&lt;-k;\theta=0)\end{aligned}\]</span></p>
+<p>以及当 <span class="math inline">\(\theta = 0\)</span> 时，<span class="math inline">\(U\)</span> 具有 <span class="math inline">\(N(0, V )\)</span> 分布，该分布关于零对称，有</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(U&gt;k;\theta=0)=\mathrm{P}(U&lt;-k;\theta=0)\end{aligned}\]</span></p>
+<p>然后根据式 <a href="chap15.html#eq:15-4">(15.4)</a> 得出</p>
+<p><span class="math display" id="eq:15-5">\[\begin{align}
+\mathrm{P}(U&gt;k;\theta=0)=\frac\alpha2
+\tag{15.5}
+\end{align}\]</span></p>
+<p>接下来，我们注意到，</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(|U|&gt;k;\theta=\theta_R)=\mathrm{P}(U&gt;k;\theta=\theta_R)+\mathrm{P}(U&lt;-k;\theta=\theta_R)\end{aligned}\]</span></p>
+<p>对于在假设检验中可能使用的 <span class="math inline">\(k\)</span> 值，无论是 <span class="math inline">\(\mathrm{P}(U&lt;-k;\theta=\theta_R)\)</span> 还是 <span class="math inline">\(\mathrm{P}(U&gt;k;\theta=\theta_R)\)</span> 都是可忽略不计的。例如，如果新疗法预期会增大生存率，即认为 <span class="math inline">\(\theta_R\)</span> 小于零，那么 <span class="math inline">\(U\)</span> 值大于 <span class="math inline">\(k(k&gt;0)\)</span> 的概率将很小。因此，不失一般性，我们取</p>
+<p><span class="math display">\[\mathrm{P}(|U|&gt;k;\theta=\theta_R)\approx\mathrm{P}(U&lt;-k;\theta=\theta_R)\]</span></p>
+<p>现在我们用 <span class="math inline">\(z_p\)</span> 表示标准正态分布的上 <span class="math inline">\(100p\%\)</span> 分位点。则 <span class="math inline">\(\Phi(z_p)=1−p\)</span>，其中 <span class="math inline">\(\Phi(\cdot)\)</span> 表示标准正态分布函数。因此，量 <span class="math inline">\(\Phi(z_p)\)</span> 表示在值 <span class="math inline">\(z_p\)</span> 左侧的标准正态密度函数下的面积。现在，由于当 <span class="math inline">\(\theta = 0\)</span> 时 <span class="math inline">\(U \sim N(0, V )\)</span></p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(U&gt;k;\theta=0)=1-\mathrm{P}(U\leqslant k;\theta=0)=1-\Phi\left(\frac{k}{\surd(V)}\right)\end{aligned}\]</span></p>
+<p>利用式 <a href="chap15.html#eq:15-4">(15.4)</a>，我们得到</p>
+<p><span class="math display">\[\Phi\left(\frac k{√(V)}\right)=1-(\alpha/2)\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\frac k{√(V)}&amp;=z_{\alpha/2}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点，因此 <span class="math inline">\(k\)</span> 可表示为</p>
+<p><span class="math display" id="eq:15-6">\[\begin{align}
+k=z_{\alpha/2}√(V)
+\tag{15.6}
+\end{align}\]</span></p>
+<p>以类似的方式，由于当 <span class="math inline">\(\theta = \theta_R\)</span> 时 <span class="math inline">\(U\sim N(\theta_RV,V)\)</span>，有</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(U&lt;-k;\theta=\theta_R)=\Phi\left(\frac{-k-\theta_RV}{\surd(V)}\right)\approx1-\beta\end{aligned}\]</span></p>
+<p>所以我们取</p>
+<p><span class="math display">\[\frac{-k-\theta_RV}{√(V)}=z_\beta \]</span></p>
+<p>其中 <span class="math inline">\(z_\beta\)</span> 是标准正态分布的上 <span class="math inline">\(\beta\)</span> 分位点。如果我们现在利用式 <a href="chap15.html#eq:15-6">(15.6)</a> 替换 <span class="math inline">\(k\)</span>，我们得到</p>
+<p><span class="math display">\[-z_{\alpha/2}√(V)-\theta_RV=z_\beta√(V)\]</span></p>
+<p>因此 <span class="math inline">\(V\)</span> 需满足</p>
+<p><span class="math display" id="eq:15-7">\[\begin{align}
+V=(z_{\alpha/2}+z_\beta)^2/\theta_R^2
+\tag{15.7}
+\end{align}\]</span></p>
+<p>以满足指定的要求。</p>
+<p>当死亡人数相对于风险人数较少时，式 <a href="chap15.html#eq:15-3">(15.3)</a> 中 <span class="math inline">\(V\)</span> 的表达式近似为</p>
+<p><span class="math display" id="eq:15-8">\[\begin{align}
+\sum_{j=1}^r\frac{n_{1j}n_{2j}d_j}{n_j^2}
+\tag{15.8}
+\end{align}\]</span></p>
+<p>此外，如果 <span class="math inline">\(\theta\)</span> 很小，并且每个治疗组以相似的速度招募入组，那么对于 <span class="math inline">\(j=1,2,\ldots,r\)</span> 有 <span class="math inline">\(n_{1j}\approx n_{2j}\)</span>，因此</p>
+<p><span class="math display">\[\begin{aligned}\frac{n_{1j}n_{2j}}{n_j^2}=\frac{n_{1j}n_{2j}}{(n_{1j}+n_{2j})^2}\approx\frac{n_{1j}^2}{(2n_{1j})^2}=\frac14\end{aligned}\]</span></p>
+<p>那么 <span class="math inline">\(V\)</span> 由下式给出</p>
+<p><span class="math display">\[V\approx\sum_{j=1}^rd_j/4=d/4\]</span></p>
+<p>其中 <span class="math inline">\(d=\sum_{j=1}^rd_j\)</span> 为研究中个体的死亡总数。</p>
+<p>最后，使用式 <a href="chap15.html#eq:15-7">(15.7)</a>，我们现在要求 <span class="math inline">\(d\)</span> 满足</p>
+<p><span class="math display">\[\begin{aligned}\frac{d}{4}=\frac{(z_{\alpha/2}+z_{\beta})^2}{\theta_{R}^2}\end{aligned}\]</span></p>
+<p>这得到了式 <a href="chap15.html#eq:15-1">(15.1)</a> 所示的所需死亡人数公式。</p>
+<p>在晚期死亡时间，即式 <a href="chap15.html#eq:15-8">(15.8)</a> 中的 <span class="math inline">\(j\)</span> 值接近 <span class="math inline">\(r\)</span> 时，两组中处于风险的个体数将会较少。这可能意味着 <span class="math inline">\(n_{1j}\)</span> 和 <span class="math inline">\(n_{2j}\)</span> 在晚期死亡时间将大不相同，因此 <span class="math inline">\(n_{1j}n_{2j}/n_j^2\)</span> 将小于 0.25。这反过来意味着 <span class="math inline">\(V &lt; d/4\)</span>，因此所需的死亡人数往往会低估。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex15-1" class="example"><strong>示例 15.1  (慢性活动性肝炎的生存) </strong></span><br></p>
+<p>患有慢性活动性肝炎的患者很快就会因肝功能衰竭而过早死亡。一种新的疗法已经问世，因此计划进行一项临床试验，以评估这种新疗法对该疾病患者生存时间的影响。作为第一步，我们获得了接受标准疗法的年龄相近的患者的生存时间（以年为单位）的信息。由这些数据得到的生存函数的 Kaplan-Meier 估计如图 15.1 所示。</p>
+<details><summary><font color="#8B2232">图 15.1</font>
+</summary><img src="figure/figure%2015.1.png#center" style="width:80.0%"></details><p><br>
+根据该生存函数估计，中位生存时间为 3.3 年，2 年、4 年和 6 年的生存率分别为 <span class="math inline">\(S(2)=0.70,S(4)=0.45\)</span> 和 <span class="math inline">\(S(6)=0.25\)</span>。</p>
+<p>新疗法预计可将五年生存率从标准疗法的 0.41 提高到 0.60. 该信息可用于计算 <span class="math inline">\(\theta_R\)</span> 的值。为此，我们使用以下结果：如果假定风险函数成比例，则在时间 <span class="math inline">\(t\)</span> 接受新疗法的个体的生存函数为</p>
+<p><span class="math display" id="eq:15-9">\[\begin{align}
+S_N(t)=[S_S(t)]^\psi
+\tag{15.9}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(S_S(t)\)</span> 是个体在 <span class="math inline">\(t\)</span> 时接受标准疗法的生存函数，<span class="math inline">\(\psi\)</span> 是风险比。所以</p>
+<p><span class="math display">\[\psi=\frac{\log S_N(t)}{\log S_S(t)}\]</span></p>
+<p>因此，<span class="math inline">\(S(t)\)</span> 从 0.41 增加到 0.60 对应的 <span class="math inline">\(\psi\)</span> 值为</p>
+<p><span class="math display">\[\begin{aligned}\psi_R=\frac{\log(0.60)}{\log(0.41)}=0.57\end{aligned}\]</span></p>
+<p>有了这个信息，接受新疗法的患者的生存函数为 <span class="math inline">\([S_S(t)]^{\psi_R}\)</span>，因此 <span class="math inline">\(S_N (2) = 0.82,S_N (4) = 0.63\)</span> 以及 <span class="math inline">\(S_N (6) = 0.45\)</span>。两个生存函数的图形如图 15.2 所示。</p>
+<details><summary><font color="#8B2232">图 15.2</font>
+</summary><img src="figure/figure%2015.2.png#center" style="width:80.0%"></details><p><br>
+新疗法下的中位生存时间可以根据生存函数的估计来确定。根据图 15.2，新疗法下的中位生存时间估计约为六年。因此，0.57 的风险比意味着中位生存时间从标准疗法的 3.3 年增加到新疗法的 6 年。</p>
+<p>为计算比较两种疗法的研究所需的死亡人数，我们将取 <span class="math inline">\(\alpha = 0.05\)</span> 以及 <span class="math inline">\(1 − \beta = 0.90\)</span>。利用该 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 的值，表 15.1 中的函数 <span class="math inline">\(c(\alpha,\beta)\)</span> 值为 10.51。将 <span class="math inline">\(c(0.05, 0.1)\)</span> 代入 式 <a href="chap15.html#eq:15-2">(15.2)</a> 并取 <span class="math inline">\(\theta_R = \log \psi_R = \log(0.57) = −0.562\)</span>，在 5% 的显著性水平下，为了有 90% 的机会检出 0.57 的风险比具有显著性，所需的死亡人数为</p>
+<p><span class="math display">\[\begin{aligned}d=\frac{4\times10.51}{0.562^2}=133\end{aligned}\]</span></p>
+<p>考虑到低估的可能性，死亡总数可四舍五入为 140 人。这意味着每个治疗组需要观察到大约 70 例死亡。</p>
+<p>需要检出的治疗差异也可用中位生存时间所期望的绝对或相对变化来表示。然后，通过反转前面的计算，可以得出在式 <a href="chap15.html#eq:15-1">(15.1)</a> 中使用的相应的对数风险比。例如，假设预期中位生存时间将从标准疗法的 3.3 年增加到新疗法的 5 年。当 <span class="math inline">\(t=5\)</span> 时，新疗法的生存函数为 0.5，使用式 <a href="chap15.html#eq:15-9">(15.9)</a>，<span class="math inline">\(S_N(5)=\{S_S(5)\}^{\psi_R}=0.5\)</span>。因此，<span class="math inline">\(\psi_R\log\{S_S(5)\}=\log0.5\)</span>，并且由于 <span class="math inline">\(S_S(5)=0.41\)</span>，则 <span class="math inline">\(\psi_R=0.78\)</span>。这反映了与 <span class="math inline">\(\psi_R\)</span> 取 0.57 时相比，治疗效应不太乐观。如果要以 90% 的把握宣称该风险比在 5% 水平下与 1 显著不同，则需要观察到的相应死亡人数约为 680 人。这远大于将 0.57 的风险比识别为显著结果所需的人数。</p>
+</div>
+</div>
+<p>上述计算只有在研究将持续到一定数量的参与者死亡时，才能直接用于研究。大多数试验的设计都是基于要招募的患者数量，因此我们现在必须研究如何获得该量。</p>
+</div>
+</div>
+<div id="sec15-3" class="section level2" number="15.3">
+<h2>
+<span class="header-section-number">15.3</span> 计算所需的患者人数<a class="anchor" aria-label="anchor" href="#sec15-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>为了计算生存研究所需的实际患者数量，我们需要考虑研究期间内患者死亡的概率。通常情况下，患者会在长度为 <span class="math inline">\(a\)</span> 的<strong>入组期</strong> (accrual period) 内入组。招募完成后，还会有一个长度为 <span class="math inline">\(f\)</span> 的<strong>随访期</strong> (follow-up period). 因此，研究的总时长将是 <span class="math inline">\(a + f\)</span>。请注意，如果 <span class="math inline">\(f\)</span> 很小甚至为零，那么为了获得特定数量的死亡患者，就需要招募相应地更多的患者。</p>
+<p>一旦评估了研究中患者死亡的概率，就可以根据以下公式得到所需的患者数量</p>
+<p><span class="math display" id="eq:15-10">\[\begin{align}
+n=\frac{d}{\text{P}(\text{死亡})}
+\tag{15.10}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(d\)</span> 是根据式 <a href="chap15.html#eq:15-2">(15.2)</a> 得出的所需死亡人数。根据下一节推导的结果，死亡概率可表示为</p>
+<p><span class="math display" id="eq:15-11">\[\begin{align}
+\mathrm{P}(\text{死亡})&amp;=1-\frac16\{\bar{S}(f)+4\bar{S}(0.5a+f)+\bar{S}(a+f)\}
+\tag{15.11}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\bar{S}(t)=\frac{S_S(t)+S_N(t)}2\]</span></p>
+<p><span class="math inline">\(S_S(t)\)</span> 和 <span class="math inline">\(S_N (t)\)</span> 分别是标准疗法和新疗法个体在时间 <span class="math inline">\(t\)</span> 的生存函数估计。</p>
+<p>上述结果显示了如何计算入组期为 <span class="math inline">\(a\)</span>、随访期为 <span class="math inline">\(f\)</span> 的试验所需的患者数量。当然，入组期和随访期的长短取决于招募率 (recruitment rate). 因此，假设招募率预计为 <span class="math inline">\(m\)</span> 名患者/每月，并且需要 <span class="math inline">\(d\)</span> 例死亡。如果在一个月内有 <span class="math inline">\(n\)</span> 名患者参与研究，这意味着每个月需要招募 <span class="math inline">\(n/a\)</span> 名患者。在实践中可能会有预期的入组率 (accrual rate) <span class="math inline">\(m\)</span> 的信息。在长度为 <span class="math inline">\(a\)</span> 的入组期内招募的人数为 <span class="math inline">\(ma\)</span>，因此研究中的预期死亡人数为</p>
+<p><span class="math display">\[ma\times\mathrm{P}(\text{死亡})\]</span></p>
+<p>然后，可以通过数值方法得出使该值接近所需死亡人数的 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(f\)</span> 的值，例如，通过尝试不同的 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(f\)</span> 值。我们可以利用计算机实现这一算法，并使用优化方法找到 <span class="math inline">\(a\)</span> 的值，使得对于一系列 <span class="math inline">\(f\)</span> 的值</p>
+<p><span class="math display" id="eq:15-12">\[\begin{align}
+d-\{ma\times\mathrm{P}(\text{死亡})\}
+\tag{15.12}
+\end{align}\]</span></p>
+<p>接近于零。或者，可以找到对于一系列 <span class="math inline">\(a\)</span> 值使式 <a href="chap15.html#eq:15-12">(15.12)</a> 成立的 <span class="math inline">\(f\)</span> 值。一张给出不同 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(f\)</span> 值组合所需患者数量的双向表对于研究规划将特别有用。</p>
+<p>以下小节给出了式 <a href="chap15.html#eq:15-11">(15.11)</a> 中结果的详细推导，并且可以再次省略而不失连续性。</p>
+<div id="sec15-3-1" class="section level3" number="15.3.1">
+<h3>
+<span class="header-section-number">15.3.1</span> 所需患者人数的推导<a class="anchor" aria-label="anchor" href="#sec15-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>我们从分布理论的一般结果开始，即，在研究期间患者死亡的边际概率，可根据死亡以及在时间 <span class="math inline">\(t\)</span> 进入研究的联合概率来获得</p>
+<p><span class="math display" id="eq:15-13">\[\begin{align}
+\mathrm{P}(\text{死亡})&amp;=\int_0^a\mathrm{P}(\text{死亡且在时间 } t \text{ 进入研究})\mathrm{d}t
+\tag{15.13}
+\end{align}\]</span></p>
+<p>该联合概率又等于</p>
+<p><span class="math display" id="eq:15-14">\[\begin{align}
+\mathrm{P}(\text{死亡且在时间 } t \text{ 进入研究})&amp;=\mathrm{P}(\text{死亡}\mid\text{在时间 } t \text{ 进入研究})\times\mathrm{P}(\text{在时间 } t \text{ 进入研究})
+\tag{15.14}
+\end{align}\]</span></p>
+<p>这仅是 <span class="math inline">\(\text{P}(A\mid B)=\text{P}(AB)/\text{P}(B)\)</span> 这一结果的一个版本。</p>
+<p>我们现在假定入组期的招募率是均匀的。那么可认为进入研究的时间的分布在时间区间 <span class="math inline">\((0,a)\)</span> 上是均匀的。因此，对于区间 <span class="math inline">\((0,a)\)</span> 中的任何 <span class="math inline">\(t\)</span> 值，一个个体在时间 <span class="math inline">\(t\)</span> 被招募到研究中的概率为 <span class="math inline">\(t^{-1}\)</span>。根据式 <a href="chap15.html#eq:15-13">(15.13)</a> 和 <a href="chap15.html#eq:15-14">(15.14)</a>，我们有</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(\text{死亡})&amp;=\int_0^a\mathrm{P}(\text{死亡}\mid\text{在时间 } t \text{ 进入研究})\,a^{-1}\mathrm{d}t\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(\text{死亡})&amp;=1-\frac1a\int_0^a\mathrm{P}(\text{死亡}\mid\text{在时间 } t \text{ 进入研究})\text{d}t\end{aligned}\]</span></p>
+<p>在时间 <span class="math inline">\(t\)</span> 进入研究的患者在研究期间存活，即生存时间为 <span class="math inline">\(a+f\)</span> 的患者，必须在进入研究后存活 <span class="math inline">\(a+f−t\)</span>。因此，条件概率 <span class="math inline">\(\mathrm{P}(\text{死亡}\mid\text{在时间 } t \text{ 进入研究})\)</span> 是生存超过 <span class="math inline">\(a+f−t\)</span> 的概率。该概率是该个体在 <span class="math inline">\(a+f−t\)</span> 处的生存函数值，即 <span class="math inline">\(S(a+f–t)\)</span>。因此</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(\text{死亡})&amp;=1-\frac1a\int_0^aS(a+f-t)\mathrm{d}t\end{aligned}\]</span></p>
+<p>令 <span class="math inline">\(u=a+f−t\)</span>，上式成为</p>
+<p><span class="math display" id="eq:15-15">\[\begin{align}
+\mathrm{P}(\mathrm{死亡})=1-\frac1a\int_f^{a+f}S(u)\mathrm{d}u
+\tag{15.15}
+\end{align}\]</span></p>
+<p>现在使用数值积分来近似生存函数的积分。根据 Simpson’s rule</p>
+<p><span class="math display">\[\begin{aligned}\int_u^vf(x)\mathrm{d}x&amp;\approx\frac{v-u}{6}\left\{f(u)+4f\left(\frac{u+v}{2}\right)+f(v)\right\}\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\int_f^{a+f}S(u)\mathrm{d}u&amp;\approx\frac{a}{6}\left\{S(f)+4S(0.5a+f)+S(a+f)\right\}\end{aligned}\]</span></p>
+<p>因此，利用式 <a href="chap15.html#eq:15-15">(15.15)</a>，研究期间的死亡概率由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(\mathrm{死亡})&amp;=1-\frac16\left\{S(f)+4S(0.5a+f)+S(a+f)\right\}\end{aligned}\]</span></p>
+<p>根据该结果，Group I 中生存函数为 <span class="math inline">\(S_S(t)\)</span> 的个体的近似死亡概率为</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(\text{死亡; Group I})&amp;=1-\frac{1}{6}\left\{S_S(f)+4S_S(0.5a+f)+S_S(a+f)\right\}\end{aligned}\]</span></p>
+<p>类似地，对于 Group II 中的个体</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(\text{死亡; Group II})&amp;=1-\frac{1}{6}\left\{S_N(f)+4S_N(0.5a+f)+S_N(a+f)\right\}\end{aligned}\]</span></p>
+<p>假设一个个体被分配到两个治疗组的概率相等，那么总死亡概率是这两个概率的平均，因此</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(\text{死亡})=\frac{\text{P}(\text{死亡};\text{ Group I})+\text{P}(\text{死亡};\text{ Group II})}2\end{aligned}\]</span></p>
+<p>代入两个治疗组的死亡概率，并令 <span class="math inline">\(\bar{S}(t)=\{S_S(t)+S_N(t)\}/2\)</span> ，总死亡概率可写为</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(\mathrm{死亡})=1-\frac16\{\bar{S}(f)+4\bar{S}(0.5a+f)+\bar{S}(a+f)\}\end{aligned}\]</span></p>
+<p>如式 <a href="chap15.html#eq:15-11">(15.11)</a> 所示。</p>
+<p>如果分配到 Group I 的个体比例为 <span class="math inline">\(\pi\)</span>，则总死亡概率变为</p>
+<p><span class="math display">\[\pi\text{ P}(\text{死亡; Group I})+(1-\pi)\text{ P}(\text{死亡; Group II})\]</span></p>
+<p>式 <a href="chap15.html#eq:15-11">(15.11)</a> 中给出的总死亡概率结果需作相应修改。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex15-2" class="example"><strong>示例 15.2  (慢性活动性肝炎的生存) </strong></span><br></p>
+<p><a href="chap15.html#exm:ex15-1">示例 15.1</a> 表明，慢性肝炎研究需要观察 140 例死亡，才能有足够的功效来检测 0.57 的风险比在 5% 的水平上是否显着。假设将在 18 个月的入组期招募患者参加该研究，并且随后有 24 个月的随访期。根据式 <a href="chap15.html#eq:15-11">(15.11)</a>，研究 42 个月内的死亡概率由下式给出</p>
+<p><span class="math display">\[\mathrm{P}(\mathrm{死亡})=1-\frac{1}{6}\left\{\bar{S}(24)+4\bar{S}(33)+\bar{S}(42)\right\}\]</span></p>
+<p>现在，使用图 15.2 所示的生存函数估计，</p>
+<p><span class="math display">\[\begin{gathered}
+\bar{S}(24)=\frac{S_S(24)+S_N(24)}2=\frac{0.70+0.82}2=0.76 \\
+\bar{S}(33) =\frac{S_S(33)+S_N(33)}2=\frac{0.57+0.73}2=0.65 \\
+\bar{S}(42)=\frac{S_S(42)+S_N(42)}2=\frac{0.45+0.63}2=0.54
+\end{gathered}\]</span></p>
+<p>因此死亡概率为</p>
+<p><span class="math display">\[\begin{aligned}1-\frac16\{0.76+(4\times0.65)+0.54\}&amp;=0.350\end{aligned}\]</span></p>
+<p>根据式 <a href="chap15.html#eq:15-10">(15.10)</a>，所需的患者数量为</p>
+<p><span class="math display">\[\begin{aligned}n=\frac{140}{0.350}=400\end{aligned}\]</span></p>
+<p>因此，在 18 个月的入组期内需要招募 400 名患者参与该研究。这需要每月约 22 名患者的招募率。</p>
+<p>如果预计每月仅招募 18 名患者，则需要延长入组期，以确保有足够的人数来提供所需的死亡人数。一个月内可招募的人数为 <span class="math inline">\(18a\)</span>。然后可以尝试各种 <span class="math inline">\(a\)</span> 值，以使其近似等于根据式 <a href="chap15.html#eq:15-10">(15.10)</a> 获得的值。例如，如果我们取 <span class="math inline">\(a = 24\)</span> 并继续使用 <span class="math inline">\(f = 24\)</span>，则研究四年内的死亡概率为</p>
+<p><span class="math display">\[\mathrm{P}(\mathrm{死亡})=1-\frac16\{\bar{S}(24)+4\bar{S}(36)+\bar{S}(48)\}\]</span></p>
+<p>根据图 15.2，可以估计每种治疗的患者在 24, 36 和 48 个月时的生存函数，我们得到 <span class="math inline">\(\bar{S}(24)=0.76,\bar{S}(36)=0.654\)</span> 以及 <span class="math inline">\(\bar{S}(48)=0.50\)</span>。那么死亡的概率为 0.357，而现在所需的死亡人数是 393 人。这与估计的每月 18 人的招募率大体一致。</p>
+<p>现在假设决定研究没有随访期，因此入组期等于研究的持续时间。如果入组期为 20 个月，则 <span class="math inline">\(a = 20\)</span> 且 <span class="math inline">\(f = 0\)</span>，则死亡概率为</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(\text{死亡})=1-\frac{1}{6}\{\bar{S}(0)+4\bar{S}(10)+\bar{S}(20)\}\end{aligned}\]</span></p>
+<p>现在，<span class="math inline">\(\bar{S}(0)=1.00,\bar{S}(10)=0.82\)</span> 以及 <span class="math inline">\(\bar{S}(20)=0.79\)</span>，死亡概率为 0.155. 现在所需的患者数量为 <span class="math inline">\(140/0.155 = 903\)</span>，每月招募 45 名患者就可以满足这一要求。这表明随访期的缺失会增加必须进入研究的患者数量。</p>
+</div>
+</div>
+</div>
+<div id="sec15-3-2" class="section level3" number="15.3.2">
+<h3>
+<span class="header-section-number">15.3.2</span> 一个近似程序<a class="anchor" aria-label="anchor" href="#sec15-3-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>本节概述了一个更简单的用于计算生存研究中所需患者数量以比较两种治疗方法的程序。此结果的基础为，<span class="math inline">\(\{S_S(\tau)+S_N(\tau)\}/2\)</span> 是研究中的患者在 <span class="math inline">\(\tau\)</span> 时间后生存的平均概率，其中 <span class="math inline">\(S_S(\tau)\)</span> 和 <span class="math inline">\(S_N (\tau)\)</span> 是时间 <span class="math inline">\(\tau\)</span> 处生存函数值，分别对应接受标准疗法和新疗法的患者。从时间起点到 <span class="math inline">\(\tau\)</span> 期间的死亡概率可近似为</p>
+<p><span class="math display">\[\begin{aligned}1-\frac{S_S(\tau)+S_N(\tau)}2\end{aligned}\]</span></p>
+<p>使用式 <a href="chap15.html#eq:15-10">(15.10)</a>，所需的患者数成为</p>
+<p><span class="math display">\[n=\frac{2d}{2-S_S(\tau)-S_N(\tau)}\]</span></p>
+<p>其中 <span class="math inline">\(d\)</span> 为所需死亡数。</p>
+<p>此计算中使用的 <span class="math inline">\(\tau\)</span> 值的自然选择是研究中患者随访期的平均长度 <span class="math inline">\(f + (a/2)\)</span>，其中 <span class="math inline">\(a\)</span> 是入组期长度，<span class="math inline">\(f\)</span> 是随访期长度。该过程非常近似，因为它没有考虑超出 <span class="math inline">\(\tau\)</span> 的患者随访时间。因此，该结果往往会高估所需的样本量。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex15-3" class="example"><strong>示例 15.3  (慢性活动性肝炎的生存) </strong></span><br></p>
+<p>慢性活动性肝炎的研究现在用于说明确定所需患者人数的近似程序。与<a href="chap15.html#exm:ex15-2">示例 15.2</a> 一样，假设在 18 个月的时间内招募患者，并且还有 24 个月的进一步随访期。患者随访期的平均长度为 <span class="math inline">\(\tau=f+(a/2)=33\)</span> 个月。从图 15.2 可以看出，两组患者的生存函数分别为 <span class="math inline">\(S_S(33)=0.57\)</span> 和 <span class="math inline">\(S_N(33)=0.73\)</span>。因此，0 至 33 个月期间的近似死亡概率为 0.35，并且需要造成 140 例死亡的患者人数为 <span class="math inline">\(140/0.35=400\)</span>。在本示例中，由近似结果给出的样本量与<a href="chap15.html#exm:ex15-2">示例 15.2</a> 使用的更复杂的程序给出的样本量相同，但通常情况并非如此。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec15-4" class="section level2" number="15.4">
+<h2>
+<span class="header-section-number">15.4</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec15-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>Friedman, Furberg and DeMets (2010), Matthews (2006) 和 Pocock (1983) 以及 Altman (1991) 的更一般的文本中给出了设计临床试验时需要考虑的问题的全部细节。Whitehead (1997) 描述了当感兴趣的结局变量是生存时间时，如何设计序贯临床试验，Jennison and Turnbull (2000) 描述了成组序贯法。</p>
+<p>Machin et al. (2009) 和 Julious (2010) 提供了涉及不同类型响应变量（包括生存时间）的研究所需的样本量要求的详细表格。大多数统计软件包，包括 SAS, R 和 Stata，都具有样本量计算功能。此外，一些商业可用的样本量计算软件包，如 PASS (Power Analysis and Sample Size program) 和 nQuery Advisor 也可实现生存研究中所需患者数量的计算。</p>
+<p>式 <a href="chap15.html#eq:15-1">(15.1)</a> 中所需死亡人数的公式出现在许多论文中，包括 Bernstein and Lagakos (1978), Schoenfeld (1981), Schoenfeld and Richter (1982) 以及 Schoenfeld (1983)，尽管结果所基于的假设不同。Bernstein and Lagakos (1978) 假设每组的生存时间呈指数分布，得到式 <a href="chap15.html#eq:15-1">(15.1)</a>。Lachin (1981), Rubinstein, Gail and Santner (1981) 以及 Lachin and Foulkes (1986) 也讨论了假设生存时间呈指数分布的试验中的样本量要求。另请参见 George 和 Desu (1974) 的早期著作。</p>
+<p><a href="chap15.html#sec15-3">15.3</a> 节中所需患者数量的公式基于 Schoenfeld (1983). 当假设生存时间为指数时，这些公式简化为 Schoenfeld and Richter (1982) 的结果。尽管所得公式更易于使用，但根据生存时间分布的限制性假设进行样本量计算是危险的。</p>
+<p>Freedman (1982) 给出了所需死亡人数公式的一个变体。Freedman 用 <span class="math inline">\(\{(1+\psi)/(1-\psi)\}^2\)</span> 代替了式 <a href="chap15.html#eq:15-1">(15.1)</a> 中的 <span class="math inline">\(4/(\log\psi)^2\)</span>。然而，对于较小的 <span class="math inline">\(\log \psi\)</span> 值</p>
+<p><span class="math display">\[\{(1+\psi)/(1-\psi)\}^2\approx4/(\log\psi)^2\]</span></p>
+<p>因此这两个表达式往往会给出相似的结果。<a href="chap15.html#sec15-3-2">15.3.2</a> 节中给出的所需患者数量的近似公式也是由 Freedman (1982) 提出的。</p>
+<p>Lakatos (1988) 提出了一种估计比较两种治疗所需患者数量的方法，该方法可以解决交错进入、不依从、失访和非成比例风险等问题。Lakatos and Lan (1992) 表明 Lakatos 程序在各种情况下都表现良好。该方法基于马尔可夫模型，并且需要计算机程序来实现。</p>
+<p>Latouche, Porcher and Chevret (2004) 给出了第 12 章 <a href="chap12.html#sec12-5">12.5</a> 节中描述的用于在存在竞争风险的情况下对子分布风险函数进行建模的近似样本量公式。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></div>
+<div class="next"><a href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap15"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="nav-link" href="#sec15-1"><span class="header-section-number">15.1</span> 区分两个治疗组</a></li>
+<li>
+<a class="nav-link" href="#sec15-2"><span class="header-section-number">15.2</span> 计算所需的死亡人数</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec15-2-1"><span class="header-section-number">15.2.1</span> 所需死亡人数的推导</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec15-3"><span class="header-section-number">15.3</span> 计算所需的患者人数</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec15-3-1"><span class="header-section-number">15.3.1</span> 所需患者人数的推导</a></li>
+<li><a class="nav-link" href="#sec15-3-2"><span class="header-section-number">15.3.2</span> 一个近似程序</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec15-4"><span class="header-section-number">15.4</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

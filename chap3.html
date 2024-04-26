@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 3 章 Cox 回归模型 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="第 2...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 3 章 Cox 回归模型 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="第 2...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 3 章 Cox 回归模型 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="第 2...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="active" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap3" class="section level1" number="3">
+<h1>
+<span class="header-section-number">第 3 章</span> Cox 回归模型<a class="anchor" aria-label="anchor" href="#chap3"><i class="fas fa-link"></i></a>
+</h1>
+<p>第 <a href="chap2.html#chap2">2</a> 章描述的非参数方法在分析单一生存数据样本或比较两个或多个生存时间组时可能很有用。然而，在大多数产生生存数据的医学研究中，还会记录每个个体的补充信息。一个典型的例子是比较接受两种不同治疗的患者的生存时间的临床试验。在这类研究中，患者的年龄和性别等人口学变量、血清血红蛋白水平和心率等生理学变量的值，以及与患者生活方式相关的因素，如吸烟史和饮食习惯，都可能对患者的生存时间产生影响。因此，这些称为解释变量的值会在研究开始时被记录下来。由此产生的数据集将比第 <a href="chap2.html#chap2">2</a> 章考虑的数据集更为复杂，而该章描述的方法通常将不适用。为了探索患者的生存经历与解释变量之间的关系，可以采用基于统计建模的方法。本章开发的特定模型，即 Cox 回归模型，既统一又扩展了第 <a href="chap2.html#chap2">2</a> 章的非参数程序。</p>
+<div id="sec3-1" class="section level2" number="3.1">
+<h2>
+<span class="header-section-number">3.1</span> 风险函数建模<a class="anchor" aria-label="anchor" href="#sec3-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>通过分析生存数据的建模方法，我们可以探讨一组患者的生存经历如何依赖于一个或多个解释变量的值，这些变量的值在起始时间对每位患者都有记录。例如，在<a href="chap1.html#exm:ex1-3">示例 1.3</a> 给出的多发性骨髓瘤研究中，目的是确定七个解释变量中哪些对患者的生存时间有影响。<a href="#exm:ex1-14">示例 1.14</a> 涉及两种前列腺癌疗法的临床试验中患者的生存时间，主要目的是确定两个治疗组的患者是否有不同的生存经历。在这个例子中，患者的年龄和肿瘤大小等变量可能会影响生存时间，因此在评估任何治疗差异的程度时，考虑这些变量是很重要的。此外，通过建模方法，我们不仅可以了解哪些变量对生存时间有影响，还能估计这些影响的具体大小。这使得我们能够更准确地理解各因素对生存经历的贡献，并为临床决策提供有力依据。在生存分析的研究中，选择适当的模型和解释变量是关键步骤，因为它们直接影响结果的准确性和可靠性。因此，在进行分析时，我们需要仔细考虑并选择合适的模型，以确保结果的准确性和有效性。</p>
+<p>在生存数据分析中，兴趣集中在研究开始后任何时间的死亡风险或危险 (hazard or risk). 因此，在生存分析中，直接对第 1 章 <a href="chap1.html#sec1-4-2">1.4.2</a> 节中定义的风险函数建模。所得模型在形式上与回归分析和设计实验数据分析中遇到的线性模型有些不同，后者对平均响应或其某些函数关于某些解释变量的依赖性进行建模。然而，线性模型中使用的许多原理和程序都适用于生存数据的建模。</p>
+<p>对生存数据进行建模的原因主要有两个。建模过程的一个目标是确定哪些潜在解释变量的组合会影响风险函数的形式。具体来说，可以研究治疗对死亡风险的影响，以及其他解释变量对风险函数的影响程度。对风险函数进行建模的另一个原因是为了获得某个个体风险函数本身的估计值。其本身可能就是人们感兴趣的，此外，根据式 <a href="chap1.html#sec1-6">1.6</a> 描述的生存函数与风险函数之间的关系，还可以得到生存函数的估计值。这反过来又能得出对诸如中位生存时间等量的估计，这些量是模型中解释变量的函数。然后，可以根据这些解释变量的特定值，为当前或未来的患者估计中位生存时间。所得估计在制定治疗方案或向患者提供预后咨询时可能特别有用。</p>
+<p>本章描述的生存数据模型基于第 2 章 <a href="chap2.html#sec2-6-5">2.6.5</a> 节中介绍的比例风险假设，称为<strong>比例风险模型</strong> (proportional hazard model). 我们首先开发模型来比较两组个体的风险函数。</p>
+<div id="sec3-1-1" class="section level3" number="3.1.1">
+<h3>
+<span class="header-section-number">3.1.1</span> 用于两组比较的模型<a class="anchor" aria-label="anchor" href="#sec3-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设两组患者分别接受标准疗法或新疗法，并设 <span class="math inline">\(h_S(t)\)</span> 和 <span class="math inline">\(h_N(t)\)</span> 分别为接受标准疗法和新疗法的患者在时间 <span class="math inline">\(t\)</span> 的死亡风险。根据这两组患者生存时间的简单模型，接受新疗法的患者在时间 <span class="math inline">\(t\)</span> 的风险与接受标准疗法的患者在同一时间的风险成比例。这种比例风险模型可以表示为</p>
+<p><span class="math display" id="eq:3-1">\[\begin{equation}
+h_N(t)=\psi h_S(t)
+\tag{3.1}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t\)</span> 为任何非负值，<span class="math inline">\(\psi\)</span> 为常数。这一假设的含义是，如 <a href="chap2.html#sec2-6-5">2.6.5</a> 节所示，新疗法和标准疗法中个体相应的真实生存函数不会交叉。</p>
+<p>参数 <span class="math inline">\(\psi\)</span> 的值是新疗法患者相对于标准疗法患者在任何时间的死亡风险的比值，因此 <span class="math inline">\(\psi\)</span> 称为相对风险 (relative hazard) 或风险比 (hazard ratio). 如果 <span class="math inline">\(\psi&lt;1\)</span>，则相对于接受标准疗法的患者，接受新疗法的患者在时间 <span class="math inline">\(t\)</span> 的死亡风险更小。这时，新疗法相对于标准疗法是一个改进。另一方面，如果 <span class="math inline">\(\psi&gt;1\)</span>，则接受新疗法的患者在时间 <span class="math inline">\(t\)</span> 的死亡风险更大，标准疗法更优。</p>
+<p>以另一种方式表示式 <a href="chap3.html#sec3-1">3.1</a> 中的模型可以得到一个更容易推广的模型。假设有 <span class="math inline">\(n\)</span> 个个体的生存数据，用 <span class="math inline">\(h_i(t)\)</span> 表示第 <span class="math inline">\(i\)</span> 个个体的风险函数，其中 <span class="math inline">\(i = 1, 2,...,n\)</span>。同时，用 <span class="math inline">\(h_0(t)\)</span> 表示接受标准疗法的个体的风险函数。那么，接受新疗法的个体的风险函数就是 <span class="math inline">\(\psi h_0(t)\)</span>。相对风险 <span class="math inline">\(\psi\)</span> 不能为负值，因此，将 <span class="math inline">\(\psi\)</span> 设为 <span class="math inline">\(\exp(\beta)\)</span> 更为方便。这样，参数 <span class="math inline">\(\beta\)</span> 就是风险比的对数，即 <span class="math inline">\(\beta=\log \psi\)</span>，且 <span class="math inline">\(\beta\)</span> 在<span class="math inline">\((−\infty, \infty)\)</span> 范围内的任何值都能得到正的 <span class="math inline">\(\psi\)</span>。请注意，当风险比 <span class="math inline">\(\psi&gt;1\)</span>，即新疗法不如标准疗法时，<span class="math inline">\(\beta\)</span> 为正。</p>
+<p>现令 <span class="math inline">\(X\)</span> 是一个指示变量，如果一个个体接受标准治疗，它的值为 0，如果一个个体接受新治疗，它的值为 1. 如果 <span class="math inline">\(x_i\)</span> 是研究中第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(X\)</span> 值，<span class="math inline">\(i=1,2,\ldots,n\)</span>，该个体的风险函数可以写为</p>
+<p><span class="math display" id="eq:3-2">\[\begin{equation}
+h_i(t)=e^{\beta x_i}h_0(t)
+\tag{3.2}
+\end{equation}\]</span></p>
+<p>其中如果第 <span class="math inline">\(i\)</span> 个个体接受新疗法，则 <span class="math inline">\(x_i=1\)</span>，否则 <span class="math inline">\(x_i＝0\)</span>。这是用于比较两个治疗组的比例风险模型。</p>
+</div>
+<div id="sec3-1-2" class="section level3" number="3.1.2">
+<h3>
+<span class="header-section-number">3.1.2</span> 一般比例风险模型<a class="anchor" aria-label="anchor" href="#sec3-1-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>上一节中的模型现在被推广，某一特定时间的死亡风险取决于 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1, X_2,...,X_p\)</span> 的值 <span class="math inline">\(x_1, x_2,...,x_p\)</span>。假设这些变量的值在研究的起始时间就已经被记录。在第 <a href="chap8.html#chap8">8</a> 章中，我们会考虑将模型扩展至若干解释变量随时间变化的情况。</p>
+<p>在比例风险模型中，解释变量的值由向量 <span class="math inline">\(\boldsymbol x\)</span> 表示，即 <span class="math inline">\(\boldsymbol x=(x_1,x_2,\ldots,x_p)^\prime\)</span>。设 <span class="math inline">\(h_0(t)\)</span> 是构成向量 <span class="math inline">\(\boldsymbol x\)</span> 的所有解释变量的值为 0 的个体的风险函数。函数 <span class="math inline">\(h_0(t)\)</span> 称为基线风险函数 (baseline hazard function)。那么，第 <span class="math inline">\(i\)</span> 个个体的风险函数可以写为</p>
+<p><span class="math display">\[h_i(t)=\psi(\boldsymbol{x}_i)h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(\psi(\boldsymbol x_i)\)</span> 是 <span class="math inline">\(\boldsymbol x_i\)</span> 的函数，<span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的解释变量的值的向量，其分量为 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span>。函数 <span class="math inline">\(\psi(\cdot)\)</span> 可以解释为解释变量向量为 <span class="math inline">\(\boldsymbol x_i\)</span> 的个体在时间 <span class="math inline">\(t\)</span> 的风险与 <span class="math inline">\(\boldsymbol x=0\)</span> 的个体的风险的相对风险。</p>
+<p>同样，由于相对风险 <span class="math inline">\(\psi(\boldsymbol x_i)\)</span> 不可能是负的，因此可以方便地将其写成 <span class="math inline">\(\exp(\eta _i)\)</span>，其中 <span class="math inline">\(\eta _i\)</span> 是 <span class="math inline">\(\boldsymbol x_i\)</span> 中 <span class="math inline">\(p\)</span> 个解释变量值的线性组合。因此</p>
+<p><span class="math display">\[\begin{aligned}\eta_i=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\end{aligned}\]</span></p>
+<p>即 <span class="math inline">\(\eta_i=\sum_{j=1}^p\beta_jx_{ji}\)</span>。用矩阵表示为 <span class="math inline">\(\eta_i=\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i\)</span>，其中 <span class="math inline">\(\boldsymbol{\beta}=(\beta_1,\beta_2,\ldots,\beta_p)'\)</span> 为模型中 <span class="math inline">\(p\)</span> 个解释变量的系数向量。量 <span class="math inline">\(\eta_i\)</span> 称为模型的线性部分 (linear component)，也称为第 <span class="math inline">\(i\)</span> 个个体的风险评分 (risk score) 或预后指数 (prognostic index)。函数 <span class="math inline">\(\psi(\boldsymbol x_i)\)</span> 还有其他可能的形式，但选择 <span class="math inline">\(\psi(\boldsymbol{x}_i)=\exp(\boldsymbol{\beta}'\boldsymbol{x}_i)\)</span> 能得出最常用的生存数据模型。那么，一般的比例风险模型为</p>
+<p><span class="math display" id="eq:3-3">\[\begin{equation}
+h_i(t)=\exp(\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi})h_0(t)
+\tag{3.3}
+\end{equation}\]</span></p>
+<p>请注意，在这个比例风险模型的线性部分中没有常数项。例如，如果包括常数项 <span class="math inline">\(\beta_0\)</span>，则可以通过将 <span class="math inline">\(h_0(t)\)</span> 除以 <span class="math inline">\(\exp (\beta_0)\)</span> 来重新缩放基线风险函数，并且常数项将抵消。式 <a href="chap3.html#eq:3-3">(3.3)</a> 中的模型也可以重新表示为</p>
+<p><span class="math display">\[\log\left\{\frac{h_i(t)}{h_0(t)}\right\}=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\]</span></p>
+<p>这给出了关于风险比对数的线性模型。</p>
+<p>Cox (1972) 提出了式 <a href="chap3.html#eq:3-3">(3.3)</a> 中的模型，该模型没有对基线风险函数 <span class="math inline">\(h_0(t)\)</span> 的实际形式做出任何假设，因此该模型称为 Cox 回归模型或 Cox 比例风险模型。由于未对生存时间的概率分布做出特定的假设，Cox 回归模型是一个半参数模型，<a href="chap3.html#sec3-3">3.3</a> 节将展示如何估计该模型中的 <span class="math inline">\(\beta\)</span> 系数。当然，我们往往还需要估计 <span class="math inline">\(h_0(t)\)</span> 本身，我们将在 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节中看到如何做到这一点。关于基线风险函数 <span class="math inline">\(h_0(t)\)</span> 的形式做出特定假设的模型将在第 <a href="chap5.html#chap5">5</a> 章和第 <a href="chap6.html#chap6">6</a> 章中描述。</p>
+</div>
+</div>
+<div id="sec3-2" class="section level2" number="3.2">
+<h2>
+<span class="header-section-number">3.2</span> 模型的线性部分<a class="anchor" aria-label="anchor" href="#sec3-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>风险函数可能依赖于两种类型的 variables，即 variates 和因素。variate （以下称为变量）是一种 variable，它采用的数值通常是连续的测量尺度，如年龄或收缩压。因素是另一种 variable，它取一组有限的值，这些值称为因素的水平。例如，性别是一个有两个水平的因素，肿瘤类型也可能是一个因素，其水平对应于不同的组织，如鳞状细胞、腺细胞或小细胞。我们现在考虑如何将变量、因素以及结合变量和因素的项组合到 Cox 回归模型的线性部分中。</p>
+<div id="sec3-2-1" class="section level3" number="3.2.1">
+<h3>
+<span class="header-section-number">3.2.1</span> 纳入一个变量<a class="anchor" aria-label="anchor" href="#sec3-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>变量，无论是单独的还是组合的，都可以很容易地纳入 Cox 回归模型中。每个变量都以相应的 <span class="math inline">\(\beta\)</span> 系数出现在模型中。作为说明，请考虑风险函数取决于两个变量 <span class="math inline">\(X_1\)</span> 和 <span class="math inline">\(X_2\)</span> 的情况。第 <span class="math inline">\(i\)</span> 个个体的这些变量的值分别为 <span class="math inline">\(x_{1i}\)</span> 和 <span class="math inline">\(x_{2i}\)</span>，<span class="math inline">\(n\)</span> 个个体中第 <span class="math inline">\(i\)</span> 个个体的 Cox 回归模型可写为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\beta_1x_{1i}+\beta_2x_{2i})h_0(t)\end{aligned}\]</span></p>
+<p>在这样的模型中，基线风险函数 <span class="math inline">\(h_0(t)\)</span> 是模型中包含的所有变量均为 0 的个体的风险函数。</p>
+</div>
+<div id="sec3-2-2" class="section level3" number="3.2.2">
+<h3>
+<span class="header-section-number">3.2.2</span> 纳入一个因素<a class="anchor" aria-label="anchor" href="#sec3-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设要建立一个风险函数仅依赖于单一因素 <span class="math inline">\(A\)</span> 的模型，其中 <span class="math inline">\(A\)</span> 有 <span class="math inline">\(a\)</span> 个水平。那么，对于 <span class="math inline">\(A\)</span> 的水平为 <span class="math inline">\(j\)</span> 的个体，模型需纳入 <span class="math inline">\(\alpha_j\)</span> 这个项，它代表该因素水平 <span class="math inline">\(j\)</span> 的效应。<span class="math inline">\(\alpha_1,\alpha_2,\ldots,\alpha_a\)</span> 称为因素 <span class="math inline">\(A\)</span> 的主效应 (main effects). 根据 Cox 回归模型，<span class="math inline">\(A\)</span> 的水平为 <span class="math inline">\(j\)</span> 的个体的风险函数为 <span class="math inline">\(\exp(\alpha_j)h_0(t)\)</span>。现在，基线风险函数 <span class="math inline">\(h_0(t)\)</span> 定义为所有解释变量值均为 0 的个体的风险。为了与这一定义保持一致，其中一个 <span class="math inline">\(\alpha_j\)</span> 必须设为零。一种方法是采用约束条件 <span class="math inline">\(\alpha_1 = 0\)</span>，这对应于将基线风险视为 <span class="math inline">\(A\)</span> 处于第一个水平的个体的风险。这将是后续分析中使用的约束条件。</p>
+<p>通过为每个因素定义<strong>指示变量</strong>或<strong>虚拟变量</strong> (indicator or dummy variable)，可以将包含与因素相对应的项的模型表示为解释变量的线性组合。当使用不允许直接拟合因素的计算机软件进行生存分析时，将需要这个步骤。</p>
+<p>如果因素 <span class="math inline">\(A\)</span> 的第一个水平设置为零，此时它成为该因素的基线水平，可以通过定义 <span class="math inline">\(a−1\)</span> 个指示变量 <span class="math inline">\(X_2,X_3,\ldots,X_a\)</span> 以将项 <span class="math inline">\(\alpha_j\)</span> 纳入模型。这些指示变量的取值如表 3.1 所示。</p>
+<details><summary><font color="#8B2232">表 3.1</font>
+</summary><img src="figure/table%203.1.png#center" style="width:80.0%"></details><p><br>
+通过包含 <span class="math inline">\(a − 1\)</span> 个解释变量 <span class="math inline">\(X_2,X_3,\ldots,X_a\)</span> 以及系数 <span class="math inline">\(\alpha_2,\alpha_3,\ldots,\alpha_a\)</span>，可以将项 <span class="math inline">\(\alpha_j\)</span> 纳入 Cox 回归模型的线性部分中。换句话说，模型中的项 <span class="math inline">\(\alpha_j\)</span> 被替换为 <span class="math inline">\(\alpha_{2}x_{2}+\alpha_{3}x_{3}+\cdots+\alpha_{a}x_{a}\)</span>，其中 <span class="math inline">\(x_j\)</span> 是 <span class="math inline">\(A\)</span> 处于第 <span class="math inline">\(j\)</span> 个水平的个体的 <span class="math inline">\(X_j\)</span> 值，<span class="math inline">\(j = 2, 3,...,a\)</span>。那么有 <span class="math inline">\(a−1\)</span> 个参数与因素 <span class="math inline">\(A\)</span> 的主效应相关，并且称 <span class="math inline">\(A\)</span> 具有 <span class="math inline">\(a − 1\)</span> 个自由度。</p>
+</div>
+<div id="sec3-2-3" class="section level3" number="3.2.3">
+<h3>
+<span class="header-section-number">3.2.3</span> 纳入一个交互作用<a class="anchor" aria-label="anchor" href="#sec3-2-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>当模型中需要包含对应于多个因素的项时，可以像上面展示的那样，为每个因素定义一组指示变量。在这种情况下，在模型中纳入对应于两个或更多因素水平组合的个体效应的项也可能是合适的。这种效应称为<strong>交互作用</strong> (interactions).</p>
+<p>例如，假设这两个因素是患者的性别和肿瘤分级。如果肿瘤分级对不同性别患者死亡风险的效应不同，我们可以说这两个因素之间存在交互作用。风险函数将取决于这两个因素水平的组合。</p>
+<p>一般来说，如果 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 是两个因素，并且死亡风险取决于 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 水平的组合，则称 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 发生了交互 (interact). 如果 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 分别具有 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(b\)</span> 个水平，则表示这两个因素之间交互作用的项用 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 表示，其中 <span class="math inline">\(j = 1, 2,...,a\)</span> 且 <span class="math inline">\(k = 1, 2,...,b\)</span>。</p>
+<p>在统计建模中，只能通过将交互作用项添加到已包含相应主效应的模型中来研究交互作用的效应。如果从模型中排除 <span class="math inline">\(\alpha_j\)</span> 或 <span class="math inline">\(\beta_k\)</span>，则项 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 表示一个因素嵌套 (nested) 在另一个因素中的效应。例如，如果模型中包含 <span class="math inline">\(\alpha_j\)</span>，但不包含 <span class="math inline">\(\beta_k\)</span>，则 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 是嵌套在 <span class="math inline">\(A\)</span> 中的 <span class="math inline">\(B\)</span> 的效应。如果 <span class="math inline">\(\alpha_j\)</span> 和 <span class="math inline">\(\beta_k\)</span> 均被排除，则项 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 表示 <span class="math inline">\(A\)</span> 的水平 <span class="math inline">\(i\)</span> 和 <span class="math inline">\(B\)</span> 的水平 <span class="math inline">\(j\)</span> 的组合对响应变量的效应。这意味着只有当 <span class="math inline">\(\alpha_j\)</span> 和 <span class="math inline">\(\beta_k\)</span> 同时包含在模型中时（这对应于 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 的主效应），<span class="math inline">\((\alpha\beta)_{jk}\)</span> 才能被解释为交互效应。当我们在 <a href="chap3.html#sec3-6">3.6</a> 节中考虑模型构建策略时，我们会回到这一点。</p>
+<p>为了将项 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 包含在模型中，需要计算与主效应相关的指示变量的乘积。例如，如果 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 分别有 2 个和 3 个水平，则指示变量 <span class="math inline">\(U_2\)</span> 和 <span class="math inline">\(V_2,V_3\)</span> 的定义如表 3.2 所示。</p>
+<details><summary><font color="#8B2232">表 3.2</font>
+</summary><img src="figure/table%203.2.png#center" style="width:80.0%"></details><p><br>
+令 <span class="math inline">\(u_j\)</span> 和 <span class="math inline">\(v_k\)</span> 分别为给定个体的 <span class="math inline">\(U_j\)</span> 和 <span class="math inline">\(V_k\)</span> 的值，其中 <span class="math inline">\(j = 2, k = 2, 3\)</span>。然后通过在模型中包含由 <span class="math inline">\(U_j\)</span> 和 <span class="math inline">\(V_k\)</span> 的乘积形成的变量来拟合项 <span class="math inline">\((\alpha\beta)_{jk}\)</span>。给定个体的乘积的相应值是 <span class="math inline">\(u_jv_k\)</span>。该乘积的系数表示为 <span class="math inline">\((\alpha\beta)_{jk}\)</span>，因此项 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 拟合为</p>
+<p><span class="math display">\[(\alpha\beta)_{22}u_2v_2+(\alpha\beta)_{23}u_2v_3\]</span></p>
+<p>因此，有两个与 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 交互作用相关的参数。一般来说，如果 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 分别具有 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(b\)</span> 个水平，则双因素交互作用 <span class="math inline">\(AB\)</span> 有 <span class="math inline">\((a − 1)(b − 1)\)</span> 个与其相关的参数，换句话说 <span class="math inline">\(AB\)</span> 有 <span class="math inline">\((a − 1)(b − 1)\)</span> 个自由度。此外，只要 <span class="math inline">\(A\)</span> 或 <span class="math inline">\(B\)</span> 处于第一个水平，即 <span class="math inline">\(j = 1\)</span> 或 <span class="math inline">\(k = 1\)</span> 时，项 <span class="math inline">\((\alpha\beta)_{jk}\)</span> 就等于 0.</p>
+</div>
+<div id="sec3-2-4" class="section level3" number="3.2.4">
+<h3>
+<span class="header-section-number">3.2.4</span> 纳入一个混合项<a class="anchor" aria-label="anchor" href="#sec3-2-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>模型中可能需要的另一种项是由因素和变量构成的<strong>混合项</strong> (mixed term). 当模型中某个变量的系数可能因因素的不同水平而有所差异时，会使用这种类型的项。例如，考虑一个避孕试验，其中对闭经期开始的时间（即长时间没有月经出血）进行建模。闭经的风险可能与女性的体重有关，但该变量的系数可能因女性以往怀孕次数的不同水平而有所不同。</p>
+<p>变量 <span class="math inline">\(X\)</span> 的系数与因素 <span class="math inline">\(A\)</span> 水平之间的依赖关系可以通过在 Cox 回归模型的线性部分中包含项 <span class="math inline">\(\alpha_jx\)</span> 来表示，其中 <span class="math inline">\(x\)</span> 是因素 <span class="math inline">\(A\)</span> 处于第 <span class="math inline">\(j\)</span> 水平的某个特定个体的 <span class="math inline">\(X\)</span> 值，<span class="math inline">\(j = 1, 2,...,a\)</span>。为了包含这样的项，我们为因素 <span class="math inline">\(A\)</span> 定义指示变量 <span class="math inline">\(U_j\)</span>，并将这些变量与每个个体的 <span class="math inline">\(X\)</span> 值相乘。乘积 <span class="math inline">\(U_jX\)</span> 的结果值为 <span class="math inline">\(u_jx\)</span>，而模型中 <span class="math inline">\(u_jx\)</span> 的系数为 <span class="math inline">\(\alpha_j\)</span>，其中 <span class="math inline">\(j\)</span> 为因素 <span class="math inline">\(A\)</span> 水平的索引。</p>
+<p>如果使用与先前讨论中相同的指示变量定义，那么 <span class="math inline">\(\alpha_1\)</span>（即因素 <span class="math inline">\(A\)</span> 为第一个水平的个体的 <span class="math inline">\(X\)</span> 的系数）将为零。因此，必须将变量 <span class="math inline">\(X\)</span> 以及乘积同时包含在模型中，否则无法对因素 <span class="math inline">\(A\)</span> 第一水平的个体对 <span class="math inline">\(X\)</span> 的依赖关系进行建模。一个例子可以使这一点更加清晰。</p>
+<p>假设一项研究中共有九个个体，每个个体的变量 <span class="math inline">\(X\)</span> 的值以及因素 <span class="math inline">\(A\)</span> 的水平都已被记录。设 <span class="math inline">\(A\)</span> 有三个水平，其中前三个个体的 <span class="math inline">\(A\)</span> 处于第一水平，接下来三个个体的 <span class="math inline">\(A\)</span> 处于第二水平，最后三个个体的 <span class="math inline">\(A\)</span> 处于第三水平。为了对变量 <span class="math inline">\(X\)</span> 的系数与因素 <span class="math inline">\(A\)</span> 的水平之间的依赖关系进行建模，我们定义了两个指示变量 <span class="math inline">\(U_2\)</span> 和 <span class="math inline">\(U_3\)</span>，如表 3.3 所示。然后，将形成的解释变量 <span class="math inline">\(U_2X\)</span> 和 <span class="math inline">\(U_3X\)</span>（在表 3.3 的最后两列中给出）与变量 <span class="math inline">\(X\)</span> 一起包含在模型的线性部分中。</p>
+<details><summary><font color="#8B2232">表 3.3</font>
+</summary><img src="figure/table%203.3.png#center" style="width:80.0%"></details><p><br>
+设乘积 <span class="math inline">\(U_2X\)</span> 和 <span class="math inline">\(U_3X\)</span> 的值的系数分别为 <span class="math inline">\(\alpha^\prime_2\)</span> 和 <span class="math inline">\(\alpha^\prime_3\)</span>，设变量 <span class="math inline">\(X\)</span> 的值在模型中的系数为 <span class="math inline">\(\beta\)</span>。那么，模型包含项 <span class="math inline">\(\beta x + \alpha^\prime_2(u_2x) + \alpha^\prime_3(u_3x)\)</span>。从表 3.3 中可以看出，对于因素 <span class="math inline">\(A\)</span> 第一水平的个体，<span class="math inline">\(u_2 = 0\)</span> 且 <span class="math inline">\(u_3 = 0\)</span>，因此这些个体的 <span class="math inline">\(x\)</span> 的系数仅为 <span class="math inline">\(\beta\)</span>。对于因素 <span class="math inline">\(A\)</span> 第二水平的个体，<span class="math inline">\(u_2 = 1\)</span> 且 <span class="math inline">\(u_3 = 0\)</span>，<span class="math inline">\(x\)</span> 的系数则为 <span class="math inline">\(\beta + \alpha^\prime_2\)</span>。类似地，在因素 <span class="math inline">\(A\)</span> 的第三水平，<span class="math inline">\(u_2 = 0\)</span> 且 <span class="math inline">\(u_3 = 1\)</span>，<span class="math inline">\(x\)</span> 的系数则为 <span class="math inline">\(\beta + \alpha^\prime_3\)</span>。</p>
+<p>请注意，如果从模型中省略项 <span class="math inline">\(\beta x\)</span> ，个体 1, 2 和 3 的 <span class="math inline">\(x\)</span> 的系数将为零，那么对于因素 <span class="math inline">\(A\)</span> 第一水平的个体，就没有关于风险函数和变量 <span class="math inline">\(X\)</span> 之间关系的信息。</p>
+<p>通过以不同的方式定义指示变量可以避免前面段落中描述的操作。如果因素 <span class="math inline">\(A\)</span> 有 <span class="math inline">\(a\)</span> 个水平，并且希望在模型中包含项 <span class="math inline">\(\alpha_jx\)</span>，而不一定包含项 <span class="math inline">\(\beta x\)</span>，那么可以为 <span class="math inline">\(A\)</span> 定义指示变量 <span class="math inline">\(Z_1, Z_2,...,Z_a\)</span>，其中 <span class="math inline">\(Z_j\)</span> 在 <span class="math inline">\(A\)</span> 第 <span class="math inline">\(j\)</span> 水平时为 1，否则为 0. 对应于个体的这些乘积 <span class="math inline">\(z_1x, z_2x, ..., z_ax\)</span> 及其系数 <span class="math inline">\(\alpha_1, \alpha_2,...,\alpha_a\)</span> 一起纳入模型。这些是在 <span class="math inline">\(A\)</span> 每个水平下 <span class="math inline">\(x\)</span> 的系数。</p>
+<p>现在，如果变量 <span class="math inline">\(X\)</span> 与 <span class="math inline">\(a\)</span> 个形如 <span class="math inline">\(Z_jX\)</span> 的乘积一起纳入模型，那么将有 <span class="math inline">\(a+1\)</span> 个项与 <span class="math inline">\(a\)</span> 个系数相对应。因此，不可能获得这些 <span class="math inline">\(\alpha\)</span> 系数的唯一估计值，并且该模型是过度参数化的 (overparameterised). 可以通过强制 <span class="math inline">\(a+1\)</span> 个系数中的一个为零来处理这种过度参数化问题。特别地，取 <span class="math inline">\(\alpha_1 = 0\)</span> 将相当于对指示变量进行重新定义：取 <span class="math inline">\(Z_1\)</span> 为零。这将得到与已经讨论过的模型相同的公式。</p>
+<p>在我们了解了如何拟合 Cox 回归模型之后，这些思想在实际数据集分析中的应用将在 <a href="chap3.html#sec3-4">3.4</a> 节中进行说明。</p>
+</div>
+</div>
+<div id="sec3-3" class="section level2" number="3.3">
+<h2>
+<span class="header-section-number">3.3</span> 拟合 Cox 回归模型<a class="anchor" aria-label="anchor" href="#sec3-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>为一组生存数据拟合由式 <a href="chap3.html#eq:3-3">(3.3)</a> 定义的 Cox 回归模型，需要估计模型线性部分的解释变量 <span class="math inline">\(X_1,X_2,...,X_p\)</span> 的未知系数 <span class="math inline">\(\beta_1,\beta_2,...,\beta_p\)</span>。同时，基线风险函数 <span class="math inline">\(h_0(t)\)</span> 也可能需要进行估计。事实证明，模型的这两个部分可以分别进行估计。首先估计这些 <span class="math inline">\(\beta\)</span>，然后使用这些估计来构建基线风险函数的估计。这是一个重要的结果，因为这意味着为了对 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 对相对风险 <span class="math inline">\(h_i(t)/h_0(t)\)</span> 的效应进行推断，我们不需要估计 <span class="math inline">\(h_0(t)\)</span>。因此，<span class="math inline">\(h_0(t)\)</span> 的估计方法将推迟到 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节。</p>
+<p>Cox 回归模型中的 <span class="math inline">\(\beta\)</span> 系数是模型中的未知参数，可以使用最大似然法 (method of maximum likelihood) 进行估计。为了操作这种方法，我们首先获得样本数据的似然 (likelihood). 这是观测数据的联合概率，被视为假设模型中未知参数的函数。对于 Cox 回归模型，这是模型线性部分中生存时间和未知 <span class="math inline">\(\beta\)</span> 参数的函数。<span class="math inline">\(\beta\)</span> 的估计是根据观测数据最有可能 (most likely) 得到的值。因此，这些最大似然估计是使似然函数最大化的值。从计算的角度来看，最大化似然函数的对数更方便。此外，可以从对数似然函数的二阶导数获得最大似然估计的方差的近似值。这里不提供细节，但附录 <a href="A.html#A">A</a> 包含了最大似然估计理论的相关结果的总结。</p>
+<p>假设有 <span class="math inline">\(n\)</span> 个个体的可用数据，其中有 <span class="math inline">\(r\)</span> 个不同的死亡时间和 <span class="math inline">\(n−r\)</span> 个右删失生存时间。目前，我们假设在每个死亡时间只有一个人死亡，因此数据中不存在结 (ties). 结的处理将在 <a href="chap3.html#sec3-3-2">3.3.2</a> 节中进行讨论。<span class="math inline">\(r\)</span> 个有序死亡时间表示为 <span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;\cdots&lt;t_{(r)}\)</span>，因此 <span class="math inline">\(t_{(j)}\)</span> 是第 <span class="math inline">\(j\)</span> 个有序死亡时间。在时间 <span class="math inline">\(t_{(j)}\)</span> 处于风险的个体集合由 <span class="math inline">\(R(t_{(j)})\)</span> 表示，因此 <span class="math inline">\(R(t_{(j)})\)</span> 是在 <span class="math inline">\(t_{(j)}\)</span> 之前的时刻活着且未删失的个体的集合。量 <span class="math inline">\(R(t_{(j)})\)</span> 称为风险集 (risk set).</p>
+<p>Cox (1972) 表明，与式 <a href="chap3.html#eq:3-3">(3.3)</a> 中的模型相关的似然函数由下式给出</p>
+<p><span class="math display" id="eq:3-4">\[\begin{equation}
+L(\boldsymbol{\beta})=\prod_{j=1}^r\frac{\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_{(j)})}{\sum_{l\in R(t_{(j)})}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_l)}
+\tag{3.4}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{x}_{(j)}\)</span> 是在第 <span class="math inline">\(j\)</span> 个有序死亡时间 <span class="math inline">\(t_{(j)}\)</span> 处死亡的个体的协变向量 (vector of covarites). 该似然函数分母中的求和运算是对在时间 <span class="math inline">\(t_{(j)}\)</span> 处于风险中的所有个体的 <span class="math inline">\(\exp(\boldsymbol \beta^\prime \boldsymbol x)\)</span> 进行的。请注意，乘积运算是对所有有死亡时间记录的个体进行的。生存时间删失的个体对对数似然函数的分子没有贡献，但它们参与了发生在删失之前的死亡时间风险集的求和运算。</p>
+<p>所得似然函数不是真正的似然，因为它没有直接使用实际的删失和未删失的生存时间。因此，它称为<strong>偏似然函数</strong> (partial likelihood function). 式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的似然函数仅取决于死亡时间的排序，因为这决定了每个死亡时间的风险集。因此，关于解释变量对风险函数效应的推断仅取决于生存时间的秩次。</p>
+<p>现在假设数据由 <span class="math inline">\(n\)</span> 个生存时间组成，用 <span class="math inline">\(t_1, t_2,...,t_n\)</span> 来表示，<span class="math inline">\(\delta_i\)</span> 是一个事件指示符，如果第 <span class="math inline">\(i\)</span> 个生存时间 <span class="math inline">\(t_i, i = 1, 2,...,n\)</span> 是右删失的，则 <span class="math inline">\(\delta_i\)</span> 为 0，否则为 1。式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的偏似然函数可以表示为以下形式</p>
+<p><span class="math display" id="eq:3-5">\[\begin{equation}
+\prod_{i=1}^n\left\{\frac{\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)}{\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_l)}\right\}^{\delta_i}
+\tag{3.5}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(R(t_{(j)})\)</span> 是在时间 <span class="math inline">\(t_i\)</span> 处的风险集。根据式 <a href="chap3.html#eq:3-5">(3.5)</a> ，相应的<strong>偏对数似然函数</strong> (partial log-likelihood function) 由下式给出</p>
+<p><span class="math display" id="eq:3-6">\[\begin{equation}
+\log L(\boldsymbol{\beta})=\sum_{i=1}^n\delta_i\left\{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i-\log\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_l)\right\}
+\tag{3.6}
+\end{equation}\]</span></p>
+<p>Cox 回归模型中 <span class="math inline">\(\boldsymbol \beta\)</span> 参数的最大似然估计可以通过使用数值方法最大化此对数似然函数来得到。这种最大化通常是使用下面 <a href="chap3.html#sec3-3-3">3.3.3</a> 节描述的 Newton-Raphson 程序来完成的。</p>
+<p>幸运的是，大多数用于生存分析的统计软件都可以拟合 Cox 回归模型。通常软件还会给出拟合模型中参数估计的标准误。</p>
+<p><a href="chap3.html#sec3-3-1">3.3.1</a> 节给出了使用式 <a href="chap3.html#eq:3-4">(3.4)</a> 作为似然函数的理由以及似然函数结构的进一步细节。然后，<a href="chap3.html#sec3-3-2">3.3.2</a> 节讨论了绑定生存时间的处理，<a href="chap3.html#sec3-3-3">3.3.3</a> 节概述了 Newton-Raphson 程序。这三个部分可以省略而不失阅读的连贯性。</p>
+<div id="sec3-3-1" class="section level3" number="3.3.1">
+<h3>
+<span class="header-section-number">3.3.1</span> 模型的似然函数<a class="anchor" aria-label="anchor" href="#sec3-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在 Cox 回归模型中，第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol \beta\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量系数的向量，其值为 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span>。第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(h_0(t)\)</span> 是未指定形式的基线风险函数。</p>
+<p>构建该模型的似然函数的思想是，连续死亡时间之间的区间并不提供关于解释变量对死亡风险效应的信息。这是因为基线风险函数具有任意形式，因此可以想象，在没有死亡的那些时间区间内，<span class="math inline">\(h_0(t)\)</span> 以及 <span class="math inline">\(h_i(t)\)</span> 都是零。这反过来意味着这些区间不提供有关 <span class="math inline">\(\beta\)</span> 参数值的任何信息。因此，我们考虑第 <span class="math inline">\(i\)</span> 个个体在某个时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的概率，前提是 <span class="math inline">\(t_{(j)}\)</span> 是 <span class="math inline">\(r\)</span> 个死亡时间 <span class="math inline">\(t_{(1)},t_{(2)},\ldots,t_{(r)}\)</span> 中的一个。如果将在 <span class="math inline">\(t_{(j)}\)</span> 时死亡的个体的解释变量值表示为 <span class="math inline">\(\boldsymbol x_{(j)}\)</span>，则该概率为</p>
+<p><span class="math display" id="eq:3-7">\[\begin{equation}
+\text{P}(\text{变量为 }\boldsymbol x_{(j)}\text{ 的个体死于 }t_{(j)}\mid t_{(j)}\text{ 发生一个死亡})
+\tag{3.7}
+\end{equation}\]</span></p>
+<p>而在事件 <span class="math inline">\(B\)</span> 已发生的条件下，事件 <span class="math inline">\(A\)</span> 发生的概率由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(A\mid B)=\mathrm{P}(A\text{ and }B)/\mathrm{P}(B)\end{aligned}\]</span></p>
+<p>因此式 <a href="chap3.html#eq:3-7">(3.7)</a> 成为</p>
+<p><span class="math display" id="eq:3-8">\[\begin{equation}
+\frac{\mathrm{P}(\text{变量为 }\boldsymbol x_{(j)}\text{ 的个体死于 }t_{(j)})}{\mathrm{P}(t_{(j)}\text{ 发生一个死亡})}
+\tag{3.8}
+\end{equation}\]</span></p>
+<p>假设死亡时间彼此独立，因此该表达式的分母是在时间 <span class="math inline">\(t_{(j)}\)</span> 时所有有死亡风险的个体的死亡概率之和。如果这些个体由 <span class="math inline">\(l\)</span> 索引，其中 <span class="math inline">\(R(t_{(j)})\)</span> 表示在时间 <span class="math inline">\(t_{(j)}\)</span> 处于风险的个体集，则式 <a href="chap3.html#eq:3-8">(3.8)</a> 变为</p>
+<p><span class="math display" id="eq:3-9">\[\begin{equation}
+\frac{\mathrm{P}\left(\text{变量为 }\boldsymbol x_{(j)}\text{ 的个体死于 }t_{(j)}\right)}{\sum_{l\in R(t_{(j)})}\mathrm{P}\left(\text{个体 }l\text{ 死于 }t_{(j)}\right)}
+\tag{3.9}
+\end{equation}\]</span></p>
+<p>现在以区间 <span class="math inline">\((t_{(j)},t_{(j)}+\delta t)\)</span> 中的死亡概率代替式 <a href="chap3.html#eq:3-9">(3.9)</a> 中时间 <span class="math inline">\(t_{(j)}\)</span> 处的死亡概率，再将分子和分母同时除以 <span class="math inline">\(\delta t\)</span>，我们得到</p>
+<p><span class="math display">\[\frac{\mathrm{P}\left(\text{变量为 }\boldsymbol x_{(j)}\text{ 的个体死于 }(t_{(j)},t_{(j)}+\delta t)\right)\big/\delta t}{\sum_{l\in R(t_{(j)})}\mathrm{P}\left(\text{个体 }l\text{ 死于 }(t_{(j)},t_{(j)}+\delta t)\right)\big/\delta t}\]</span></p>
+<p>当 <span class="math inline">\(\delta t\)</span> 趋近于 0 时，这个表达式的极限值就是式 <a href="chap3.html#eq:3-8">(3.8)</a> 中概率的比值。根据式 <a href="chap1.html#eq:1-3">(1.3)</a> ，这个极限也是时间 <span class="math inline">\(t_{(j)}\)</span> 时相应死亡风险的比值，即</p>
+<p><span class="math display">\[\frac{\text{变量为 }\boldsymbol x_{(j)}\text{ 的个体死于 }t_{(j)}\text{ 的风险}}{\sum_{l\in R(t_{(j)})}\{\text{个体 }l\text{ 死于 }t_{(j)}\text{ 的风险}\}}\]</span></p>
+<p>如果在 <span class="math inline">\(t_{(j)}\)</span> 死亡是第 <span class="math inline">\(i\)</span> 个个体，则该表达式分子中的风险函数可以写成 <span class="math inline">\(h_i(t_{(j)})\)</span>。同样，分母是在时间 <span class="math inline">\(t_{(j)}\)</span> 时所有有死亡风险的个体的死亡风险的总和。这是在时间 <span class="math inline">\(t_{(j)}\)</span> 的风险集 <span class="math inline">\(R(t_{(j)})\)</span> 中的所有个体的 <span class="math inline">\(h_l(t_{(j)})\)</span> 的总和。因此，式 <a href="chap3.html#eq:3-7">(3.7)</a> 中的条件概率变为</p>
+<p><span class="math display">\[\frac{h_i(t_{(j)})}{\sum_{l\in R(t_{(j)})}h_l(t_{(j)})}\]</span></p>
+<p>在使用式 <a href="chap3.html#eq:3-8">(3.8)</a> 时，分子和分母中的基线风险函数被抵消，剩下</p>
+<p><span class="math display">\[\frac{\exp(\boldsymbol{\beta'x}_{(j)})}{\sum_{l\in R(t_{(j)})}\exp(\boldsymbol{\beta'x}_l)}\]</span></p>
+<p>最后，取这些条件概率关于 <span class="math inline">\(r\)</span> 个死亡时间的乘积，得到式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的偏似然函数。</p>
+<p>为了进一步阐明偏似然的结构，考虑由五个个体构成的生存数据样本，编号从 1 到 5. 生存数据如图 3.1 所示。个体 2 和 5 的生存时间是右删失的，并且三个有序的死亡时间表示为 <span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;t_{(3)}\)</span>。那么，<span class="math inline">\(t_{(1)}\)</span> 是个体 3 的死亡时间，<span class="math inline">\(t_{(2)}\)</span> 是个体 1 的死亡时间并且 <span class="math inline">\(t_{(1)}\)</span> 是个体 4 的死亡时间。</p>
+<details><summary><font color="#8B2232">图 3.1</font>
+</summary><img src="figure/figure%203.1.png#center" style="width:80.0%"></details><p><br>
+在三个有序死亡时间中，在每个死亡时间下的风险集由在每个死亡时间之前活着且未删失的个体组成。因此，风险集 <span class="math inline">\(R(t_{(1)})\)</span> 由所有 5 个个体组成，风险集 <span class="math inline">\(R(t_{(2)})\)</span> 由个体 1, 2 和 4 组成，而风险集 <span class="math inline">\(R(t_{(3)})\)</span> 仅包括个体 4. 现在记 <span class="math inline">\(\psi(i)=\exp(\boldsymbol{\beta'x}_i),i=1,2,\ldots,5\)</span>，其中 <span class="math inline">\(\boldsymbol{x}_i\)</span> 为第 <span class="math inline">\(i\)</span> 个个体的解释变量。时间 <span class="math inline">\(t_{(1)},t_{(2)}\)</span> 和 <span class="math inline">\(t_{(3)}\)</span> 处的偏似然函数的分子分别为 <span class="math inline">\(\psi(3),\psi(2)\)</span> 和 <span class="math inline">\(\psi(4)\)</span>，因为个体 3, 1 和 4 分别死于在这三个有序的死亡时间。跨这三个死亡时间的偏似然函数为</p>
+<p><span class="math display">\[\begin{aligned}\frac{\psi(3)}{\psi(1)+\psi(2)+\psi(3)+\psi(4)+\psi(5)}\times\frac{\psi(1)}{\psi(1)+\psi(2)+\psi(4)}\times\frac{\psi(4)}{\psi(4)}\end{aligned}\]</span></p>
+<p>结果表明，在最大似然估计中使用的标准结果无需修改即可直接应用于最大偏似然估计。具体来说，附录 <a href="A.html#A">A</a> 中给出的 <span class="math inline">\(\beta\)</span> 估计的方差-协方差矩的结果可以使用，与似然比检验相关的分布结果也可以使用，这些将在 <a href="chap3.html#sec3-5">3.5</a> 节中讨论。</p>
+</div>
+<div id="sec3-3-2" class="section level3" number="3.3.2">
+<h3>
+<span class="header-section-number">3.3.2</span> 结的处理<a class="anchor" aria-label="anchor" href="#sec3-3-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>生存数据的 Cox 回归模型假设风险函数是连续的，在这个假设下，<strong>生存时间结</strong> (tied survival times) 是不可能存在的。当然，生存时间通常记录到最接近的天、月或年，因此这种四舍五入的过程可能会导致生存时间结的出现。事实上，第一章中的<a href="chap1.html#exm:ex1-2">示例 1.2</a>, 1.3 和 1.4 都包含了<strong>观测结</strong> (tied observations).</p>
+<p>除了可能在某特定时间有多个死亡外，在死亡时间可能还存在一个或多个删失观测值。当在某特定时间同时存在删失和死亡时，我们假设删失发生在所有死亡之后。需要考虑如下问题：哪些个体应被纳入该死亡时间的风险集，并且使用式 <a href="chap3.html#eq:3-4">(3.4)</a> 计算似然函数时，如何处理<strong>删失观测结</strong> (tied censored observations) 以防止带来进一步的计算困难。因此，我们需要考虑在拟合 Cox 回归模型时如何处理生存时间结。</p>
+<p>为了处理观测结，必须对式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的似然函数进行某种修改。Kalbfleisch and Prentice (2002) 已经给出了存在观测结时合适的似然函数。然而，该似然函数的形式非常复杂，这里不再赘述。此外，该似然函数的计算可能非常耗时，尤其是在一个或多个死亡时间存在大量结的情况时。幸运的是，似然函数有一些近似计算方法，它们在计算上比精确方法更具优势。但在给出这些近似方法之前，还需要引入一些额外的记号。</p>
+<p>设 <span class="math inline">\(\boldsymbol{s}_{j}\)</span> 为在第 <span class="math inline">\(j\)</span> 个死亡时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的个体的 <span class="math inline">\(p\)</span> 个协变向量之和，其中 <span class="math inline">\(j = 1, 2,...,r\)</span>。如果在 <span class="math inline">\(t_{(j)}\)</span> 有 <span class="math inline">\(d_j\)</span> 个死亡事件，<span class="math inline">\(\boldsymbol{s}_{j}\)</span> 的第 <span class="math inline">\(h\)</span> 个元素为 <span class="math inline">\(s_{{h}j}=\sum_{{k}=1}^{{d}_j}x_{{h}jk}\)</span>，其中 <span class="math inline">\(x_{hjk}\)</span> 是死于第 <span class="math inline">\(j\)</span> 个死亡时间 <span class="math inline">\(t_{(j)}\)</span> 的 <span class="math inline">\(d_j\)</span> 个个体中第 <span class="math inline">\(k\)</span> 个个体的第 <span class="math inline">\(h\)</span> 个解释变量的值，其中 <span class="math inline">\(h = 1, 2,...,p,k = 1, 2,...,d_j,j = 1, 2,...,r\)</span>。</p>
+<p>似然函数最简单的近似是由 Breslow (1974) 提出的近似似然函数</p>
+<p><span class="math display" id="eq:3-10">\[\begin{equation}
+\prod_{j=1}^r\frac{\exp(\boldsymbol{\beta's}_j)}{\left\{\sum_{l\in R(t_{(j)})}\exp(\boldsymbol{\beta'x}_l)\right\}^{d_j}}
+\tag{3.10}
+\end{equation}\]</span></p>
+<p>在这个近似中，我们认为在时间 <span class="math inline">\(t_{(j)}\)</span> 发生的 <span class="math inline">\(d_j\)</span> 个死亡是不同的且按顺序发生的。然后，将所有可能的死亡序列的概率求和，以得到式 <a href="chap3.html#eq:3-10">(3.10)</a> 中的似然函数。Peto (1972) 也提出了类似的近似方法，区别只在一个比例常数。该似然函数计算起来相当直接，当任何一个死亡时间的观测结数量不是太大时，它是一个充分的近似。出于这些原因，<strong>这种方法通常是用于生存分析统计软件处理结的默认程序</strong>，会在本书中给出的示例中使用。</p>
+<p>Efron (1977) 提出</p>
+<p><span class="math display" id="eq:3-11">\[\begin{equation}
+\prod_{j=1}^r\frac{\exp(\boldsymbol{\beta}^{\prime}s_j)}{\prod_{k=1}^{d_j}\left[\sum_{l\in R(t_{(j)})}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_l)-(k-1)d_j^{-1}\sum_{l\in D(t_{(j)})}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_l)\right]}
+\tag{3.11}
+\end{equation}\]</span></p>
+<p>作为 Cox 回归模型的近似似然函数，其中 <span class="math inline">\(D(t_{(j)})\)</span> 是在时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的所有个体的集合。这比 Breslow 的近似更接近于合适的似然函数，尽管这两种近似在实践中往往给出相似的结果。</p>
+<p>Cox (1972) 建议如下近似</p>
+<p><span class="math display" id="eq:3-12">\[\begin{equation}
+\prod_{j=1}^r\frac{\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{s}_j)}{\sum_{l\in R(t_{(j)};d_j)}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{s}_l)}
+\tag{3.12}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(R(t_{(j)};d_j)\)</span> 表示从 <span class="math inline">\(R(t_{(j)})\)</span> 抽取的一组 <span class="math inline">\(d_j\)</span> 个个体，其中 <span class="math inline">\(R(t_{(j)})\)</span> 为 <span class="math inline">\(t_{(j)}\)</span> 处的风险集。分母中的求和运算是对风险集中所有可能的含 <span class="math inline">\(d_j\)</span> 个个体的集合进行的，其中的抽样是无放回的。式 <a href="chap3.html#eq:3-12">(3.12)</a> 中的近似基于时间尺度是离散的这一情况的模型，因此在这个模型下，允许存在观测结。现在，根据第 1 章 <a href="chap1.html#sec1-4-2">1.4.2</a> 节，解释变量向量为 <span class="math inline">\(\boldsymbol x_i\)</span> 的个体的风险函数, <span class="math inline">\(h_i(t)\)</span> 是单位时间区间 <span class="math inline">\((t, t + 1)\)</span> 内的死亡概率，前提是以生存到了时间 <span class="math inline">\(t\)</span>。式 <a href="chap3.html#eq:3-3">(3.3)</a> 的 Cox 回归模型的离散版本为</p>
+<p><span class="math display">\[\frac{h_i(t)}{1-h_i(t)}=\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)\frac{h_0(t)}{1-h_0(t)}\]</span></p>
+<p>其似然函数如式 <a href="chap3.html#eq:3-12">(3.12)</a> 所示。事实上，在离散时间区间长度趋于零的极限下，该模型趋于式 <a href="chap3.html#eq:3-3">(3.3)</a> 的 Cox 回归模型。</p>
+<p>当没有结时，即在每个死亡时间有 <span class="math inline">\(d_j = 1\)</span> 时，式 <a href="chap3.html#eq:3-10">(3.10)</a>, <a href="chap3.html#eq:3-11">(3.11)</a> 和 <a href="chap3.html#eq:3-12">(3.12)</a> 中的近似都简化为式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的似然函数。</p>
+</div>
+<div id="sec3-3-3" class="section level3" number="3.3.3">
+<h3>
+<span class="header-section-number">3.3.3</span> Newton-Raphson 程序<a class="anchor" aria-label="anchor" href="#sec3-3-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>含删失生存数据的模型通常通过使用 Newton-Raphson 程序来最大化偏似然函数来拟合，本节概述了该程序。</p>
+<p>令 <span class="math inline">\(\boldsymbol{u}(\boldsymbol{\beta})\)</span> 为式 <a href="chap3.html#eq:3-6">(3.6)</a> 中对数似然函数关于 <span class="math inline">\(\boldsymbol \beta\)</span> 参数的一阶导数，为 <span class="math inline">\(p × 1\)</span> 向量。这个量称为<strong>有效得分向量</strong> (vector of efficient scores). 此外，设 <span class="math inline">\(\boldsymbol{I}(\boldsymbol{\beta})\)</span> 是对数似然二阶导数负数的 <span class="math inline">\(p × p\)</span> 矩阵，则 <span class="math inline">\(\boldsymbol{I}(\boldsymbol{\beta})\)</span> 的第 <span class="math inline">\((j,k)\)</span> 元素为</p>
+<p><span class="math display">\[-\frac{\partial^2\log L(\boldsymbol{\beta})}{\partial\beta_j\partial\beta_k}\]</span></p>
+<p>矩阵 <span class="math inline">\(\boldsymbol{I}(\boldsymbol{\beta})\)</span> 称为<strong>观测信息矩阵</strong> (observed information matrix).</p>
+<p>根据 Newton-Raphson 程序，第 <span class="math inline">\((s + 1)\)</span> 轮迭代的 <span class="math inline">\(\boldsymbol\beta\)</span> 参数向量估计 <span class="math inline">\(\hat {\boldsymbol \beta}_{s+1}\)</span> 为</p>
+<p><span class="math display">\[\hat{\boldsymbol{\beta}}_{s+1}=\hat{\boldsymbol{\beta}}_s+\boldsymbol{I}^{-1}(\hat{\boldsymbol{\beta}}_s)\boldsymbol{u}(\hat{\boldsymbol{\beta}}_s)\]</span></p>
+<p>其中 <span class="math inline">\(s=0,1,2,\ldots\)</span>。<span class="math inline">\(\boldsymbol{u}(\hat{\boldsymbol{\beta}}_s)\)</span> 为有效得分向量，<span class="math inline">\(\boldsymbol{I}^{-1}(\hat{\boldsymbol{\beta}}_{s})\)</span> 为信息矩阵的逆，这两个量都在 <span class="math inline">\(\hat {\boldsymbol \beta}_{s}\)</span> 处计算。该程序可以以 <span class="math inline">\(\hat {\boldsymbol \beta}_{0}=\boldsymbol 0\)</span> 开始。当对数似然函数的变化足够小时，或者当参数估计的最大相对变化足够小时，该程序终止。</p>
+<p>当迭代程序收敛时，参数估计的方差-协方差阵可以通过信息矩阵的逆来近似，在 <span class="math inline">\(\hat {\boldsymbol \beta}\)</span> 处计算，即 <span class="math inline">\(\boldsymbol{I}^{-1}(\hat{\boldsymbol{\beta}})\)</span>。该矩阵对角元的平方根就是 <span class="math inline">\(\beta_{1},\beta_{2},\ldots,\beta_{p}\)</span> 估计的标准误。</p>
+</div>
+</div>
+<div id="sec3-4" class="section level2" number="3.4">
+<h2>
+<span class="header-section-number">3.4</span> 置信区间和假设检验<a class="anchor" aria-label="anchor" href="#sec3-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>当使用统计软件拟合 Cox 回归模型时，提供的参数估计值通常附带其标准误。这些标准误可用于获取未知 <span class="math inline">\(\beta\)</span> 参数的近似置信区间。具体来说，参数 <span class="math inline">\(\beta\)</span> 的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信区间是上下限为 <span class="math inline">\(\hat{\beta}\pm z_{\alpha/2}\operatorname{se}\left(\hat{\beta}\right)\)</span> 的区间，其中 <span class="math inline">\(\hat{\beta}\)</span> 是 <span class="math inline">\({\beta}\)</span> 的估计，<span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点。</p>
+<p>如果 <span class="math inline">\({\beta}\)</span> 的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信区间不包括零，则这是 <span class="math inline">\({\beta}\)</span> 的值不为零的证据。更具体地说，可以通过计算统计量 <span class="math inline">\(\hat{\beta}/\operatorname{se}{(\hat{\beta})}\)</span> 的值来检验声称 <span class="math inline">\(\beta = 0\)</span> 的原假设。然后将该统计量的观测值与标准正态分布的百分位点进行比较，以获得相应的 <span class="math inline">\(P\)</span> 值。等价地，该统计量的平方可以与自由度为一的卡方分布的百分位点进行比较。这一程序有时称为 Wald 检验，该检验的 <span class="math inline">\(P\)</span> 值通常与计算机输出中的参数估计及其标准误一起给出。</p>
+<p>当试图解释给定参数 <span class="math inline">\(\beta_j\)</span> 的 <span class="math inline">\(P\)</span> 值时，重要的是要认识到正在检验的假设是在模型中其他所有项都存在的情况下的 <span class="math inline">\(\beta_j = 0\)</span>。例如，假设一个模型包含三个解释变量 <span class="math inline">\(X_1,X_2,X_3\)</span>，并且它们的真实系数是 <span class="math inline">\(\beta_1,\beta_2,\beta_3\)</span>。然后使用检验统计量 <span class="math inline">\(\hat{\beta}_2/\text{ se }(\hat{\beta}_2)\)</span> 来检验在存在 <span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\beta_3\)</span> 的情况下 <span class="math inline">\(\beta_2=0\)</span> 的原假设。如果没有证据拒绝这一假设，我们将得出结论，在存在 <span class="math inline">\(X_1\)</span> 和 <span class="math inline">\(X_3\)</span> 的情况下，模型不需要 <span class="math inline">\(X_2\)</span> 的存在。</p>
+<p>一般来说，Cox 回归模型中各个 <span class="math inline">\(\beta\)</span> 的单独估计并不是相互独立的。这意味着检验模型中关于 <span class="math inline">\(\beta\)</span> 参数的单独假设的结果可能不容易解释。例如，再次考虑有三个解释变量 <span class="math inline">\(X_1,X_2,X_3\)</span> 的情况。如果与它们的标准误相比，<span class="math inline">\(\hat \beta_1\)</span> 和 <span class="math inline">\(\hat \beta_2\)</span> 未发现与零有显著差异，我们不能得出模型中只需要包含 <span class="math inline">\(X_3\)</span> 的结论。这是因为，例如，当 <span class="math inline">\(X_2\)</span> 从模型中排除时，<span class="math inline">\(X_1\)</span> 的系数可能会发生变化，反之亦然。如果 <span class="math inline">\(X_1\)</span> 和 <span class="math inline">\(X_2\)</span> 存在相关性，这种情况肯定会发生。</p>
+<p>由于难以解释模型中解释变量系数的检验结果，因此需要使用替代方法来比较不同的 Cox 回归模型。事实证明，<a href="chap3.html#sec3-5">3.5</a> 节中描述的方法比 Wald 检验更令人满意。因此，应谨慎对待基于计算机的生存数据分析中给出的 Wald 检验结果。</p>
+<div id="sec3-4-1" class="section level3" number="3.4.1">
+<h3>
+<span class="header-section-number">3.4.1</span> 风险比的标准误和置信区间<a class="anchor" aria-label="anchor" href="#sec3-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>我们已经看到，在存在两组生存数据的情况下，Cox 回归模型中的参数 <span class="math inline">\(\beta\)</span> 是一组个体在时间 <span class="math inline">\(t\)</span> 相对于另一组个体的死亡风险比的对数。风险比本身是 <span class="math inline">\(\psi=e^{\beta}\)</span>。风险比的相应估计为 <span class="math inline">\(\hat{\psi}=\exp(\hat{\beta})\)</span>，并且使用第 2 章式 <a href="chap2.html#eq:2-8">(2.8)</a> 给出的结果，可以从 <span class="math inline">\(\hat \beta\)</span> 的标准误中获得 <span class="math inline">\(\hat \psi\)</span> 的标准误。根据这一结果，作为 <span class="math inline">\(\hat \beta\)</span> 的函数，<span class="math inline">\(\hat \psi\)</span> 的近似方差为</p>
+<p><span class="math display">\[\left\{\exp(\hat{\beta})\right\}^2\mathrm{~var~}(\hat{\beta})\]</span></p>
+<p>也就是 <span class="math inline">\(\hat{\psi}^2\text{ var }(\hat{\beta})\)</span>，则 <span class="math inline">\(\hat{\psi}\)</span> 的标准误为</p>
+<p><span class="math display" id="eq:3-13">\[\begin{equation}
+\text{se }(\hat{\psi})=\hat{\psi}\text{ se }(\hat{\beta})
+\tag{3.13}
+\end{equation}\]</span></p>
+<p>一般来说，真实风险比的置信区间比风险比估计的标准误更具信息性。真实风险比 <span class="math inline">\(\psi\)</span> 的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信区间可以通过对 <span class="math inline">\(\beta\)</span> 的置信限进行指数运算来找到。以这种方式获得的区间估计优于使用 <span class="math inline">\(\hat{\psi}\pm z_{\alpha/2}\operatorname{se}\left(\hat{\psi}\right)\)</span> 获得的估计。这是因为风险比估计的对数的分布比风险比本身的分布更接近正态分布。</p>
+<p>下面的<a href="chap3.html#exm:ex3-1">示例 3.1</a> 说明了风险比置信区间的构造。<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9">3.9</a> 节给出了 Cox 回归模型线性部分中参数解释的更详细信息。</p>
+</div>
+<div id="sec3-4-2" class="section level3" number="3.4.2">
+<h3>
+<span class="header-section-number">3.4.2</span> 两个示例<a class="anchor" aria-label="anchor" href="#sec3-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在本节中，我们将用第 1 章中介绍的两个示例的数据拟合一个 Cox 回归模型。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-1" class="example"><strong>示例 3.1  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在<a href="chap1.html#exm:ex1-2">示例 1.2</a> 中给出了按肿瘤切片是否呈阳性染色分类的乳腺癌患者生存时间数据。指示染色结果的变量可视为具有两个水平的因素。根据 <a href="chap3.html#sec3-2-2">3.2.2</a> 节中的论述，这个因素可以通过使用指示变量 <span class="math inline">\(X\)</span> 来表示染色结果，其中 <span class="math inline">\(X = 0\)</span> 对应于阴性染色，<span class="math inline">\(X = 1\)</span> 对应于阳性染色。在 Cox 回归模型下，对于指示变量值为 <span class="math inline">\(x_i\)</span> 的第 <span class="math inline">\(i\)</span> 名女性，她在时间 <span class="math inline">\(t\)</span> 的死亡风险是</p>
+<p><span class="math display">\[h_i(t)=e^{\beta x_i}h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 为 0 或 1. 基线风险函数 <span class="math inline">\(h_0(t)\)</span> 是肿瘤染色阴性的女性的风险函数。这本质上是 <a href="chap3.html#sec3-1-1">3.1.1</a> 节中考虑的模型，并由式 <a href="chap3.html#eq:3-2">(3.2)</a> 给出。</p>
+<p>在肿瘤染色呈阳性的女性群体中，有两人在第 26 个月时死亡。使用似然函数的 Breslow 近似来处理这个结。该模型是通过找到使式 <a href="chap3.html#eq:3-10">(3.10)</a> 中的似然函数最大化的 <span class="math inline">\(\beta\)</span> 值，即 <span class="math inline">\(\hat \beta\)</span>，来拟合的。<span class="math inline">\(\beta\)</span> 的最大似然估计值是 <span class="math inline">\(\hat \beta=0.908\)</span>。该估计的标准误也可以从用于拟合 Cox 回归模型的统计软件中获得，结果是 <span class="math inline">\(\text{se}\left(\hat{\beta}\right)=0.501\)</span>。</p>
+<p>量 <span class="math inline">\(e^\beta\)</span> 是 <span class="math inline">\(X = 1\)</span> 的女性与 <span class="math inline">\(X = 0\)</span> 的女性的风险函数之比，因此 <span class="math inline">\(\beta\)</span> 是阳性染色女性相对于阴性染色女性在任意时间 <span class="math inline">\(t\)</span> 的死亡风险比的对数。这个风险比的估计是 <span class="math inline">\(e^0.908 = 2.48\)</span>。由于这个值大于 1，我们得出结论，肿瘤呈阳性染色的女性在任何给定时间的死亡风险将高于肿瘤呈阴性染色的女性。因此，阳性染色的乳腺癌患者的预后较差。</p>
+<p>使用式 <a href="chap3.html#eq:3-13">(3.13)</a> 中的结果，可以从 <span class="math inline">\(\beta\)</span> 的标准误中找到风险比的标准误。由于相对风险估计为 <span class="math inline">\(\hat{\psi}=\exp(\hat{\beta})=2.480\)</span>，并且 <span class="math inline">\(\hat \beta\)</span> 的标准误为 0.501，因此 <span class="math inline">\(\hat{\psi}\)</span> 的标准误由下式给出</p>
+<p><span class="math display">\[\mathrm{se}\left(\hat{\psi}\right)=2.480\times0.501=1.242\]</span></p>
+<p>我们可以进一步为这个风险比构造一个置信区间。第一步是为风险比的对数 <span class="math inline">\(\beta\)</span> 获得一个置信区间。例如，<span class="math inline">\(\beta\)</span> 的 95% 置信区间为 <span class="math inline">\(\hat{\beta}-1.96\text{se}(\hat{\beta})\)</span> 到 <span class="math inline">\(\hat{\beta}+1.96\text{se}(\hat{\beta})\)</span>，即从 −0.074 到 1.890 的区间。对这些置信限进行指数运算，得到风险比本身的 95% 置信区间为 <span class="math inline">\((0.93, 6.62)\)</span>。请注意，这个区间几乎不包含 1，有证据表明两组女性的生存经历不同。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-2" class="example"><strong>示例 3.2  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在<a href="chap1.html#exm:ex1-3">示例 1.3</a> 中给出了 48 名患有多发性骨髓瘤的患者的生存时间数据。数据中还包含了为每位患者记录的七个其他变量的值。为方便起见，描述患者性别的变量的值已被重新定义，其中男性为 0 ，女性为 1。患者的性别和与 Bence-Jones 蛋白出现情况相关的变量是具有两个水平的因素，这些项通过使用指示变量 Sex 和 Protein 进行拟合。建模过程中使用的变量如下</p>
+<ul>
+<li>
+<span class="math inline">\(Age\)</span>：患者的年龄</li>
+<li>
+<span class="math inline">\(Sex\)</span>：患者的性别（0 = 男性，1 = 女性）</li>
+<li>
+<span class="math inline">\(Bun\)</span>：血尿素氮</li>
+<li>
+<span class="math inline">\(Ca\)</span>：血清钙</li>
+<li>
+<span class="math inline">\(Hb\)</span>：血清血红蛋白</li>
+<li>
+<span class="math inline">\(Pcells\)</span>：浆细胞百分比</li>
+<li>
+<span class="math inline">\(Protein\)</span>：Bence Jones 蛋白（0 = 不存在，1 = 存在）</li>
+</ul>
+<p>第 <span class="math inline">\(i\)</span> 个个体的 Cox 回归模型为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp&amp;(\beta_1Age_i+\beta_2Sex_i+\beta_3Bun_i+\beta_4Ca_i+\beta_5Hb_i+\beta_6Pcells_i\\&amp;+\beta_7Protein_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中解释变量下标 <span class="math inline">\(i\)</span> 表示该变量对于第 <span class="math inline">\(i\)</span> 个个体的值。基线风险函数是指这七个变量的值都为 0 的个体的风险函数，即，该函数对应于一个年龄为 0 的男性，其 Bun, Ca, Hb 和 Pcells 的值都为 0，并且没有 Bence-Jones 蛋白。鉴于该函数在解释上的明显困难，通过减去平均患者 (average patient) 的值来重新定义 Age, Bun, Ca, Hb 和 Pcells 变量可能更为合理。例如，如果我们用 Age - 60 代替 Age，那么基线风险就会对应于一个 60 岁的男性。这个程序也避免了引入一个描述年龄与研究中患者年龄范围相差较大的个体的风险函数。尽管这使基线风险函数具有更自然的解释，但不会影响关于解释变量对死亡风险影响的推断。因此，在这个例子中，我们使用未转换的变量。在拟合模型后，解释变量的系数及其标准误的估计如表 3.4 所示。</p>
+<details><summary><font color="#8B2232">表 3.4</font>
+</summary><img src="figure/table%203.4.png#center" style="width:80.0%"></details><p><br>
+我们从表 3.4 中看到，一些估计接近于零。事实上，如果为七个变量的系数单独计算 95% 置信区间，则只有 Bun 和 Hb 的置信区间不包含零。这表明风险函数并不依赖于所有七个解释变量。</p>
+<p>我们不能由此推断 Bun 和 Hb 是有意义的变量，因为拟合模型中七个解释变量的系数估计并不是相互独立的。这意味着如果七个解释变量中的一个从模型中排除，剩余六个变量的系数可能与表 3.4 中的系数不同。例如，如果排除 Bun，剩余的六个解释变量 Age, Sex, Ca, Hb, Pcells 和 Protein 的系数估计分别为 -0.009, -0.301, -0.036, -0.140, -0.001 和 -0.420. 与表 3.4 中的值进行比较，这六个变量的系数估计都存在差异，尽管差异不是很大。</p>
+</div>
+</div>
+<p>一般来说，为了确定风险函数依赖于七个解释变量中的哪些，需要拟合许多不同的模型，并对结果进行比较。本章后续部分将讨论比较不同模型拟合优度的方法以及模型构建的策略。</p>
+</div>
+</div>
+<div id="sec3-5" class="section level2" number="3.5">
+<h2>
+<span class="header-section-number">3.5</span> 比较替代模型<a class="anchor" aria-label="anchor" href="#sec3-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>在分析生存数据的建模方法中，会建立一个模型来描述风险函数关于一个或多个解释变量的依赖关系。在建模过程中，会拟合包含不同项集的线性部分的 Cox 回归模型，并对它们进行比较。</p>
+<p>以一个具体例子来说，考虑有两组生存时间的情况，这两组分别对应接受新疗法和接受标准疗法的个体。在没有治疗差异的模型下的共同风险函数可以表示为 <span class="math inline">\(h0_(t)\)</span>。这个模型是式 <a href="chap3.html#eq:3-3">(3.3)</a> 中一般比例风险模型的特例，其中模型的线性部分没有解释变量。因此，这个模型称为<strong>零模型</strong> (null model).</p>
+<p>现在，设 <span class="math inline">\(X\)</span> 为一个指示变量，对于接受标准治疗的个体，其取值为 0，否则取值为 1. 在比例风险模型下，对于 <span class="math inline">\(X\)</span> 取值为 <span class="math inline">\(x\)</span> 的个体，其风险函数为 <span class="math inline">\(e^{\beta x}h_0(t)\)</span>。因此，接受标准疗法和新疗法的个体的风险函数分别为 <span class="math inline">\(h_0(t)\)</span> 和 <span class="math inline">\(e^\beta h_0(t)\)</span>。这个模型与零模型的区别在于，后者的线性部分包含了额外的项 <span class="math inline">\(\beta x\)</span>。由于 <span class="math inline">\(\beta=0\)</span> 对应于没有治疗效果，因此可以通过比较这两个 Cox 回归模型对生存数据的拟合情况，来研究治疗差异的程度。</p>
+<p>更一般地，假设对于特定的数据集，我们考虑了两个模型，即模型 (1) 和模型 (2). 其中，模型 (1) 包含模型 (2) 中的一部分项。那么模型 (1) 称为以参数方式嵌套 (parametrically nested) 在模型 (2) 内。具体来说，假设在模型 (1) 中拟合了 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span>，因此该模型的风险函数可以写为</p>
+<p><span class="math display">\[\exp\{\beta_1x_1+\beta_2x_2+\cdots+\beta_px_p\}h_0(t)\]</span></p>
+<p>还假设在模型 (2) 中拟合了 <span class="math inline">\(p+q\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p,X_{p+1},\ldots,X_{p+q}\)</span>，该模型的风险函数为</p>
+<p><span class="math display">\[\exp\{\beta_1x_1+\cdots+\beta_px_p+\beta_{p+1}x_{p+1}+\cdots+\beta_{p+q}x_{p+q}\}h_0(t)\]</span></p>
+<p>模型 (2) 包含 <span class="math inline">\(q\)</span> 个额外的解释变量 <span class="math inline">\(x_{p+1},x_{p+2},\ldots,x_{p+q}\)</span>。由于模型 (2) 比模型 (1) 具有更多的项，因此模型 (2) 一定对观测数据拟合得更好。因此，统计问题是要确定模型 (2) 中额外的个 <span class="math inline">\(q\)</span> 项是否显著提高了模型的解式释能力。如果不是，它们可能被省略，并认为模型 (1) 是充分的。</p>
+<p>在 <a href="chap3.html#sec3-2">3.2</a> 节的例子中，我们了解到当存在多个可能对问题有意义的解释变量时，每个项的效应不能独立于其他效应进行研究。因此，任何给定项的效应都取决于当前模型中包含的其他项。例如，在模型 (1) 中，任何 <span class="math inline">\(p\)</span> 个解释变量对风险函数的效应都取决于已拟合的 <span class="math inline">\(p-1\)</span> 个变量，而认为 <span class="math inline">\(X_p\)</span> 的效应是经剩余的 <span class="math inline">\(p-1\)</span> 个变量调整的 (adjusted). 具体来说，<span class="math inline">\(X_p\)</span> 的效应经 <span class="math inline">\(X_1,X_2,\ldots,X_{p-1}\)</span> 的调整，但我们也会说 <span class="math inline">\(X_p\)</span> 的效应消除了或考虑了 (eliminating or allowing for) <span class="math inline">\(X_1,X_2,\ldots,X_{p-1}\)</span> 的效应。类似地，当 <span class="math inline">\(q\)</span> 个变量 <span class="math inline">\(X_{p+1},X_{p+2},\ldots,X_{p+q}\)</span> 加入到模型 (1) 中时，认为这些变量对风险函数的效应是经已拟合的 <span class="math inline">\(p\)</span> 个变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 的调整的。</p>
+<div id="sec3-5-1" class="section level3" number="3.5.1">
+<h3>
+<span class="header-section-number">3.5.1</span> <span class="math inline">\(-2\log\hat{L}\)</span> 统计量<a class="anchor" aria-label="anchor" href="#sec3-5-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>为比较为同一组生存数据拟合的不同模型，我们需要一个能够衡量特定模型对数据拟合程度的统计量。由于似然函数总结了数据中关于给定模型中未知参数的信息，因此一个合适的总结统计量是似然函数在其最大似然估计处的值。这得到了假设模型下的最大化似然，或在 Cox 回归模型的情况下是最大化偏似然。这个统计量可以通过将式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的 <span class="math inline">\(\beta\)</span> 替换为模型下的最大似然估计来计算。对于给定的一组数据，最大似然值越大，模型与数据之间的一致程度就越好。</p>
+<p>出于后续讨论的原因，在比较不同模型时，使用负二倍对数最大似然更为方便。如果给定模型的最大似然值用 <span class="math inline">\(\hat L\)</span> 表示，那么模型与数据之间一致程度的总结度量就是 <span class="math inline">\(-2\log\hat L\)</span>。根据 <a href="chap3.html#sec3-3-1">3.3.1</a> 节，<span class="math inline">\(\hat L\)</span> 实际上是一系列条件概率的乘积，因此这个统计量将小于 1. 因此，<span class="math inline">\(-2\log\hat L\)</span> 总是正的，对于给定的数据集，<span class="math inline">\(-2\log\hat L\)</span> 的值越小，模型就越好。</p>
+<p>统计量 <span class="math inline">\(-2\log\hat L\)</span> 不能单独用作衡量模型充分性的指标。原因在于 <span class="math inline">\(\hat L\)</span> 以及由此得到的 <span class="math inline">\(-2\log\hat L\)</span> 的值，取决于数据集中的观测数量。因此，如果在对一组数据拟合模型后，又获得了其他数据，且这些新数据适用于使用原始数据建立的模型。那么扩充后的数据集的 <span class="math inline">\(-2\log\hat L\)</span> 值将与原始数据的值不同。因此，<span class="math inline">\(-2\log\hat L\)</span> 的值仅在比较为相同数据集拟合的不同模型时才有用。</p>
+</div>
+<div id="sec3-5-2" class="section level3" number="3.5.2">
+<h3>
+<span class="header-section-number">3.5.2</span> 比较嵌套模型<a class="anchor" aria-label="anchor" href="#sec3-5-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>再次考虑之前定义的模型 (1) 和模型 (2)，其中模型 (1) 包含 <span class="math inline">\(p\)</span> 个解释变量，模型 (2) 包含额外的 <span class="math inline">\(q\)</span> 个解释变量。将每个模型的最大化偏似然函数值分别表示为 <span class="math inline">\(\hat L(1)\)</span>和 <span class="math inline">\(\hat L(2)\)</span> 表示，然后，可以基于模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 之差来比较这两个模型。具体来说，<span class="math inline">\(-2\log\hat{L}(1)\)</span> 和 <span class="math inline">\(-2\log\hat{L}(1)\)</span> 之间的较大差异将得出模型 (2) 中的 <span class="math inline">\(q\)</span> 个变量（这是在模型 (1) 的基础上附加的 <span class="math inline">\(q\)</span> 个变量）确实提高了模型拟合优度的结论。自然地，当项添加到模型中时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值的变化量将取决于哪些项已包括在内。具体来说，<span class="math inline">\(-2\log\hat{L}(1)\)</span> 和 <span class="math inline">\(-2\log\hat{L}(1)\)</span> 值之差，即，<span class="math inline">\(-2\log\hat{L}(1)+2\log\hat{L}(2)\)</span>，反映了将变量 <span class="math inline">\(X_{p+1},X_{p+2},\ldots,X_{p +q}\)</span> 添加到已包含 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 的模型中的组合效应。这称为经 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 的调整后，因拟合 <span class="math inline">\(X_{p+1},X_{p+2},\ldots,X_{p +q}\)</span> 而导致的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化
+。</p>
+<p>统计量 <span class="math inline">\(-2\log\hat{L}(1)+2\log\hat{L}(2)\)</span> 可写为</p>
+<p><span class="math display">\[-2\log\{\hat{L}(1)/\hat{L}(2)\}\]</span></p>
+<p>这就是对数似然比统计量 (log-likelihood ratio statistic)，用于检验声称模型 (2) 中 <span class="math inline">\(q\)</span> 个参数 <span class="math inline">\(\beta_{p+1},\beta_{p+2},\ldots,\beta_{p+q}\)</span> 全部为零的原假设。根据似然比检验理论的相关结果（见附录 <a href="A.html#A">A</a>），在附加变量系数为零的原假设下，该统计量服从渐近卡方分布。该卡方分布的自由度等于两个模型下拟合的独立 <span class="math inline">\(\beta\)</span> 参数数量之差。因此，为比较模型 (1) 和模型 (2) 的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值，我们利用以下事实：在 <span class="math inline">\(\beta_{p+1},\beta_{p+2},\ldots,\beta_{p+q}\)</span> 全部为零的原假设下，统计量 <span class="math inline">\(-2\log\hat{L}(1)+2\log\hat{L}(2)\)</span> 服从自由度为 <span class="math inline">\(q\)</span> 的卡方分布。如果统计量的观测值不是很大，那么将判定这两个模型同等适用。在其他条件相同的情况下，将优先选用更简单的模型，即包含更少项的模型。另一方面，如果两个模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值差异显著，我们会认为需要这些附加的项，并会采用更复杂的模型。</p>
+<p>两个嵌套模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之差有一个与之相关的自由度数量，但 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量本身却没有。这是因为特定模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值并不服从卡方分布。有时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 称为偏差 (deviance). 然而这是不恰当的，因为与广义线性模型中的偏差不同，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 并不衡量与数据完美拟合的模型之间的偏差。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-3" class="example"><strong>示例 3.3  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>再次考虑<a href="chap1.html#exm:ex1-2">示例 1.2</a> 中关于乳腺癌患者生存时间的数据。在拟合不包含解释变量的 Cox 回归模型，即零模型时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 173.968. 与<a href="chap3.html#exm:ex3-1">示例 3.1</a> 类似，指示变量 <span class="math inline">\(X\)</span> 将用于表示染色程序的结果，因此，对于肿瘤呈阴性染色的女性，<span class="math inline">\(X\)</span> 的值为 0，否则为 1。 当变量 <span class="math inline">\(X\)</span> 包含在模型的线性部分时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值减小为 170.096. 替代模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值可以方便地以表格形式总结，如表 3.5 所示。</p>
+<details><summary><font color="#8B2232">表 3.5</font>
+</summary><img src="figure/table%203.5.png#center" style="width:80.0%"></details><p><br>
+零模型与包含 <span class="math inline">\(X\)</span> 的模型之间的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之差可用于评估两组女性风险函数之间的差异是否显著。由于一个模型比另一个模型多一个 <span class="math inline">\(\beta\)</span> 参数，因此 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之差服从自由度为一的卡方分布。这两个 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的差值为 <span class="math inline">\(173.968-170.096 = 3.872\)</span>，这在 5% 的水平上刚刚显著（<span class="math inline">\(P = 0.049\)</span>）。因此，我们可以得出结论，有证据表明两组女性的风险函数在 5% 的水平上存在显著差异。</p>
+<p>在<a href="chap2.html#exm:ex2-12">示例 2.12</a> 中，我们使用 log-rank 检验研究了两组女性生存时间差异的程度。该检验的卡方值为 3.515（<span class="math inline">\(P = 0.061\)</span>）。这个值与我们之前得到的 3.872（<span class="math inline">\(P = 0.049\)</span>）相差不大。这两个相似 <span class="math inline">\(P\)</span> 值意味着，关于数据为无组别差异的原假设提供证据的程度，得出的结论基本上是一样的。从实际的角度来看，一个结果在 5% 的水平上刚好显著，而另一个结果在该水平上并不完全显著，<strong>这一点并不重要</strong>。</p>
+<p>尽管本例中使用的基于模型的方法在操作上不同于 log-rank 检验，但这两个程序实际上是密切相关的，这种关系将在 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-14">3.14</a> 节中进行更详细的探讨。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-4" class="example"><strong>示例 3.4  (肾癌的治疗) </strong></span><br></p>
+<p>在 University of Oklahoma Health Sciences Center 进行的一项研究中，获得了 36 名肾脏恶性肿瘤患者的生存时间数据。这些患者都接受了化疗和免疫疗法的联合治疗，但一些患者还接受了肾切除术（手术切除肾脏）。令人感兴趣的是，患者的生存时间是否取决于诊断时的年龄以及是否接受了肾切除术。研究中获得的数据如下：Lee and Wang (2013) 给出了研究中获得的数据，但在本例中，患者的年龄根据患者是否小于 60 岁、60 岁至 70 岁或大于 70 岁进行了分类。表 3.6 给出了患者的生存时间（以月为单位）。</p>
+<details><summary><font color="#8B2232">表 3.6</font>
+</summary><img src="figure/table%203.6.png#center" style="width:80.0%"></details><p><br>
+在这个示例中，有一个名为年龄组的因素，包含三个水平 (&lt;60, 60-70, &gt;70)，以及一个与是否进行肾切除术相关的因素。根据风险函数是否与这两个因素中的一个或两个有关，有多种可能的模型，分别记作模型 (1) 至模型 (5). 在模型 (1) 下，死亡的风险既不受这两个因素中任何一个的影响，对于研究中所有 36 个个体来说也是相同的。在模型 (2) 和 (3) 中，风险只取决于年龄组或是否进行肾切除术。在模型 (4) 中，风险取决于这两个因素，其中肾切除术对风险的效应独立于患者的年龄组。模型 (5) 考虑了年龄组和肾切除术之间的交互作用，因此在该模型下，肾切除术对死亡风险的效应取决于患者的年龄组。</p>
+<p>假设第 <span class="math inline">\(j\)</span> 个年龄组的效应用 <span class="math inline">\(\alpha_j,j=1,2,3\)</span> 表示，而肾切除术状态的效应用 <span class="math inline">\(\nu_k,k=1,2\)</span> 表示。那么，可以将项 <span class="math inline">\(\alpha_j\)</span> 和 <span class="math inline">\(\nu_k\)</span> 包含在 Cox 模型的风险函数 <span class="math inline">\(h_i(t)\)</span> 中，这是研究中第 <span class="math inline">\(i\)</span> 个个体的风险函数。五种可能的模型如下</p>
+<ul>
+<li>模型 (1)：<span class="math inline">\(h_{i}(t) =h_0(t)\)</span>
+</li>
+<li>模型 (2)：<span class="math inline">\(h_i(t) =\exp\{\alpha_j\}h_0(t)\)</span>
+</li>
+<li>模型 (3)：<span class="math inline">\(h_{i}(t) =\exp\{\nu_k\}h_0(t\)</span>
+</li>
+<li>模型 (4)：<span class="math inline">\(h_{i}(t) =\exp\{\alpha_j+\nu_k\}h_0(t)\)</span>
+</li>
+<li>模型 (5)：<span class="math inline">\(h_i(t) =\exp\{\alpha_{j}+\nu_{k}+(\alpha\nu)_{jk}\}h_{0}(t)\)</span>
+</li>
+</ul>
+<p>为拟合项 <span class="math inline">\(\alpha_j\)</span>，定义了两个指示变量 <span class="math inline">\(A_2\)</span> 和 <span class="math inline">\(A_3\)</span>，其值如表 3.7 所示。</p>
+<details><summary><font color="#8B2232">表 3.7</font>
+</summary><img src="figure/table%203.7.png#center" style="width:80.0%"></details><p><br>
+通过定义变量 <span class="math inline">\(N\)</span> 来拟合项 <span class="math inline">\(\nu_k\)</span>，当没有进行肾切除术时，变量 <span class="math inline">\(N=1\)</span>，当进行了肾切除术时 <span class="math inline">\(N=0\)</span>。通过选择这一指示变量，基线风险函数将对应于未进行肾切除术的最年轻年龄组的个体。</p>
+<p>通过在模型中包含变量 <span class="math inline">\(A_2\)</span> 和 <span class="math inline">\(A_3\)</span> 来拟合包含项 <span class="math inline">\(\alpha_j\)</span> 的模型，而项 <span class="math inline">\(\nu_k\)</span> 则通过包含 <span class="math inline">\(N\)</span> 来拟合。通过在模型中包含乘积 <span class="math inline">\(A_2N=A_2×N\)</span> 和 <span class="math inline">\(A_3N=A_3×N\)</span> 来拟合交互作用。拟合的解释变量以及所考虑的五个模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值如表 3.8 所示。当用于建模生存数据的计算机软件允许在模型中包含因素而无需定义适当的指示变量时，可以直接获得表 3.8 中的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值。</p>
+<details><summary><font color="#8B2232">表 3.8</font>
+</summary><img src="figure/table%203.8.png#center" style="width:80.0%"></details><p><br><strong>比较这些不同模型的第一步是确定肾切除术状态和年龄组之间是否存在交互作用</strong>。为此，将模型 (4) 与模型 (5) 进行比较。在包含年龄组和肾切除术状态主效应的模型中加入交互项后，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值减少了 <span class="math inline">\(165.508 - 162.479 = 3.029\)</span>，这对应于 2 个自由度。这并不显著（<span class="math inline">\(P = 0.220\)</span>），因此我们得出结论，年龄组与是否进行肾切除术之间不存在交互作用。</p>
+<p>我们现在确定风险函数是否与年龄组和肾切除状态这两个因素存在相关性，有三种可能，与两个都不相关，与其中一个相关，与两个都相关。在包含 <span class="math inline">\(\nu_k\)</span> 的模型中包含项 <span class="math inline">\(\alpha_j\)</span>，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化在 2 个自由度上为 <span class="math inline">\(170.247 − 165.508 = 4.739\)</span>。这在 10% 的水平下显著 (<span class="math inline">\(P=0.094\)</span>)，因此有一些证据表明包含 <span class="math inline">\(\nu_k\)</span> 的模型也需要包含 <span class="math inline">\(\alpha_j\)</span>。当 <span class="math inline">\(\nu_k\)</span> 添加到包含 <span class="math inline">\(\alpha_j\)</span> 的模型时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的变化在 1 个自由度上为 <span class="math inline">\(172.172 − 165.508 = 6.664\)</span>，在 1% 水平上显著 (<span class="math inline">\(P = 0.010\)</span>)。将这两个结果放在一起，项 <span class="math inline">\(\alpha_j\)</span> 可能会向包含 <span class="math inline">\(\nu_k\)</span> 的模型添加一些信息，并且包含 <span class="math inline">\(\alpha_j\)</span> 的模型中肯定需要包含 <span class="math inline">\(\nu_k\)</span>。这意味着这两项都是必需的，因此风险函数取决于患者的年龄组以及是否进行了肾切除术。</p>
+<p>在结束这个例子之前，让我们考虑五个模型比较的其他可能结果，以及这些结果将如何影响我们选择最合适的模型的结论。如果在模型中除了与肾切除术状态相关的项 <span class="math inline">\(\nu_k\)</span> 外，还需要与年龄组相关的项 <span class="math inline">\(\alpha_j\)</span>，但在存在 <span class="math inline">\(\alpha_j\)</span> 的情况下，<span class="math inline">\(\nu_k\)</span> 并不需要，那么只包含 <span class="math inline">\(\alpha_j\)</span> 的模型 (2) 可能是最合适的。为了确保确实需要 <span class="math inline">\(\alpha_j\)</span>，我们还需要将模型 (2) 与零模型（模型 (1)）进行比较。类似地，如果除了与年龄组相关的项 <span class="math inline">\(\alpha_j\)</span> 外，还需要与肾切除术状态相关的项 <span class="math inline">\(\nu_k\)</span>，但在存在 <span class="math inline">\(\nu_k\)</span> 的情况下，<span class="math inline">\(\alpha_j\)</span> 并不需要，那么只包含 <span class="math inline">\(\nu_k\)</span> 的模型 (3) 可能是令人满意的。我们还需要通过将模型 (2) 与模型 (1) 进行比较来检验 <span class="math inline">\(\nu_k\)</span> 的显著性。如果在另一个因素存在的情况下，与年龄组和肾切除术状态相关的项都不需要，那么最多只需要一个变量。为了确定这两个变量中哪一个是必要的，我们会将模型 (2) 与模型 (1) 以及模型 (3) 与模型 (1) 进行比较。如果这两个结果在统计上都是显著的，我们将采用相比零模型，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值减少得最多的模型。如果模型 (2) 和模型 (3) 都不优于模型 (1)，我们将得出结论：年龄组和肾切除术状态都不会对风险函数产生影响。</p>
+</div>
+</div>
+<p>分析生存数据的建模方法还有两个进一步的步骤。首先，我们需要严格检查模型对观测数据的拟合度，以确保拟合的 Cox 回归模型确实合适。其次，我们需要解释所选模型中参数估计的含义，以便量化解释变量对风险函数的效应。<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9">3.9</a> 节将讨论拟合模型中参数的解释，而第 <a href="chap4.html#chap4">4</a> 章将考虑评估拟合模型充分性的方法。但首先，我们来讨论模型选择的可能策略。</p>
+</div>
+</div>
+<div id="sec3-6" class="section level2" number="3.6">
+<h2>
+<span class="header-section-number">3.6</span> 模型选择策略<a class="anchor" aria-label="anchor" href="#sec3-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>模型选择过程的第一步是确定一组有可能包含在 Cox 回归模型线性部分中的解释变量。该集合将包含已为每个个体记录的变量和因素，但也可能需要与因素之间或变量与因素之间的交互作用相对应的额外项。</p>
+<p>一旦确定了一组潜在的解释变量，就需要确定用于风险函数建模的变量组合。在实践中，风险函数不会依赖于唯一的变量组合。相反，可能存在许多同样好的模型，而不是单一的“最佳”模型。因此，需要考虑多种可能的模型。</p>
+<p>模型选择策略在一定程度上取决于研究目的。在某些应用中，已经获得了关于多个变量的信息，目的可能是确定哪些变量对风险函数有影响，就像多发性骨髓瘤的<a href="chap1.html#exm:ex1-3">示例 1.3</a> 那样。在其他情况下，可能存在一个或多个主要关注的变量，例如对应于治疗效应的项。建模过程的目的是评估这些变量对风险函数的效应，就像前列腺癌的<a href="chap1.html#exm:ex1-4">示例 1.4</a> 那样。由于已记录的其他变量也可能影响治疗效应的大小，因此需要在建模过程中考虑这些变量。</p>
+<p>统计建模的一个重要原则是，<strong>当模型中包含与两个因素之间交互作用相对应的项时，还应包含相应的低阶项</strong>。该规则称为<strong>层次原则</strong> (hierarchical principle)，这意味着不应拟合两个因素之间的交互作用，除非存在相应的主效应。不遵循层次原则的模型很难解释。</p>
+<div id="sec3-6-1" class="section level3" number="3.6.1">
+<h3>
+<span class="header-section-number">3.6.1</span> 变量选择程序<a class="anchor" aria-label="anchor" href="#sec3-6-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>我们首先考虑所有解释变量处于平等地位的情况，目的是确定风险函数所依赖的变量子集。当潜在的解释变量（包括交互作用、非线性项等）的数量不太大时，在适当考虑层次原则的情况下，拟合所有可能的项组合可能是可行的。可以通过检查在向模型中添加项或从模型中删除项时 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化来比较嵌套模型。</p>
+<p>也可以根据 Akaike’s Information criterion (AIC) 对一些可能的模型进行比较，这些模型不一定需要嵌套，其公式为</p>
+<p><span class="math display" id="eq:3-14">\[\begin{equation}
+AIC=-2\operatorname{log}\hat{L}+2q
+\tag{3.14}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(q\)</span> 是模型中未知参数 <span class="math inline">\(\beta\)</span> 的数量。该统计量值越小，模型越好，但与 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量不同，当向模型中添加不必要的项时，AIC 的值往往会增加。</p>
+<p>AIC 统计量的一个替代方案是 Bayesian Information Criterion (BIC)，由下式给出</p>
+<p><span class="math display">\[BIC=-2\log\hat{L}+q\log d\]</span></p>
+<p>其中 <span class="math inline">\(q\)</span> 是模型中未知参数 <span class="math inline">\(\beta\)</span> 的数量，<span class="math inline">\(d\)</span> 是数据集中未删失观测值的数量。BIC 统计量也称为 Schwarz Bayesian Criterion (SBC). BIC 是 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量的调整，它考虑了拟合模型中未知参数的数量和模型已拟合的观测值的数量。与 AIC 统计量一样，BIC 的值越小，模型更好。</p>
+<p>当然，一些项可能会以特定模型中项的替代项被识别出来，从而得到多个同等适用的子集。关于哪个子集最为合适的决定，不能仅仅基于统计依据。当模型选择没有主题依据时，从一系列候选模型中初步考虑选择的模型，可能是使得 <span class="math inline">\(-2\operatorname{log}\hat{L},AIC\)</span> 或 <span class="math inline">\(BIC\)</span> 的值最小的那个模型。然后使用第 <a href="chap4.html#chap4">4</a> 章描述的模型检验方法以确认该模型确实适合数据，这一点很重要。</p>
+<p>在某些应用中，可能会记录多个变量的信息，所有这些变量都与同一总体特征相关。例如，身高、体重、身体质量指数（体重/身高²）、头围、臂长等等，都与个体的尺寸有关。考虑到这些变量之间的内在关系，关于这些个体生存时间的模型可能不需要包含所有变量。因此，应确定需在模型中包含这组变量中的哪些，尽管具体选择哪些变量可能并不重要。</p>
+<p>当变量数量相对较大时，拟合所有可能的模型的计算成本可能会很高。具体来说，如果有 <span class="math inline">\(p\)</span> 个潜在解释变量，则有 <span class="math inline">\(2^p\)</span> 种可能的项的组合，因此，如果 <span class="math inline">\(p &gt; 10\)</span>，则解释变量的可能组合有一千多种。在这种情况下，许多软件包中提供的用于变量选择的自动程序似乎是一个有吸引力的前景。这些程序基于前向选择 (forward selection)、后向消除 (backward elimination) ，或两者的组合，称为逐步程序 (stepwise procedure).</p>
+<p>在前向选择中，一次将一个变量添加到模型中。在该过程的每个阶段，添加的变量是在包含该变量时使 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值减小最多的变量。当模型中包含的下一个候选变量不会使 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值减少超过预先指定的量时，该过程结束。这称为停机准则 (stopping rule). 当将变量添加到模型中时，此规则通常以 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值差异的显著性水平来表示，因此当下一候选项在预先指定的水平上不再显著时，选择过程结束。</p>
+<p>在向后消除中，首先拟合包含所考虑变量数量最多的模型。然后一次排除一个变量。在每一阶段，排除的变量是使 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值增加其排除的最小量的变量。当下一个要排除的候选项将 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值增加超过预先指定的量时，该过程结束。</p>
+<p>逐步程序的操作方式与正向选择相同。但是，可以考虑在后续阶段排除模型中包含的变量。因此，在向模型添加变量后，该过程将检查是否可以删除以前包含的任何变量。这些决定同样是根据预先指定的停机准则做出的。</p>
+<p>这些自动程序有许多缺点。通常，它们会导致识别一个特定的子集，而不是一组同样好的子集。这些程序找到的子集通常取决于所使用的变量选择程序，即是前向选择、后向消除还是逐步过程，并且通常倾向于不考虑分层原则。它们还依赖于用来确定一个项是否应该包含在模型中或排除在外的停机准则。由于所有这些原因，这些自动程序在模型选择中起着有限的作用，并且<strong>绝对不应该不加批判地使用</strong>。</p>
+<p>建议采用以下模型选择的一般策略，而不是使用自动变量选择程序。</p>
+<div class="rmdnote">
+<ol style="list-style-type: decimal">
+<li>第一步是一次拟合包含一个变量的模型。然后将这些模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值与零模型的值进行比较，以确定哪些变量本身显著减小了该统计量的值。</li>
+<li>然后将第一步中看起来很重要的变量组合起来并拟合模型。在某些变量存在的情况下，其他变量可能就不再重要了。因此，当这些变量从模型中省略时，如果不显著增加 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值，那么它们现在就可以被丢弃。因此，我们计算当每个变量单独从集合中省略时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化。只有那些（在省略后）导致 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值显著增加的变量才会被保留在模型中。一旦一个变量被丢弃，就应该依次检查省略每个剩余变量的影响。</li>
+<li>那些在单独考虑时不重要的变量（因此在第二步中没有被考虑），可能在其他变量的存在下变得重要。因此，这些变量将逐一添加到第二步的模型中，任何能显著减小 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的变量都将保留在模型中。这一过程可能会导致第二步确定的模型中的项不再具有显著性。</li>
+<li>最后进行一次检查，以确保模型中的任何一项都不能被省略，否则会导致 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值显著增加，并且确保未包括的任何一项都不会显著减小 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值。</li>
+</ol>
+</div>
+<p><strong>在使用这种选择程序时，应避免刻板地应用特定的显著性水平</strong>。为了指导是否包含或省略某个项的决策，显著性水平不应设置得太小，否则会导致选择的变量太少；一般建议将显著性水平设置为 15%.</p>
+<p>在某些应用中，可能需要考虑将少量交互项和其他高阶项（如某些变量的幂）纳入模型。在确保根据层次原则必需的所有项都包含在模型中之后，这些项将添加到上述第三步确定的模型中。如果任何高阶项能显著减小 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值，那么该项将包含在模型中。</p>
+<p>现通过一个示例说明这种模型选择策略。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-5" class="example"><strong>示例 3.5  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在<a href="chap3.html#exm:ex3-2">示例 3.2</a> 中，对多发性骨髓瘤患者生存时间数据的分析表明，Cox 回归模型中并非所有七个解释变量（Age、Sex、Bun、Ca、Hb、Pcells 和 Protein）都是必需的。我们现在确定这些变量中最合适的子集。在本例中，我们将不考虑原始变量的变换以及它们之间的交互作用。我们还进一步假设在模型中包含特定变量没有医学依据。表 3.9 给出了将要考虑的所有模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的总结。第一步是拟合零模型和分别包含七个解释变量的模型。在这些变量中，Bun 导致 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的减小量最大，它将统计量的值从 215.940 减小为 207.453. 与具有 1 个自由度的卡方分布的百分位点相比，8.487 的减小在 1% 的水平上是显著的（<span class="math inline">\(P = 0.004\)</span>）。将 Hb 添加到零模型中时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的减小量为 4.872，这在 5% 的水平上也是显著的（<span class="math inline">\(P = 0.027\)</span>）。最后一个本身具有一定解释能力的变量是 Protein，它导致 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的减小量在 15% 的水平上几乎显著（<span class="math inline">\(P = 0.152\)</span>）。尽管这个 <span class="math inline">\(P\)</span> 值相对较高，但我们暂时会考虑将其纳入模型中。</p>
+<p>下一步是拟合包含 Bun, Hb 和 Protein 的模型，该模型得到的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 200.503。从该模型中依次省略这三个变量中每个变量的影响如表 3.9 所示。具体来说，当省略 Bun 时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的增加量为 9.326，当省略 Hb 时增加量为 3.138，当省略 Protein 时增加量为 2.435. 这些 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化都可以与具有 1 个自由度的卡方分布的百分位点进行比较。由于在 Hb 和 Bun 存在的情况下，Protein 似乎不是模型所必需的，因此不再考虑将其纳入模型中。</p>
+<details><summary><font color="#8B2232">表 3.9</font>
+</summary><img src="figure/table%203.9.png#center" style="width:80.0%"></details><p><br>
+如果从包含 Hb 和 Bun 这两个变量的模型中排除排除其中一个，则 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的增加值分别为 4.515 和 8.130. 这两个增量在 5% 的水平上都显著，因此在不显著增加 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计值的情况下，Hb 和 Bun 都不能从模型中排除。</p>
+<p>最后，我们考察是否应将变量 Age、Sex、Ca 和 Pcells 中的任何一个包含在包含 Bun 和 Hb 的模型中。表 3.9 显示，当添加这四个变量中的任何一个时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的减小量都小于 0.5，因此不需要将它们包含在模型中。因此我们得出结论，最令人满意的模型是包含 Bun 和 Hb 的模型。</p>
+</div>
+</div>
+<p>我们现在转向具有首要意义的变量的研究，比如治疗效应。此时，我们将按照以下方式进行。</p>
+<div class="rmdnote">
+<ol style="list-style-type: decimal">
+<li>首先选择重要的预后变量，忽略治疗效应。当变量的数量不是非常大时，可以拟合包含所有可能变量组合的模型。或者可以遵循之前的步骤 1 至 4 中描述的类似步骤来进行变量选择过程。</li>
+<li>然后将治疗效应纳入模型中。如此一来，因每个治疗组中预后变量分布的差异而导致的两组之间的任何差异都不会归因于治疗。</li>
+<li>如果无法排除在治疗和其他解释变量之间存在交互作用，那么在解释治疗效应之前，必须考虑这些交互作用。</li>
+</ol>
+</div>
+<p>此外，拟合仅包含治疗效应的模型通常会很有趣。这使得能够评估预后变量对治疗效应大小的影响。</p>
+<p>在讨论模型选择策略时，我们强调了使用统计标准来指导选择过程。此外，还必须充分考虑应用领域。具体来说，在某些主题领域包含特定的变量组合可能是不合适的。另一方面，即使某些变量在为特定数据集建模时看似不需要，但从模型中省略它们可能并不明智。实际上，<strong>在模型构建中总是需要考虑非统计因素</strong>。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-6" class="example"><strong>示例 3.6  (前列腺癌两种疗法的比较) </strong></span><br></p>
+<p>在<a href="chap1.html#exm:ex1-4">示例 1.4</a> 中，关于 38 名前列腺癌患者生存时间的数据，有四个预后变量可能对生存时间产生影响。这些变量包括患者的年龄 (Age) 、血清血红蛋白水平 (Hb) 、肿瘤大小 (Size) 和 Gleason 指数 (Index). 在 Cox 回归模型中拟合了这些变量的所有可能组合，并计算了 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值。这些值以及利用 <span class="math inline">\(AIC=-2\operatorname{log}\hat{L}+2q\)</span> 得到的 Akaike 信息准则的值以及利用 <span class="math inline">\(BIC = -2\operatorname{log}\hat{L} + q\log(6)\)</span> 得到的贝叶斯信息准则的值一起显示在表 3.10 中，其中 <span class="math inline">\(q\)</span> 是为包含 6 个死亡时间的数据集拟合的模型中项的个数。</p>
+<details><summary><font color="#8B2232">表 3.10</font>
+</summary><img src="figure/table%203.10.png#center" style="width:80.0%"></details><p><br>
+单独考虑时，最重要的两个解释变量是 Size 和 Index. 通过比较从包含这两个变量的模型中分别省略它们时 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化，我们推断出 Cox 回归模型中需要这两个变量。当在包含 Size 和 Index 的模型中添加 Age 和 Shb 时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值仅略有减小。因此我们得出结论，只有 Size 和 Index 是重要的预后变量。</p>
+<p>从表 3.10 中 Akaike 信息准则的值来看，具有 Size 和 Index 的模型得出的统计量最小，证明这是所尝试的模型中最合适的模型。另请注意，没有其他解释变量组合能得出相似的 AIC 统计量的值，这表明在模型中使用 Size 和 Index 没有明显的替代方案。贝叶斯信息准则的值也能得出相同的结论。</p>
+<p>我们现在考虑治疗效应。设 Treat 为一个变量，对于分配到安慰剂组的个体，其值为 0；对于分配到己烯雌酚组的个体，其值为 1. 当将 Treat 添加到包含 Size 和 Index 的模型中时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值减小为 22.572. 此减小量 0.961 在 1 个自由度上并不显著（<span class="math inline">\(P = 0.327\)</span>）。这表明没有治疗效应，但首先我们应该检查模型中两个解释变量的系数是否依赖于治疗。为此，我们形成乘积 Tsize = Treat × Size 和 Tindex = Treat × Index，并将它们添加到包含 Size、Index 和 Treat 的模型中。当将 Tsize 和 Tindex 添加到模型中时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 分别减小为 20.829 和 20.792. 在添加这两个混合项后，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 变为 19.705. 将这些项添加到模型后，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的减小并不显著，因此没有证据表明治疗效应依赖于 Size 和 Index. 这意味着我们对治疗效应大小的原始解释是有效的，并且基于这些数据，使用己烯雌酚进行治疗似乎并不影响死亡风险。这种治疗效应大小的估计将在<a href="#exm:ex3-12">示例 3.12</a> 中进一步考虑。</p>
+<p>在结束这个例子之前，我们注意到，当 Tsize 或 Tindex 添加到模型中时，它们的系数估计和 Treat 的系数估计都会变大。这些标准误估计也很大。具体来说，在包含 Size, Index, Treat 和 Tsize 的模型中，Treat 的系数估计为 -11.28，标准误为 18.50. 对于包含 Size, Index, Treat 和 Tindex 的模型，Treat 和 Tindex 的系数分别为 -161.52 和 14.66，而这些的标准误估计分别为 18476 和 1680！<strong>这是过拟合 (overfitting) 的证据</strong>。</p>
+<p>在过拟合模型中，一些 <span class="math inline">\(\beta\)</span> 系数的估计将高度依赖于实际数据。这些变量值的一个非常微小的变化，可能会对相应系数的估计产生很大影响。这就是这类估计具有较大标准误的原因。在这个例子中，由于数据集中事件数量较少（38 名患者中只有 6 人死亡），因此发生了过拟合。</p>
+</div>
+</div>
+<p>相比数据所能证明的模型，过拟合的模型是更复杂的模型，它无法提供数据的有用总结。这也是在前列腺癌死亡风险的模型中不包含混合项的另一个原因。</p>
+</div>
+</div>
+<div id="sec3-7" class="section level2" number="3.7">
+<h2>
+<span class="header-section-number">3.7</span> 使用 lasso 进行变量选择<a class="anchor" aria-label="anchor" href="#sec3-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>变量选择的一个特别有用的辅助工具是 Least Absolute Shrinkage and Selection
+Operator，简称为 <strong>lasso</strong>. 使用 lasso 的效果是将模型中解释变量的系数向零收缩，并在这一过程中，一些估计值将自动设置为正好是零。在 lasso 程序中系数变为零的解释变量是那些解释能力很小或没有解释能力，或者与其他变量高度相关的变量。然后，选择纳入模型中的变量是具有非零系数的变量。这种收缩还提高了模型的预测能力，因为收缩后的参数估计对样本数据的变化不太敏感，因此更稳定。</p>
+<div id="sec3-7-1" class="section level3" number="3.7.1">
+<h3>
+<span class="header-section-number">3.7.1</span> Cox 回归中的 lasso<a class="anchor" aria-label="anchor" href="#sec3-7-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>考虑一个包含 <span class="math inline">\(p\)</span> 个解释变量的 Cox 回归模型，其中第 <span class="math inline">\(i\)</span> 个（共 <span class="math inline">\(n\)</span> 个）个体在时间 <span class="math inline">\(t\)</span> 发生事件的风险函数为 <span class="math inline">\(h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\)</span>，其中 <span class="math inline">\(\boldsymbol{\beta'x}_i=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\)</span>，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。在 lasso 过程中，该模型中的 <span class="math inline">\(\beta\)</span> 参数是通过最大化式 <a href="chap3.html#eq:3-5">(3.5)</a> 中的偏似然函数来估计的，同时限制其绝对值的和小于等于某个值 <span class="math inline">\(s\)</span>。用 <span class="math inline">\(R(t_{{i}})\)</span> 表示在时间 <span class="math inline">\(t_i\)</span>（第 <span class="math inline">\(i\)</span> 个个体的观测生存时间）处于事件风险的个体集合，令 <span class="math inline">\(\delta_i\)</span> 为事件指示符，当 <span class="math inline">\(t_i\)</span> 为删失生存时间时，其值为 0，否则为 1. 具有 <span class="math inline">\(p\)</span> 个解释变量的模型的偏似然函数为</p>
+<p><span class="math display" id="eq:3-15">\[\begin{equation}
+L(\boldsymbol{\beta})=\prod_{i=1}^n\left\{\frac{\exp(\boldsymbol{\beta'x}_i)}{\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta'x}_l)}\right\}^{\delta_i}
+\tag{3.15}
+\end{equation}\]</span></p>
+<p>其根据约束 <span class="math inline">\(\sum_{j=1}^p|\beta_j|\leqslant s\)</span> 来最大化。量 <span class="math inline">\(\sum_{j=1}^p|\beta_j|\)</span> 称为向量 <span class="math inline">\(\boldsymbol \beta\)</span> 的 L<sub>1</sub> 范数，常记作 <span class="math inline">\(||\boldsymbol \beta||_1\)</span>。使约束偏似然函数 (constrained likelihood function) 最大化的估计 <span class="math inline">\(\hat{\boldsymbol \beta}\)</span> 也是使下式最大化的值</p>
+<p><span class="math display" id="eq:3-16">\[\begin{equation}
+L_\lambda(\boldsymbol{\beta})=L(\boldsymbol{\beta})-\lambda\sum_{j=1}^{p}|\beta_j|
+\tag{3.16}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\lambda\)</span> 称为 <strong>lasso 参数</strong>。式 <a href="chap3.html#eq:3-16">(3.16)</a> 中的似然函数称为惩罚 (penalized) 似然，因为对极端的 <span class="math inline">\(\beta\)</span> 值施加了惩罚。由此产生的估计将更接近于零，并且比拟合 Cox 模型的标准估计具有更高的精度，但代价是在估计中引入一定程度的偏差。</p>
+<p>为了了解这种收缩 (shrinkage) 的影响，对 lasso 参数的一系列值，计算了可能包含在最终模型中的所有解释变量的系数估计。这些估计关于 <span class="math inline">\(\lambda\)</span> 的曲线图，称为 lasso 轨迹，提供了估计对 <span class="math inline">\(\lambda\)</span> 值依赖性的总结。当 <span class="math inline">\(\lambda\)</span> 较小时，模型中只有少数变量的系数为零，解释变量的数量不会减少太多。另一方面，较大的 <span class="math inline">\(\lambda\)</span> 值会导致太多变量被排除在外，模型可能不会令人满意。</p>
+<p>虽然 lasso 轨迹是一种图形辅助工具，可用于识别建模过程中合适 <span class="math inline">\(\lambda\)</span> 值，这通常还需要通过其他技术来确定 lasso 参数的最优值。这个值可以是最大化式 <a href="chap3.html#eq:3-16">(3.16)</a> 中惩罚似然函数 <span class="math inline">\(L_\lambda(\boldsymbol\beta)\)</span> 的值，或者等价地，是最小化 <span class="math inline">\(-2\log L_\lambda(\boldsymbol\beta)\)</span> 的 <span class="math inline">\(\lambda\)</span> 值。然而，通常更倾向于使用其他方法来确定 <span class="math inline">\(\lambda\)</span> 的最优值，例如<strong>交叉验证</strong> (cross-validation) 法。在这种方法中，<span class="math inline">\(\lambda\)</span> 的最优值是使交叉验证偏对数似然函数 (cross-validated partial log-likelihood function) 最大化的值。为定义这一点，设 <span class="math inline">\(\hat{\boldsymbol{\beta}}_{(-i)}(\lambda)\)</span> 是在省略第 <span class="math inline">\(i\)</span> 个个体的数据后，最大化式 <a href="chap3.html#eq:3-16">(3.16)</a> 中的惩罚偏似然函数的参数估计向量，其中 <span class="math inline">\(i = 1, 2,...,n\)</span>，对于给定的 lasso 参数 <span class="math inline">\(\lambda\)</span> 值。设 <span class="math inline">\(\log L(\boldsymbol{\beta})\)</span> 为式 <a href="chap3.html#eq:3-15">(3.15)</a> 中定义的偏似然函数的对数， <span class="math inline">\(L_{(-i)}(\boldsymbol{\beta})\)</span> 是在排除第 <span class="math inline">\(i\)</span> 个个体的数据后的偏对数似然。那么，交叉验证偏对数似然函数为</p>
+<p><span class="math display">\[\begin{aligned}\log\hat{L}_{CV}(\lambda)=\sum_{i=1}^n\left\{\log L[\hat{\boldsymbol{\beta}}_{(-i)}(\lambda)]-\log L_{(-i)}[\hat{\boldsymbol{\beta}}_{(-i)}(\lambda)]\right\}\end{aligned}\]</span></p>
+<p>选择最大化该函数的 <span class="math inline">\(\lambda\)</span> 值作为 lasso 参数的最优值。选择包含在模型中的变量是在该 <span class="math inline">\(\lambda\)</span> 值处具有非零系数的变量。</p>
+<p>使用 lasso 程序后，通常不会显示参数估计的标准误或这些估计的函数（例如风险比）。其原因之一是它们难以计算，但主要原因是参数估计将偏向于零。因此，标准误意义不大，并且往往会低估估计的精度。如果需要标准误，则可以使用 lasso 程序来确定应包含在模型中的变量，即在 lasso 参数的最佳值处具有非零系数的变量。然后拟合包含这些变量的标准 Cox 回归模型，但如此就失去了 lasso 的优势。</p>
+</div>
+<div id="sec3-7-2" class="section level3" number="3.7.2">
+<h3>
+<span class="header-section-number">3.7.2</span> 数据准备<a class="anchor" aria-label="anchor" href="#sec3-7-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在使用 lasso 程序之前，解释变量必须具有相似的测量尺度。若情况并非如此，则首先需要标准化每个解释变量：将每个解释变量减去其样本均值并除以其标准差，从而得到均值为 0 和方差为 1 的标准化变量。</p>
+<p>lasso 程序也可以应用于分类变量，但需要首先对与该因素相关的指示变量进行标准化。这种方法意味着一个因素不会被视为单一实体，lasso 程序可能会导致相关的指示变量子集被设置为零。lasso 程序识别的变量将取决于如何对相应的指示变量进行编码。例如，如 <a href="chap3.html#sec3-2">3.2</a> 节所示，如果具有 <span class="math inline">\(m\)</span> 个水平的因素有相应的 <span class="math inline">\(m - 1\)</span> 个指示变量，这些指示变量在因素第一水平时都是 0，则这些指示变量将测量每个因素水平相对于第一水平的效应。这可用于识别与基线水平没有差异的水平，但不适用于因素水平是有序的情况。在这种情况下，一种反映因素水平差异的编码方法，即前向差分编码 (forward difference coding) 将更有用。在 lasso 程序中被设置为零的系数，将对应于与具有非零系数的相邻水平具有相似效应的水平。</p>
+<p>为了说明这种编码，假设有序分类变量 <span class="math inline">\(A\)</span> 有四个水平，该因素可以用表 3.11 中定义的三个指示变量 <span class="math inline">\(A_1,A_2,A_3\)</span> 表示。</p>
+<details><summary><font color="#8B2232">表 3.11</font>
+</summary><img src="figure/table%203.11.png#center" style="width:80.0%"></details><p><br>
+当这三个变量以系数 <span class="math inline">\(α_1,α_2,α_3\)</span> 的形式包含在一个模型中时，<span class="math inline">\(A\)</span> 第一水平的效应是 <span class="math inline">\((3α_1 + 2α_2 + α_3)/4\)</span>，第二水平的效应是 <span class="math inline">\((−α_1 + 2α_2 + α_3)/4\)</span>。因此，<span class="math inline">\(A_1\)</span> 的系数 <span class="math inline">\(α_1\)</span> 代表 <span class="math inline">\(A\)</span> 第一水平和第二水平之间的差异。类似地，<span class="math inline">\(A_2\)</span> 的系数代表 <span class="math inline">\(A\)</span> 第二水平和第三水平之间的差异，而 <span class="math inline">\(A_3\)</span> 的系数代表 <span class="math inline">\(A\)</span> 第三水平和第四水平之间的差异。在一般情况下，对于具有 <span class="math inline">\(m\)</span> 个水平的因素 <span class="math inline">\(A\)</span>，<span class="math inline">\(m - 1\)</span> 个指示变量是这样的：<span class="math inline">\(A_1\)</span> 的值为 <span class="math inline">\((m-1)/m, -1/m, -1/m,..., -1/m\)</span>；<span class="math inline">\(A_2\)</span> 的值为 <span class="math inline">\((m-2)/m, (m-2)/m, -2/m, -2/m,..., -2/m\)</span>；<span class="math inline">\(A_3\)</span> 的值为 <span class="math inline">\((m-3)/m, (m-3)/m, (m-3)/m, -3/m,..., -3/m\)</span>；以此类推，直到 <span class="math inline">\(A_{m-1}\)</span> 的值为 <span class="math inline">\(1/m, 1/m,..., 1/m, -(m-1)/m\)</span>。分类变量也可以通过 group lasso 进行处理，它允许一组变量被完全包含或排除，但这里不会给出更多细节。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-7" class="example"><strong>示例 3.7  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>以第 1 章<a href="chap1.html#exm:ex1-3">示例 1.3</a> 中首次给出的 48 名多发性骨髓瘤患者的生存时间数据来说明 lasso 程序在变量选择中的使用。七个潜在的解释变量包括五个连续变量（Age、Bun、Ca、Hb、Pcells）和两个二元变量（Sex、Protein）。所有七个变量的测量尺度都有较大差异，因此它们首先被标准化为均值为 0 和标准差为 1. 例如，48 个年龄的均值为 62.90，标准差为 6.96，因此标准化值为 (Age − 62.90)/6.96.</p>
+<p>为了应用 lasso 程序，通过在 <span class="math inline">\(\lambda\)</span> 的值范围内最大化式 <a href="chap3.html#eq:3-16">(3.16)</a> 中的惩罚似然函数来获得七个 <span class="math inline">\(\beta\)</span> 系数的估计。图 3.2 显示了每个变量的系数相对于 <span class="math inline">\(\lambda\)</span> 的结果轨迹。在该图中，所呈现的系数是原始变量的系数：使约束似然函数最大化的标准化解释变量的系数估计除以该变量的标准差。</p>
+<details><summary><font color="#8B2232">图 3.2</font>
+</summary><img src="figure/figure%203.2.png#center" style="width:80.0%"></details><p><br><span class="math inline">\(\lambda=0\)</span> 时的估计是包含所有七个解释变量的 Cox 回归模型的参数估计。随着 <span class="math inline">\(\lambda\)</span> 的增加，这些估计逐渐接近于零，但速度有所不同。当 <span class="math inline">\(\lambda=0.5\)</span> 时，Ca 的系数估计为零，而当 <span class="math inline">\(\lambda=0.75\)</span> 时，Pcells 的系数估计为零。<span class="math inline">\(\lambda=2.5\)</span> 时，Age 和 Sex 的系数估计均为零。该图还说明了 lasso 的另一个性质，即 lasso 轨迹是由许多直线段组成的，因此它是分段线性的 (piecewise linear).</p>
+<p>为了确定 <span class="math inline">\(\lambda\)</span> 的最佳值，针对一系列 <span class="math inline">\(\lambda\)</span> 值计算交叉验证偏对数似然 <span class="math inline">\(\log\hat{L}_{CV}(\lambda)\)</span>，并确定使该似然函数最大化的值。交叉验证偏对数似然为 lasso 参数 <span class="math inline">\(\lambda\)</span> 的函数，如图 3.3 所示。</p>
+<details><summary><font color="#8B2232">图 3.3</font>
+</summary><img src="figure/figure%203.3.png#center" style="width:80.0%"></details><p><br>
+当 <span class="math inline">\(\lambda=3.90\)</span> 时，该函数达到最大值，在该 <span class="math inline">\(\lambda\)</span> 值下，有三个变量具有非零系数：Hb, Bun 和 Protein. 因此，lasso 程序产生了一个包含这三个变量的模型。在本例中，图 3.3 中所示的交叉验证偏对数似然函数在其最大值附近非常平坦，即在<span class="math inline">\(\lambda\)</span> 值处于 3 和 5 之间时函数值非常相似。此外，根据图 3.2，对于 3 和 5 之间的任何 <span class="math inline">\(\lambda\)</span> 值，将选择相同的变量纳入模型，尽管系数估计会有所不同。</p>
+<p>在 <span class="math inline">\(λ=3.90\)</span> 的模型中，Hb, Bun 和 Protein 系数分别为 −0.080, 0.015 和 −0.330. 具有这三个变量的 Cox 模型的相应估计值分别为 -0.110, 0.020 和 -0.617. 请注意，lasso 程序中模型的系数估计都比 Cox 模型中的相应估计更接近于零，这表明了收缩效应。在 Cox 模型中，Protein 系数与零没有显著差异（<span class="math inline">\(P=0.13\)</span>），尽管 lasso 程序表明该变量应保留在模型中。最后，人们可能希望将 Protein 纳入模型，以免错过任何内容。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec3-8" class="section level2" number="3.8">
+<h2>
+<span class="header-section-number">3.8</span> 非线性项<a class="anchor" aria-label="anchor" href="#sec3-8"><i class="fas fa-link"></i></a>
+</h2>
+<p>当要对一个取值范围广泛的解释变量与风险函数之间的依赖关系进行建模时，我们应考虑将该变量以线性项的形式纳入 Cox 回归模型是否适合。如果有理由不假设变量是线性的，那么我们需要考虑如何对非线性关系进行建模。</p>
+<div id="sec3-8-1" class="section level3" number="3.8.1">
+<h3>
+<span class="header-section-number">3.8.1</span> 非线性检验<a class="anchor" aria-label="anchor" href="#sec3-8-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>检查是否需要非线性项的一种直接方法是向模型添加二次项或三次项，并考察 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量值因此的减小值。如果包含这些项会显著减小该统计量的值，我们就会得出存在非线性的结论。那么可以将多项式项纳入模型。然而在许多情况下，解释变量中的非线性不能通过在 Cox 回归模型中包含多项式项来充分表示。因此，建议一般使用以下程序。</p>
+<p>为了确定变量是否表现出非线性，首先将可能的非线性变量的值分为四类或五类，其中每类包含大致相等数量的观测值。然后定义一个因素，其水平对应于该分组。例如，反映肿瘤大小的变量可以拟合为一个因素，其水平对应于非常小、小、中和大。</p>
+<p>更具体地说，设 <span class="math inline">\(A\)</span> 是一个由连续变量形成的具有 <span class="math inline">\(m\)</span> 个水平的因素，设 <span class="math inline">\(X\)</span> 是一个变量，当 <span class="math inline">\(A\)</span> 处于水平 <span class="math inline">\(j\)</span> 时，<span class="math inline">\(X\)</span> 取值为 <span class="math inline">\(j\)</span>，其中 <span class="math inline">\(j = 1, 2,...,m\)</span>。原始变量的线性关系对应于 <span class="math inline">\(A\)</span> 水平之间存在线性趋势。这种线性趋势可以通过单独拟合 <span class="math inline">\(X\)</span> 来建模。现在，拟合 <span class="math inline">\(m-1\)</span>个项 <span class="math inline">\(X, X^2,...,X^{(m-1)}\)</span> 相当于在模型中将 <span class="math inline">\(A\)</span> 作为因素进行拟合，使用如 <a href="chap3.html#sec3-2-2">3.2.2</a> 节中的指示变量。因此，包含 <span class="math inline">\(X\)</span> 的模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值与包含 <span class="math inline">\(A\)</span> 的模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之间的差异，是衡量 <span class="math inline">\(A\)</span> 水平之间非线性的指标。如果这个差异不显著，我们可以得出不存在非线性的结论，并且将拟合原始变量。另一方面，如果有非线性的证据，则可以从与 <span class="math inline">\(A\)</span> 对应的指示变量的系数中进一步研究这种非线性的实际形式。绘制这些系数的图可能有助于确定因素 <span class="math inline">\(A\)</span> 水平之间这种趋势的性质。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-8" class="example"><strong>示例 3.8  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在<a href="chap3.html#exm:ex3-5">示例 3.5</a> 中，我们发现包含解释变量 Bun 和 Hb 的 Cox 回归模型似乎适用于多发性骨髓瘤患者生存时间的数据。我们现在考虑血清血红蛋白水平 (Hb) 是否存在非线性证据，并检查包含 Bun 和 Hb 的模型中是否需要二次项。当向该模型添加 Hb<sup>2</sup> 项时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值从 202.938 减小为 202.917. 在 1 个自由度上减小 0.021 显然并不显著，这表明在 Hb 中使用线性项就足够了。</p>
+<p>检查非线性程度的另一种方法是使用一个因素为 Hb 对风险函数的效应进行建模。假设定义了一个具有四个水平的因素，其中水平 1 对应于小于等于 7 的 Hb 值，水平 2 对应于 7 到 10 之间的值，水平 3 对应于 10 到 13 之间的值，水平 4 对应于大于 13 的值。这种水平的选择大致对应于 Hb 分布的四分位数。可以通过定义三个指示变量 Hb2, Hb3 和 Hb4 来拟合该因素，这三个指示变量的值如表 3.12 所示。</p>
+<details><summary><font color="#8B2232">表 3.12</font>
+</summary><img src="figure/table%203.12.png#center" style="width:80.0%"></details><p><br>
+当拟合包含 Bun, Hb2, Hb3 和 Hb4 的模型时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 200.417. 将指示变量 Hb2, Hb3 和 Hb4 添加到仅包含 Bun 的模型后，该统计量在 3 个自由度上的变化为 7.036，在 10% 的水平上显著（<span class="math inline">\(P = 0.071\)</span>）。然而，很难确定各因素水平之间的任何模式。</p>
+<p>与血红蛋白水平相对应的因素水平的线性趋势可以通过拟合变量 <span class="math inline">\(X\)</span> 来建模，变量 <span class="math inline">\(X\)</span> 根据因素水平取值 1, 2, 3, 4. 当拟合包含 Bun 和 <span class="math inline">\(X\)</span> 的模型时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 203.891，在 2 个自由度上，由于任何非线性导致的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值变化为 <span class="math inline">\(203.891-200.417=3.474\)</span>。与具有 2 个自由度的卡方分布的百分位点相比，这并不显著（<span class="math inline">\(P=0.176\)</span>）。因此我们得出结论，血红蛋白水平对这组患者死亡风险的效应可以通过使用线性项 Hb 进行充分建模。</p>
+</div>
+</div>
+</div>
+<div id="sec3-8-2" class="section level3" number="3.8.2">
+<h3>
+<span class="header-section-number">3.8.2</span> 非线性建模<a class="anchor" aria-label="anchor" href="#sec3-8-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>如果使用 <a href="chap3.html#sec3-8-1">3.8.1</a> 节中描述的程序检测出非线性，则可能会在建模过程中使用与变量对应的系数。然而，这意味着连续变量被阶跃函数所取代。从主题的角度来看，这样的一个固有连续变量被如此表示通常无法令人信服。此外，该过程需要选择分类边界，而分类过程会导致信息丢失。通常也不建议使用多项式项来表示解释变量中的非线性行为。这是因为低阶多项式，例如二次或三次表达式，可能不适合数据，而高阶多项式通常不能很好地拟合解释变量范围的极值。此外，具有极限值或渐近线的变量不能使用多项式表达式进行充分建模。一个简单而灵活的解决方案是使用包含相同变量的不同幂次的模型，这些幂次可能是分数，称为分数多项式 (fractional polynomials).</p>
+</div>
+<div id="sec3-8-3" class="section level3" number="3.8.3">
+<h3>
+<span class="header-section-number">3.8.3</span> 分数多项式<a class="anchor" aria-label="anchor" href="#sec3-8-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>一个关于变量 <span class="math inline">\(X\)</span> 的 <span class="math inline">\(m\)</span> 阶分数多项式包含 <span class="math inline">\(X\)</span> 的 <span class="math inline">\(m\)</span> 个不同的幂次。将表达式 <span class="math inline">\(\beta_1X^{p_1}+\beta_2X^{p_2}+\cdots+\beta_mX^{p_m}\)</span> 纳入模型，其中每个幂次 <span class="math inline">\(p_j(j=1,2,\ldots,m)\)</span> 都是集合 <span class="math inline">\(\{−2, −1, −0.5, 0, 0.5, 1, 2, 3\}\)</span> 中的一个值，<span class="math inline">\(X^0\)</span> 被视为 <span class="math inline">\(\log X\)</span>。将 <span class="math inline">\(X\)</span> 的 0 次幂表示为 <span class="math inline">\(\log X\)</span> 称为 <span class="math inline">\(X\)</span> 的 Box-Tidwell 变换。仅使用变量的两个不同幂次即可实现解释变量对死亡风险效应建模的极大灵活性，因此 <span class="math inline">\(m\)</span> 通常取 1 或 2. 当 m = 2 时，我们可以不失一般性地取 <span class="math inline">\(p_1 &lt; p_2\)</span>，因为具有幂次 <span class="math inline">\(p_1,p_2\)</span> 的模型与具有幂次 <span class="math inline">\(p_2,p_1\)</span> 的模型是相同的，并且具有 <span class="math inline">\(p_1 = p_2\)</span> 的模型与 <span class="math inline">\(m = 1\)</span> 对于的模型是等价的。</p>
+<p>当 <span class="math inline">\(m = 1\)</span> 时，将拟合具有 8 个可能幂次的模型，在考虑其他变量的存在下，具有最小 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的模型是最佳拟合模型。当 <span class="math inline">\(m = 2\)</span> 时，在集合中的 8 个幂次有 28 种可能的组合（这不包括变量以相同幂出现两次的 8 种情况），最合适的组合将是使得 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 最小化的组合。在比较不同阶数的非嵌套模型时，例如一个具有两个幂次的模型和一个仅有一个幂次的模型，且两个模型没有共同的幂次，可以使用 AIC 或 BIC 统计量。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-9" class="example"><strong>示例 3.9  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在这个例子中，我们调查了关于多发性骨髓瘤患者生存时间的数据集中，血清血红蛋白水平是否存在非线性的证据。除了变量 Bun 外，还拟合了 Hb 的 1 阶和 2 阶分数多项式。因此，Hb 以幂次 <span class="math inline">\(p_1\)</span> 的单个项和以幂次为 <span class="math inline">\(p_1 &lt; p_2\)</span> 的两个项纳入模型，其中 <span class="math inline">\(p_1\)</span> 和 <span class="math inline">\(p_2\)</span> 取自值集 <span class="math inline">\(\{−2, −1, −0.5, 0, 0.5, 1, 2, 3\}\)</span>，且 Hb 的 0 次幂视为 <span class="math inline">\(\log Hb\)</span>。如下 Cox 回归模型</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)&amp;=\exp(\beta_1Hb_i^{p_1}+\beta_2Bun_i)h_0(t),\\h_i(t)&amp;=\exp(\beta_1Hb_i^{p_1}+\beta_2Hb_i^{p_2}+\beta_3Bun_i)h_0(t)\end{aligned}\]</span></p>
+<p>的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值展示在表 3.13 中。</p>
+<details><summary><font color="#8B2232">表 3.13</font>
+</summary><img src="figure/table%203.13.png#center" style="width:80.0%"></details><p><br>
+根据这张表，只具有一个 Hb 幂次的最佳模型 (<span class="math inline">\(m = 1\)</span>)，是包含 Hb 线性项或二次项的模型，其中仅包含 Hb 线性项的模型最简单。</p>
+<p>当拟合具有两个 Hb 幂次的模型时，<span class="math inline">\(p_1 = −2,p_2 = −1\)</span> 和 <span class="math inline">\(p_1 = −2,p_2 = −0.5\)</span> 的模型得到的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值最小，但这两种模型相对于仅有一个 Hb 幂次的模型并没有显著改进。如果要向仅包含 Hb 的模型中添加另一个 Hb 的幂次，我们会添加 Hb<sup>−2</sup>，但同样没有必要这样做，因为具有两个 Hb 幂次的模型相对于仅包含 Hb 的模型并没有显著改进。我们得出结论，Hb 的线性项就足够了，这证实了<a href="chap3.html#exm:ex3-8">示例 3.8</a> 中分析的结果。</p>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></div>
+<div class="next"><a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap3"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li>
+<a class="nav-link" href="#sec3-1"><span class="header-section-number">3.1</span> 风险函数建模</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-1-1"><span class="header-section-number">3.1.1</span> 用于两组比较的模型</a></li>
+<li><a class="nav-link" href="#sec3-1-2"><span class="header-section-number">3.1.2</span> 一般比例风险模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-2"><span class="header-section-number">3.2</span> 模型的线性部分</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-2-1"><span class="header-section-number">3.2.1</span> 纳入一个变量</a></li>
+<li><a class="nav-link" href="#sec3-2-2"><span class="header-section-number">3.2.2</span> 纳入一个因素</a></li>
+<li><a class="nav-link" href="#sec3-2-3"><span class="header-section-number">3.2.3</span> 纳入一个交互作用</a></li>
+<li><a class="nav-link" href="#sec3-2-4"><span class="header-section-number">3.2.4</span> 纳入一个混合项</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-3"><span class="header-section-number">3.3</span> 拟合 Cox 回归模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-3-1"><span class="header-section-number">3.3.1</span> 模型的似然函数</a></li>
+<li><a class="nav-link" href="#sec3-3-2"><span class="header-section-number">3.3.2</span> 结的处理</a></li>
+<li><a class="nav-link" href="#sec3-3-3"><span class="header-section-number">3.3.3</span> Newton-Raphson 程序</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-4"><span class="header-section-number">3.4</span> 置信区间和假设检验</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-4-1"><span class="header-section-number">3.4.1</span> 风险比的标准误和置信区间</a></li>
+<li><a class="nav-link" href="#sec3-4-2"><span class="header-section-number">3.4.2</span> 两个示例</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-5"><span class="header-section-number">3.5</span> 比较替代模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-5-1"><span class="header-section-number">3.5.1</span> \(-2\log\hat{L}\) 统计量</a></li>
+<li><a class="nav-link" href="#sec3-5-2"><span class="header-section-number">3.5.2</span> 比较嵌套模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-6"><span class="header-section-number">3.6</span> 模型选择策略</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec3-6-1"><span class="header-section-number">3.6.1</span> 变量选择程序</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-7"><span class="header-section-number">3.7</span> 使用 lasso 进行变量选择</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-7-1"><span class="header-section-number">3.7.1</span> Cox 回归中的 lasso</a></li>
+<li><a class="nav-link" href="#sec3-7-2"><span class="header-section-number">3.7.2</span> 数据准备</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-8"><span class="header-section-number">3.8</span> 非线性项</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-8-1"><span class="header-section-number">3.8.1</span> 非线性检验</a></li>
+<li><a class="nav-link" href="#sec3-8-2"><span class="header-section-number">3.8.2</span> 非线性建模</a></li>
+<li><a class="nav-link" href="#sec3-8-3"><span class="header-section-number">3.8.3</span> 分数多项式</a></li>
+</ul>
+</li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>A 最大似然估计 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="本附录总结了与生存分析相关的最大似然估计结果。给出的结果同样适用于基于偏似然函数的推断，因此可以与第 3 章中介绍的 Cox 回归模型以及第 5 章和第 6 章中描述的全参数模型结合使用。Cox and Hinkley (1974) 给出了最大似然估计和似然比检验。  A.1 关于单个未知参数的推断 假设 \(n\) 个观察到的生存时间 \(t_1,t_2,\ldots,t_n\)...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="A 最大似然估计 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="本附录总结了与生存分析相关的最大似然估计结果。给出的结果同样适用于基于偏似然函数的推断，因此可以与第 3 章中介绍的 Cox 回归模型以及第 5 章和第 6 章中描述的全参数模型结合使用。Cox and Hinkley (1974) 给出了最大似然估计和似然比检验。  A.1 关于单个未知参数的推断 假设 \(n\) 个观察到的生存时间 \(t_1,t_2,\ldots,t_n\)...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="A 最大似然估计 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="本附录总结了与生存分析相关的最大似然估计结果。给出的结果同样适用于基于偏似然函数的推断，因此可以与第 3 章中介绍的 Cox 回归模型以及第 5 章和第 6 章中描述的全参数模型结合使用。Cox and Hinkley (1974) 给出了最大似然估计和似然比检验。  A.1 关于单个未知参数的推断 假设 \(n\) 个观察到的生存时间 \(t_1,t_2,\ldots,t_n\)...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="active" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="A" class="section level1" number="18">
+<h1>
+<span class="header-section-number">A</span> 最大似然估计<a class="anchor" aria-label="anchor" href="#A"><i class="fas fa-link"></i></a>
+</h1>
+<p>本附录总结了与生存分析相关的最大似然估计结果。给出的结果同样适用于基于偏似然函数的推断，因此可以与第 <a href="chap3.html#chap3">3</a> 章中介绍的 Cox 回归模型以及第 <a href="chap5.html#chap5">5</a> 章和第 <a href="chap6.html#chap6">6</a> 章中描述的全参数模型结合使用。Cox and Hinkley (1974) 给出了最大似然估计和似然比检验。</p>
+<div id="secA-1" class="section level2" number="18.1">
+<h2>
+<span class="header-section-number">A.1</span> 关于单个未知参数的推断<a class="anchor" aria-label="anchor" href="#secA-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>假设 <span class="math inline">\(n\)</span> 个观察到的生存时间 <span class="math inline">\(t_1,t_2,\ldots,t_n\)</span> 的似然是单个未知参数 <span class="math inline">\(\beta\)</span> 的函数，记作 <span class="math inline">\(L(\beta)\)</span>。<span class="math inline">\(\beta\)</span> 的<strong>最大似然估计</strong> (maximum likelihood estimate) 就是使该函数达到最大值的值 <span class="math inline">\(\hat\beta\)</span>。在几乎所有应用中，使用似然函数的自然对数 <span class="math inline">\(\log L(\beta)\)</span> 更为方便。使对数似然最大化的值 <span class="math inline">\(\hat\beta\)</span> 与使似然函数本身最大化的值相同，通常使用微分来求出。</p>
+<p>具体来说，<span class="math inline">\(\hat\beta\)</span> 是 <span class="math inline">\(\log L(\beta)\)</span> 关于 <span class="math inline">\(\beta\)</span> 的导数等于 0 时 <span class="math inline">\(\beta\)</span> 的值。换句话说，<span class="math inline">\(\hat\beta\)</span> 满足</p>
+<p><span class="math display">\[\frac{\mathrm{d}\log L(\beta)}{\mathrm{d}\beta}\Bigg|_{\hat{\beta}}=0\]</span></p>
+<p><span class="math inline">\(\log L(\beta)\)</span> 关于 <span class="math inline">\(\beta\)</span> 的一阶导数称为 <span class="math inline">\(\beta\)</span> 的<strong>有效得分</strong> (efficient score)，记作 <span class="math inline">\(u(\beta)\)</span>。因此</p>
+<p><span class="math display">\[\begin{aligned}u(\beta)&amp;=\frac{\mathrm{d}\log L(\beta)}{\mathrm{d}\beta}\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(\beta\)</span> 的最大似然估计 <span class="math inline">\(\hat\beta\)</span> 满足</p>
+<p><span class="math display">\[\begin{aligned}u(\hat{\beta})=0\end{aligned}\]</span></p>
+<p><span class="math inline">\(\beta\)</span> 最大似然估计的渐近方差根据下式得出</p>
+<p><span class="math display" id="eq:A-1">\[\begin{equation}
+\left(-\operatorname{E}\left\{\frac{\operatorname{d}^2\log L(\beta)}{\operatorname{d}\beta^2}\right\}\right)^{-1}
+\tag{A.1}
+\end{equation}\]</span></p>
+<p>或等价地根据下式得出</p>
+<p><span class="math display">\[\left(\text{ E }\left\{\frac{\mathrm{d}\log L(\beta)}{\mathrm{d}\beta}\right\}^2\right)^{-1}\]</span></p>
+<p>从这两个式子中得出的方差都可视为 <span class="math inline">\(\hat\beta\)</span> 的近似方差，但是使用式 <a href="A.html#eq:A-1">(A.1)</a> 通常更直接。当式 <a href="A.html#eq:A-1">(A.1)</a> 中导数的期望值难以获得时，通过计算在 <span class="math inline">\(\hat\beta\)</span> 处的导数来找到 <span class="math inline">\(\hat\beta\)</span> 的方差的进一步近似。这由下式给出</p>
+<p><span class="math display" id="eq:A-2">\[\begin{equation}
+\text{var }(\hat{\beta})\approx\left.-\left(\frac{\mathrm{d}^2\log L(\beta)}{\mathrm{d}\beta^2}\right)^{-1}\right|_{\hat{\beta}}
+\tag{A.2}
+\end{equation}\]</span></p>
+<p>对数似然函数的二阶导数有时称为 Hessian，量</p>
+<p><span class="math display">\[-\text{ E }\left\{\frac{\text{d}^2\log L(\beta)}{\text{d}\beta^2}\right\}\]</span></p>
+<p>称为信息函数。由于信息函数是由 <span class="math inline">\(\log L(\beta)\)</span> 二阶导数的期望值形成的，因此有时称为<strong>期望信息函数</strong> (expected information function). 相反，对数似然函数本身的负二阶导数称为<strong>观测信息函数</strong> (observed information function). 将后者记作 <span class="math inline">\(i(\beta)\)</span>，因此</p>
+<p><span class="math display">\[i(\beta)=-\left\{\frac{\mathrm{d}^2\log L(\beta)}{\mathrm{d}\beta^2}\right\}\]</span></p>
+<p>该函数的倒数在 <span class="math inline">\(\hat\beta\)</span> 处的值就是式 <a href="A.html#eq:A-2">(A.2)</a> 中给出的 <span class="math inline">\(\hat\beta\)</span> 的近似方差，即</p>
+<p><span class="math display">\[\mathrm{var~}(\hat{\beta})\approx\frac1{i(\hat{\beta})}\]</span></p>
+<p><span class="math inline">\(\hat\beta\)</span> 的标准误，即 <span class="math inline">\(\hat\beta\)</span> 方差估计的平方根，为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{se}\left(\hat{\beta}\right)&amp;=\frac1{\sqrt{\{i(\hat{\beta})\}}}\end{aligned}\]</span></p>
+<p>该标准误可用于构造 <span class="math inline">\(\beta\)</span> 的置信区间。</p>
+<p>为检验 <span class="math inline">\(\beta=0\)</span> 的原假设，可以使用三种检验统计量。<strong>似然比检验统计量</strong> (likelihood ratio test statistic) 为 <span class="math inline">\(-2\log L(\hat{\beta})\)</span> 和 <span class="math inline">\(-2\log L(0)\)</span> 之差。<strong>Wald 检验</strong> (Wald test) 基于统计量</p>
+<p><span class="math display">\[\hat{\beta}^2i(\hat{\beta})\]</span></p>
+<p>以及<strong>得分检验统计量</strong> (score test statistic) 为</p>
+<p><span class="math display">\[\begin{aligned}\frac{\{u(0)\}^2}{i(0)}\end{aligned}\]</span></p>
+<p>在 <span class="math inline">\(\beta=0\)</span> 的原假设下，这些统计量都渐近服从自由度为一的卡方分布。请注意，Wald 统计量等价于统计量</p>
+<p><span class="math display">\[\begin{aligned}\frac{\hat{\beta}}{\text{se }(\hat{\beta})}\end{aligned}\]</span></p>
+<p>其渐近分布于标准正态分布。</p>
+</div>
+<div id="secA-2" class="section level2" number="18.2">
+<h2>
+<span class="header-section-number">A.2</span> 关于未知参数向量的推断<a class="anchor" aria-label="anchor" href="#secA-2"><i class="fas fa-link"></i></a>
+</h2>
+<p><a href="A.html#secA-1">A.1</a> 节中的结果可以扩展到使用 <span class="math inline">\(n\)</span> 个观测值来估计 <span class="math inline">\(p\)</span> 个未知参数 <span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p\)</span> 的值的情况。这些参数可以组装成一个 <span class="math inline">\(p×1\)</span> 的向量 <span class="math inline">\(\beta\)</span>，相应的似然函数为 <span class="math inline">\(L(\boldsymbol{\beta})\)</span>。使 <span class="math inline">\(L(\boldsymbol{\beta})\)</span> 最大化的 <span class="math inline">\(p\)</span> 个未知参数的最大似然估计为 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span>。它们是通过同时求解 <span class="math inline">\(p\)</span> 个方程得到的</p>
+<p><span class="math display">\[\left.\frac{\mathrm{d}\log L(\boldsymbol{\beta})}{\mathrm{d}\beta_j}\right|_{\boldsymbol{\hat{\beta}}}=0\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,p\)</span>。</p>
+<p>由 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span> 组成的向量记为 <span class="math inline">\({\boldsymbol{\hat{\beta}}}\)</span>，因此最大似然为 <span class="math inline">\(L(\hat{\boldsymbol{\beta}})\)</span>。<span class="math inline">\(\beta_j(j=1,2,\ldots,p)\)</span> 的有效得分为</p>
+<p><span class="math display">\[u(\beta_j)=\frac{\mathrm{d}\log L(\boldsymbol{\beta})}{\mathrm{d}\beta_j}\]</span></p>
+<p>这些量可以组合起来得到有效得分的 <span class="math inline">\(p×1\)</span> 向量，记作 <span class="math inline">\(\boldsymbol{u}(\boldsymbol{\beta})\)</span>。因此，最大似然估计向量满足</p>
+<p><span class="math display">\[\boldsymbol{u}(\hat{\boldsymbol{\beta}})=\boldsymbol{0}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol 0\)</span> 为<span class="math inline">\(p×1\)</span> 零向量。</p>
+<p>现在令矩阵 <span class="math inline">\(\boldsymbol H(\boldsymbol \beta)\)</span> 为对数似然函数 <span class="math inline">\(\log L(\hat{\boldsymbol{\beta}})\)</span> 的二阶偏导数的 <span class="math inline">\(p × p\)</span> 矩阵。<span class="math inline">\(\boldsymbol H(\boldsymbol \beta)\)</span> 的第 <span class="math inline">\((j, k)\)</span> 个元素为</p>
+<p><span class="math display">\[\begin{aligned}\frac{\partial^2\log L(\hat{\boldsymbol{\beta}})}{\partial\beta_j\partial\beta_k}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,p,k=1,2,\ldots,p\)</span>。<span class="math inline">\(\boldsymbol H(\boldsymbol \beta)\)</span> 称为 Hessian 矩阵。矩阵</p>
+<p><span class="math display">\[\boldsymbol{I}(\boldsymbol{\beta})=-\boldsymbol{H}(\boldsymbol{\beta})\]</span></p>
+<p>称为<strong>观测信息矩阵</strong> (observed information matrix)。相应<strong>期望信息矩阵</strong> (expected information matrix) 的第 <span class="math inline">\((j, k)\)</span> 个元素为</p>
+<p><span class="math display">\[\begin{aligned}-\operatorname{E}\left(\frac{\partial^2\log L(\boldsymbol{\beta})}{\partial\beta_j\partial\beta_k}\right)\end{aligned}\]</span></p>
+<p>最大似然估计 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span> 的方差-协方差阵，写作 <span class="math inline">\(\operatorname{var}(\hat{\boldsymbol{\beta}})\)</span>，可以通过观测信息矩阵的逆在 <span class="math inline">\(\hat{\boldsymbol\beta}\)</span> 处的值来近似，即</p>
+<p><span class="math display">\[\mathrm{var~}(\hat{\boldsymbol{\beta}})\approx\boldsymbol{I}^{-1}(\hat{\boldsymbol{\beta}})\]</span></p>
+<p>该矩阵第 <span class="math inline">\((j, j)\)</span> 个元素的平方根可视为 <span class="math inline">\(\hat{\beta}_{j}\)</span> 的标准误，其中 <span class="math inline">\(j=1,2,\ldots,p\)</span>。</p>
+<p><a href="A.html#secA-1">A.1</a> 节中给出的检验统计量可以推广到多参数的情况。考虑关于原假设的检验，即拟合模型中的所有 <span class="math inline">\(\beta\)</span> 参数都等于 0. 似然比检验统计量的值为</p>
+<p><span class="math display">\[2\left\{\log L(\hat{\boldsymbol{\beta}})-\log L(\mathbf{0})\right\}\]</span></p>
+<p>Wald 检验基于</p>
+<p><span class="math display">\[\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{I}(\hat{\boldsymbol{\beta}})\hat{\boldsymbol{\beta}}\]</span></p>
+<p>得分检验统计量为</p>
+<p><span class="math display">\[\boldsymbol{u}'(\boldsymbol{0})\boldsymbol{I}^{-1}(\boldsymbol{0})\boldsymbol{u}(\boldsymbol{0})\]</span></p>
+<p>在原假设 <span class="math inline">\(\boldsymbol\beta = \boldsymbol0\)</span> 下，这些统计量中都服从自由度为一的卡方分布。</p>
+<p>在比较替代模型时，人们的兴趣集中于这样的假设：模型中的某些 <span class="math inline">\(\beta\)</span> 参数为零。为检验该假设，似然比检验是最合适的，所以我们在这里只考虑这个程序。假设将包含 <span class="math inline">\(p + q\)</span> 个参数 <span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p,\beta_{p+1},\ldots,\beta_{p+q}\)</span> 的模型与仅包含 <span class="math inline">\(p\)</span> 个参数 <span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p\)</span> 的模型进行比较。这相当于检验原假设：具有 <span class="math inline">\(p + q\)</span> 个未知参数的模型中 <span class="math inline">\(q\)</span> 个参数 <span class="math inline">\(\beta_{p+1},\beta_{p+2},\ldots,\beta_{p+q}\)</span> 均等于 0. 令 <span class="math inline">\(\hat{\boldsymbol\beta}_1\)</span> 表示具有 <span class="math inline">\(p + q\)</span> 个参数的模型的向量估计，<span class="math inline">\(\hat{\boldsymbol\beta}_2\)</span> 表示仅具有 <span class="math inline">\(p\)</span> 参数的模型的向量估计。那么，在具有 <span class="math inline">\(p + q\)</span> 参数的模型中，有关原假设 <span class="math inline">\(\beta_{p+1},\beta_{p+2},\ldots,\beta_{p+q}=0\)</span> 的似然比检验基于统计量</p>
+<p><span class="math display">\[2\left\{\log L(\hat{\boldsymbol{\beta}}_1)-\log L(\hat{\boldsymbol{\beta}}_2)\right\}\]</span></p>
+<p>在原假设下，它服从自由度为 <span class="math inline">\(q\)</span> 的卡方分布。该检验构成了比较替代模型的基础，并在第 3 章 <a href="chap3.html#sec3-5">3.5</a> 节中进行了更详细的描述。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></div>
+<div class="next"><a href="B.html"><span class="header-section-number">B</span> 额外数据集</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#A"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="nav-link" href="#secA-1"><span class="header-section-number">A.1</span> 关于单个未知参数的推断</a></li>
+<li><a class="nav-link" href="#secA-2"><span class="header-section-number">A.2</span> 关于未知参数向量的推断</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

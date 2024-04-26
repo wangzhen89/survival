@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>示例索引 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="停用宫内节育器的时间：示例 1.1, 2.2, 2.4, 2.5, 2.7, 2.8, 2.9, 2.10, 5.1, 5.2, 5.3, 5.4, 16.1, 16.2, 16.3 乳腺癌妇女的预后：示例 1.2, 2.11, 2.12, 2.13, 2.14, 3.1, 3.3, 5.5, 5.6, 5.7, 5.8, 5.13, 5.14, 5.17, 10.1, 10.2,...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="示例索引 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="停用宫内节育器的时间：示例 1.1, 2.2, 2.4, 2.5, 2.7, 2.8, 2.9, 2.10, 5.1, 5.2, 5.3, 5.4, 16.1, 16.2, 16.3 乳腺癌妇女的预后：示例 1.2, 2.11, 2.12, 2.13, 2.14, 3.1, 3.3, 5.5, 5.6, 5.7, 5.8, 5.13, 5.14, 5.17, 10.1, 10.2,...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="示例索引 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="停用宫内节育器的时间：示例 1.1, 2.2, 2.4, 2.5, 2.7, 2.8, 2.9, 2.10, 5.1, 5.2, 5.3, 5.4, 16.1, 16.2, 16.3 乳腺癌妇女的预后：示例 1.2, 2.11, 2.12, 2.13, 2.14, 3.1, 3.3, 5.5, 5.6, 5.7, 5.8, 5.13, 5.14, 5.17, 10.1, 10.2,...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="active" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="exm" class="section level1 unnumbered">
+<h1>示例索引<a class="anchor" aria-label="anchor" href="#exm"><i class="fas fa-link"></i></a>
+</h1>
+<p><strong>停用宫内节育器的时间</strong>：<a href="chap1.html#exm:ex1-1">示例 1.1</a>, <a href="chap2.html#exm:ex2-2">2.2</a>, <a href="chap2.html#exm:ex2-4">2.4</a>, <a href="chap2.html#exm:ex2-5">2.5</a>, <a href="chap2.html#exm:ex2-7">2.7</a>, <a href="chap2.html#exm:ex2-8">2.8</a>, <a href="chap2.html#exm:ex2-9">2.9</a>, <a href="chap2.html#exm:ex2-10">2.10</a>, <a href="chap5.html#exm:ex5-1">5.1</a>, <a href="chap5.html#exm:ex5-2">5.2</a>, <a href="chap5.html#exm:ex5-3">5.3</a>, <a href="chap5.html#exm:ex5-4">5.4</a>, <a href="chap16.html#exm:ex16-1">16.1</a>, <a href="chap16.html#exm:ex16-2">16.2</a>, <a href="chap16.html#exm:ex16-3">16.3</a></p>
+<p><strong>乳腺癌妇女的预后</strong>：<a href="chap1.html#exm:ex1-2">示例 1.2</a>, <a href="chap2.html#exm:ex2-11">2.11</a>, <a href="chap2.html#exm:ex2-12">2.12</a>, <a href="chap2.html#exm:ex2-13">2.13</a>, <a href="chap2.html#exm:ex2-14">2.14</a>, <a href="chap3.html#exm:ex3-1">3.1</a>, <a href="chap3.html#exm:ex3-3">3.3</a>, <a href="chap5.html#exm:ex5-5">5.5</a>, <a href="chap5.html#exm:ex5-6">5.6</a>, <a href="chap5.html#exm:ex5-7">5.7</a>, <a href="chap5.html#exm:ex5-8">5.8</a>, <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-13">5.13</a>, <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-14">5.14</a>, <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-17">5.17</a>, <a href="chap10.html#exm:ex10-1">10.1</a>, <a href="chap10.html#exm:ex10-2">10.2</a>, <a href="chap16.html#exm:ex16-4">16.4</a>, <a href="chap16.html#exm:ex16-5">16.5</a>, <a href="chap16.html#exm:ex16-6">16.6</a></p>
+<p><strong>多发性骨髓瘤患者的生存</strong>：<a href="chap1.html#exm:ex1-3">示例 1.3</a>, <a href="chap2.html#exm:ex2-2">2.2</a>, <a href="chap2.html#exm:ex2-6">2.6</a>, <a href="chap3.html#exm:ex3-2">3.2</a>, <a href="chap3.html#exm:ex3-5">3.5</a>, <a href="chap3.html#exm:ex3-7">3.7</a>, <a href="chap3.html#exm:ex3-8">3.8</a>, <a href="chap3.html#exm:ex3-9">3.9</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-15">3.15</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-17">3.17</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-19">3.19</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-20">3.20</a>, <a href="chap4.html#exm:ex4-5">4.5</a>, <a href="chap4.html#exm:ex4-8">4.8</a>, <a href="chap4.html#exm:ex4-9">4.9</a>, <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-16">5.16</a></p>
+<p><strong>前列腺癌两种疗法的比较</strong>：<a href="chap1.html#exm:ex1-4">示例 1.4</a>, <a href="chap3.html#exm:ex3-6">3.6</a>, <a href="#exm:ex3-12">3.12</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-16">3.16</a>, <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-15">5.15</a></p>
+<p><strong>肺转移</strong>：<a href="chap2.html#exm:ex2-1">示例 2.1</a></p>
+<p><strong>黑色素瘤患者的生存时间</strong>：<a href="chap2.html#exm:ex2-15">示例 2.15</a>, <a href="chap2.html#exm:ex2-16">2.16</a></p>
+<p><strong>肾癌的治疗</strong>：<a href="chap3.html#exm:ex3-4">示例 3.4</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-10">3.10</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-11">3.11</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-13">3.13</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-14">3.14</a>, <a href="chap5.html#exm:ex5-10">5.10</a>, <a href="chap6.html#exm:ex6-1">6.1</a>, <a href="chap6.html#exm:ex6-4">6.4</a></p>
+<p><strong>侧流装置检测 COVID-19 的性能</strong>：<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-18">示例 3.18</a></p>
+<p><strong>透析患者的感染</strong>：<a href="chap4.html#exm:ex4-1">示例 4.1</a>, <a href="chap4.html#exm:ex4-2">4.2</a>, <a href="chap4.html#exm:ex4-3">4.3</a>, <a href="chap4.html#exm:ex4-4">4.4</a>, <a href="chap4.html#exm:ex4-7">4.7</a>, <a href="chap4.html#exm:ex4-10">4.10</a>, <a href="chap4.html#exm:ex4-11">4.11</a>, <a href="chap4.html#exm:ex4-12">4.12</a></p>
+<p><strong>数值说明</strong>：<a href="chap5.html#exm:ex5-9">示例 5.9</a></p>
+<p><strong>卵巢癌患者的化疗</strong>：<a href="chap5.html#exm:ex5-11">示例 5.11</a>, <a href="chap5.html#exm:ex5-12">5.12</a>, <a href="chap7.html#exm:ex7-1">7.1</a>, <a href="chap7.html#exm:ex7-2">7.2</a>, <a href="chap7.html#exm:ex7-3">7.3</a>, <a href="chap7.html#exm:ex7-4">7.4</a>, <a href="chap8.html#exm:ex8-3">8.3</a></p>
+<p><strong>一个样条函数的说明</strong>：<a href="chap6.html#exm:ex6-2">示例 6.2</a>, <a href="chap6.html#exm:ex6-3">5.12</a></p>
+<p><strong>乳腺癌患者的无复发生存</strong>：<a href="chap6.html#exm:ex6-5">示例 6.5</a>, <a href="chap6.html#exm:ex6-6">6.6</a></p>
+<p><strong>计数过程格式说明</strong>：<a href="chap8.html#exm:ex8-1">示例 8.1</a>, <a href="chap13.html#exm:ex13-1">13.1</a></p>
+<p><strong>骨髓移植治疗白血病</strong>：<a href="chap8.html#exm:ex8-2">示例 8.2</a></p>
+<p><strong>肝硬化研究数据</strong>：<a href="chap8.html#exm:ex8-4">示例 8.4</a></p>
+<p><strong>主动脉瓣置换术后的生存</strong>：<a href="chap8.html#exm:ex8-5">示例 8.5</a>, <a href="chap8.html#exm:ex8-6">8.6</a>, <a href="chap8.html#exm:ex8-7">8.7</a>, <a href="chap8.html#exm:ex8-8">8.8</a>, <a href="chap8.html#exm:ex8-9">8.9</a></p>
+<p><strong>溃疡复发</strong> <a href="chap9.html#exm:ex9-1">示例 9.1</a>, <a href="chap9.html#exm:ex9-4">9.4</a>, <a href="chap9.html#exm:ex9-5">9.5</a>, <a href="chap9.html#exm:ex9-6">9.6</a>, <a href="chap9.html#exm:ex9-7">9.7</a>, <a href="chap11.html#exm:ex11-1">11.1</a></p>
+<p><strong>人造区间删失数据</strong>：<a href="chap9.html#exm:ex9-2">示例 9.2</a>, <a href="chap9.html#exm:ex9-3">9.3</a></p>
+<p><strong>肺移植登记患者的生存</strong>：<a href="chap10.html#exm:ex10-3">示例 10.3</a></p>
+<p><strong>胃癌患者的生存</strong>：<a href="chap11.html#exm:ex11-2">示例 11.2</a>, <a href="chap11.html#exm:ex11-3">11.3</a></p>
+<p><strong>肾移植中心之间的比较</strong>：<a href="chap11.html#exm:ex11-4">示例 11.4</a>, <a href="chap11.html#exm:ex11-5">11.5</a>, <a href="chap11.html#exm:ex11-6">11.6</a>, <a href="chap11.html#exm:ex11-7">11.7</a>, <a href="chap11.html#exm:ex11-8">11.8</a></p>
+<p><strong>实验小鼠的生存</strong>：<a href="chap12.html#exm:ex12-7">示例 12.7</a></p>
+<p><strong>雌性大鼠乳腺肿瘤的复发</strong>：<a href="chap13.html#exm:ex13-2">示例 13.2</a></p>
+<p><strong>他莫昔芬治疗乳腺癌患者的临床试验</strong>：<a href="chap13.html#exm:ex13-3">示例 13.3</a></p>
+<p><strong>骨髓移植后的患者结局</strong>：<a href="chap13.html#exm:ex13-4">示例 13.4</a></p>
+<p><strong>等待肝移植的死亡时间</strong>：<a href="chap14.html#exm:ex14-1">示例 14.1</a>, <a href="chap14.html#exm:ex14-3">14.3</a></p>
+<p><strong>相依删失的数据格式</strong>：<a href="chap14.html#exm:ex14-2">示例 14.2</a></p>
+<p><strong>慢性活动性肝炎的生存</strong>：<a href="chap15.html#exm:ex15-1">示例 15.1</a>, <a href="chap15.html#exm:ex15-2">15.2</a>, <a href="chap15.html#exm:ex15-3">15.3</a></p>
+<p><strong>健康评估及其初级保健的连接</strong>：<a href="chap16.html#exm:ex16-7">示例 16.7</a></p>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="chapter-nav">
+<div class="prev"><a href="bib.html">参考书目</a></div>
+<div class="empty"></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav"><li><a class="nav-link" href="#exm">示例索引</a></li></ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

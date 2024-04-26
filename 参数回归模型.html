@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>►参数回归模型 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="5.10 用于两组比较的加速失效时间模型 加速失效时间模型 (accelerated failure time model) 是一种通用的生存数据模型，其中假设在个体上测量的解释变量会在时间尺度上起乘性作用 (act multiplicatively)，从而影响个体在时间轴上前进的速率。这意味着模型可以从疾病进展速度的角度来解释，这种解释具有直观的吸引力。在 5.11...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="►参数回归模型 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="5.10 用于两组比较的加速失效时间模型 加速失效时间模型 (accelerated failure time model) 是一种通用的生存数据模型，其中假设在个体上测量的解释变量会在时间尺度上起乘性作用 (act multiplicatively)，从而影响个体在时间轴上前进的速率。这意味着模型可以从疾病进展速度的角度来解释，这种解释具有直观的吸引力。在 5.11...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="►参数回归模型 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="5.10 用于两组比较的加速失效时间模型 加速失效时间模型 (accelerated failure time model) 是一种通用的生存数据模型，其中假设在个体上测量的解释变量会在时间尺度上起乘性作用 (act multiplicatively)，从而影响个体在时间轴上前进的速率。这意味着模型可以从疾病进展速度的角度来解释，这种解释具有直观的吸引力。在 5.11...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="active" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="参数回归模型" class="section level1 unnumbered">
+<h1>►参数回归模型<a class="anchor" aria-label="anchor" href="#%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B"><i class="fas fa-link"></i></a>
+</h1>
+<div id="sec5-10" class="section level2" number="5.10">
+<h2>
+<span class="header-section-number">5.10</span> 用于两组比较的加速失效时间模型<a class="anchor" aria-label="anchor" href="#sec5-10"><i class="fas fa-link"></i></a>
+</h2>
+<p>加速失效时间模型 (accelerated failure time model) 是一种通用的生存数据模型，其中假设在个体上测量的解释变量会在时间尺度上起乘性作用 (act multiplicatively)，从而影响个体在时间轴上前进的速率。这意味着模型可以从疾病进展速度的角度来解释，这种解释具有直观的吸引力。在 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-11">5.11</a> 节介绍模型的一般形式之前，先详细描述用于比较两组患者生存时间的加速失效时间模型。</p>
+<p>假设患者随机接受两种疗法之一，标准疗法 S 或新疗法 N. 在加速失效时间模型下，接受新疗法的个体的生存时间视为接受标准疗法的个体的生存时间的倍数。因此，新疗法的效应是“加速”或“减慢”时间的流逝。在此假设下，接受新疗法的个体在时间 <span class="math inline">\(t\)</span> 后生存的概率就是接受标准疗法的个体在时间 <span class="math inline">\(t/\phi\)</span> 后生存的概率，其中 <span class="math inline">\(\phi\)</span> 是未知的正的常数。</p>
+<p>现在令 <span class="math inline">\(S_S(t)\)</span> 和 <span class="math inline">\(S_N(t)\)</span> 是两个治疗组中个体的生存函数。那么，对于生存时间 <span class="math inline">\(t\)</span> 的任何值，加速失效时间模型指定</p>
+<p><span class="math display">\[\begin{aligned}S_N(t)=S_S(t/\phi)\end{aligned}\]</span></p>
+<p>对该模型的一种解释是，接受新疗法的个体的寿命是该个体在标准疗法下的寿命的 <span class="math inline">\(\phi\)</span> 倍。因此，参数 <span class="math inline">\(\phi\)</span> 反映了新疗法对生存时间的影响，称为时间比 (time ratio).</p>
+<p>当关注的终点是患者的死亡时，与接受标准疗法的患者相比，<span class="math inline">\(ϕ&lt;1\)</span> 对应于接受新疗法的患者死亡时间的加速。因此，从延长寿命的角度来看，标准疗法会更合适。另一方面，当终点是从某种疾病状态恢复时，当新疗法的效应是加快恢复时间时，会得到 <span class="math inline">\(\phi&lt;1\)</span>。此时，新疗法将优于标准疗法。量 <span class="math inline">\(\phi^{-1}\)</span> 是时间比的倒数，是新疗法生存时间相对于标准疗法生存时间的加速或减速的因子，称为加速因子 (acceleration factor).</p>
+<p>时间比或加速因子也可用新疗法和标准疗法的患者中位生存时间 <span class="math inline">\(t_N (50)\)</span> 和 <span class="math inline">\(t_S(50)\)</span> 来解释。这些值满足 <span class="math inline">\(S_N\{t_N(50)\}=S_S\{t_S(50)\}=0.5\)</span>。现在，在加速失效时间模型下，<span class="math inline">\(S_N\{t_N(50)\}=S_S\{t_N(50)/\phi\}\)</span>，因此可以得出 <span class="math inline">\(t_N (50) = \phi t_S(50)\)</span>。换句话说，在加速失效时间模型下，接受新疗法的患者的中位生存时间是接受标准疗法的患者的 <span class="math inline">\(\phi\)</span> 倍。事实上，同样的论证可用于生存时间分布的任何百分位数。这意味着接受新疗法的患者的生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数 <span class="math inline">\(t_N (p)\)</span> 满足 <span class="math inline">\(t_N (p) = \phi t_S(p)\)</span>，其中 <span class="math inline">\(t_S(p)\)</span> 是标准疗法的第 <span class="math inline">\(p\)</span> 个百分位数。该模型的这种解释对临床医生特别有吸引力。</p>
+<p>根据式 <a href="chap1.html#eq:1-4">(1.4)</a> 中给出的生存函数、概率密度函数和风险函数之间的关系，两个治疗组中个体的密度和风险函数的关系为</p>
+<p><span class="math display">\[\begin{aligned}f_N(t)=\phi^{-1}f_S(t/\phi)\end{aligned}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\begin{aligned}h_N(t)=\phi^{-1}h_S(t/\phi)\end{aligned}\]</span></p>
+<p>现在，让 <span class="math inline">\(X\)</span> 是一个指示变量，对于接受标准疗法的个体，它的值为 0，而对于接受新疗法的个体，它的值为 1. 第 <span class="math inline">\(i\)</span> 个个体的风险函数可以表示为</p>
+<p><span class="math display" id="eq:5-57">\[\begin{align}
+h_i(t)=\phi^{-x_i}h_0(t/\phi^{x_i})
+\tag{5.57}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是研究中第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(X\)</span> 值。将 <span class="math inline">\(x_i=0\)</span> 代入此表达式，可以看出函数 <span class="math inline">\(h_0(t)\)</span> 是接受标准疗法的个体的风险函数。这再次被称为基线风险函数。接受新治疗个体的风险函数则为 <span class="math inline">\(\phi^{-1}h_0(t/\phi)\)</span>。</p>
+<p>参数 <span class="math inline">\(\phi\)</span> 必须为非负，因此可以方便地设置 <span class="math inline">\(\phi = e^\alpha\)</span>。式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-57">(5.57)</a> 中的加速失效时间模型则变为</p>
+<p><span class="math display" id="eq:5-58">\[\begin{align}
+h_{{i}}(t)=e^{{-}\alpha x_{{i}}}h_{{0}}(t/e^{\alpha x_{{i}}})
+\tag{5.58}
+\end{align}\]</span></p>
+<p>因此，新疗法中个体的风险函数现在为 <span class="math inline">\(e^{\large-\alpha}h_0(t/e^{\large\alpha})\)</span>。</p>
+<div id="sec5-10-1" class="section level3" number="5.10.1">
+<h3>
+<span class="header-section-number">5.10.1</span> 与比例风险模型的比较<a class="anchor" aria-label="anchor" href="#sec5-10-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>为了说明比例风险模型和加速失效时间模型之间的差异，再次假设要对两组（例如 Group I 和 Group II）中的个体的生存时间进行建模。进一步假设对于 Group I 中的个体，风险函数由下式给出</p>
+<p><span class="math display">\[\left.h_0(t)=\left\{\begin{array}{l}0.5\text{ if }t\leqslant1\\1.0\text{ if }t&gt;1\end{array}\right.\right.\]</span></p>
+<p>其中时间以月为单位。这种类型的风险函数源自分段指数模型 (piecewise exponential model)，因为在每个时间段内的恒定风险意味着生存时间呈指数分布，但两个时间段的均值不同。该模型提供了一种表示可变 (variable) 风险函数的简单方法，并可能适用于存在短期风险恒定但在阈值时间后风险突然增加的情况。</p>
+<p>现在让 <span class="math inline">\(h_P (t)\)</span> 和 <span class="math inline">\(h_A(t)\)</span> 分别表示比例风险模型和加速失效时间模型下 Group II 个体的风险函数。因此，我们可以写处两个风险函数</p>
+<p><span class="math display">\[\begin{aligned}h_P(t)=\psi h_0(t)\end{aligned}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\begin{aligned}h_A(t)=\phi^{-1}h_0(t/\phi)\end{aligned}\]</span></p>
+<p>两种模型下 Group II 个体对应的生存函数分别为</p>
+<p><span class="math display">\[S_P(t)=\left[S_0(t)\right]^\psi \]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\begin{aligned}S_A(t)=S_0(t/\phi)\end{aligned}\]</span></p>
+<p>使用 <span class="math inline">\(S(t)=\exp\{-\int_0^th(u)\mathrm{d}u\}\)</span> 这一结果，基线生存函数为</p>
+<p><span class="math display">\[\left.S_0(t)=\left\{\begin{array}{ll}e^{-0.5t}&amp;\text{if }t\leqslant1\\e^{-0.5-(t-1)}&amp;\text{if }t&gt;1\end{array}\right.\right.\]</span></p>
+<p>由于如果 <span class="math inline">\(t\le 1\)</span> 则 <span class="math inline">\(S_0(t)\geqslant0.61\)</span>，因此中位数 <span class="math inline">\(t\)</span> 出现在生存函数的第二部分，即满足 <span class="math inline">\(\exp\{-0.5-(t-1)\}=0.5\)</span>。因此，Group I 患者的中位生存时间为 1.19 个月。</p>
+<p>为了说明比例风险模型和加速失效时间模型下的风险函数之间的差异，请考虑 <span class="math inline">\(\psi=\phi^{-1}=2.0\)</span> 的特殊情况。在比例风险模型下，Group II 个体的中位生存时间为 0.69 个月，在加速失效时间模型下为 0.60 个月。两种模型下两组的风险函数如图 5.19 所示，相应的生存函数如图 5.20 所示。</p>
+<details><summary><font color="#8B2232">图 5.19</font>
+</summary><img src="figure/figure%205.19.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.20</font>
+</summary><img src="figure/figure%205.20.png#center" style="width:80.0%"></details><p><br>
+在加速失效时间模型中，Group II 个体的风险从 1.0 增加到 2.0 的时间比比例风险模型更早发生。在加速失效时间模型下，生存函数的“拐点”也发生得更早。</p>
+</div>
+<div id="sec5-10-2" class="section level3" number="5.10.2">
+<h3>
+<span class="header-section-number">5.10.2</span> 百分位-百分位图<a class="anchor" aria-label="anchor" href="#sec5-10-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>百分位-百分位图 (percentile-percentile plot)，也称为分位数-分位数图 (quantile-quantile plot) 或 Q-Q 图，提供了一种用于评估两组生存数据的加速失效时间模型有效性的探索性方法。回想一下，分布的第 <span class="math inline">\(p\)</span> 个百分位数是值 <span class="math inline">\(t(p)\)</span>，<span class="math inline">\(p\)</span> 的取值区间为 <span class="math inline">\((0, 100)\)</span>。因此，第 <span class="math inline">\(p\)</span> 个百分位数满足</p>
+<p><span class="math display">\[\begin{aligned}t(p)&amp;=S^{-1}\left(\frac{100-p}{100}\right)\end{aligned}\]</span></p>
+<p>现在令 <span class="math inline">\(t_0(p)\)</span> 和 <span class="math inline">\(t_1(p)\)</span> 为根据两组生存数据的生存函数估计的第 <span class="math inline">\(p\)</span> 个百分位数。<span class="math inline">\(p\)</span> 的值可以取为 10, 20,…, 90，只要每组的观测数不是太少。因此，两组的百分位数可以表示为</p>
+<p><span class="math display">\[\begin{aligned}t_0(p)=S_0^{-1}\left(\frac{100-p}{100}\right),\quad t_1(p)=S_1^{-1}\left(\frac{100-p}{100}\right)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(S_0(t)\)</span> 和 <span class="math inline">\(S_1(t)\)</span> 为两组的生存函数。对于任何给定的 <span class="math inline">\(p\)</span> 值，有</p>
+<p><span class="math display" id="eq:5-59">\[\begin{align}
+S_1\{t_1(p)\}=S_0\{t_0(p)\}
+\tag{5.59}
+\end{align}\]</span></p>
+<p>在加速失效时间模型下，<span class="math inline">\(S_1(t) = S_0(t/\phi)\)</span>，因此第二组的第 <span class="math inline">\(p\)</span> 个百分位数 <span class="math inline">\(t_1(p)\)</span> 满足</p>
+<p><span class="math display">\[\begin{aligned}S_1\{t_1(p)\}=S_0\{t_1(p)/\phi\}\end{aligned}\]</span></p>
+<p>使用式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-59">(5.59)</a></p>
+<p><span class="math display">\[\begin{aligned}S_0\left\{t_0(p)\right\}=S_0\left\{t_1(p)/\phi\right\}\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}t_0(p)=\phi^{-1}t_1(p)\end{aligned}\]</span></p>
+<p>现在令 <span class="math inline">\(\hat{t}_0(p),\hat{t}_1(p)\)</span> 表示两组的百分位数估计，因此</p>
+<p><span class="math display">\[\begin{aligned}\hat{t}_0(p)=\hat{S}_0^{-1}\left(\frac{100-p}{100}\right),\quad\hat{t}_1(p)=\hat{S}_1^{-1}\left(\frac{100-p}{100}\right)\end{aligned}\]</span></p>
+<p>如果加速失效时间模型合适，对于适当选择的 <span class="math inline">\(p\)</span> 值，<span class="math inline">\(\hat{t}_0(p)\)</span> 关于 <span class="math inline">\(\hat{t}_1(p)\)</span> 的图形应给出一条穿过原点的直线。这条线的斜率将是加速因子 <span class="math inline">\(\phi^{−1}\)</span> 的估计。因此，该图可用于对加速失效时间模型的充分性 (adequacy) 进行探索性评估。从这个意义上说，<strong>它类似于对数累积风险图</strong>，后者在 <a href="chap4.html#sec4-4-1">4.4.1</a> 节中用于检查比例风险模型的有效性。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-13" class="example"><strong>示例 5.13  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在本例中，最初在第 1 章<a href="chap1.html#exm:ex1-2">示例 1.2</a> 给出的阴性或阳性乳腺癌女性的生存时间数据用于说明百分位图。每组生存时间分布的百分位数可以通过各自生存函数的 Kaplan-Meier 估计来估计。这些数据列在表 5.8 中。</p>
+<details><summary><font color="#8B2232">表 5.8</font>
+</summary><img src="figure/table%205.8.png#center" style="width:80.0%"></details><p><br>
+相对较少的死亡次数，以及这两组女性数据的删失模式，意味着并非所有的百分位数都可以估计。因此，百分位图将只有四对点，如图 5.21 所示。这些点落在一条相当直的线上，这表明加速失效时间模型并非不合适。然而，鉴于图中的点数有限，必须谨慎对待这一结论。</p>
+<details><summary><font color="#8B2232">图 5.21</font>
+</summary><img src="figure/figure%205.21.png#center" style="width:80.0%"></details><p><br>
+图 5.21 中各点之间的直线的斜率大约为 3，这是加速因子的粗略估计。对此的解释是，与肿瘤呈阴性染色的妇女相比，肿瘤呈阳性染色的妇女的疾病进展加速了三倍。</p>
+<p>等价地，时间比约为三分之一，因此肿瘤呈阳性染色的女性的寿命约为肿瘤染色呈阴性的女性的三分之一。我们还可以说，肿瘤呈阳性染色的女性的中位生存时间估计约为肿瘤呈阴性染色的女性的三分之一。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec5-11" class="section level2" number="5.11">
+<h2>
+<span class="header-section-number">5.11</span> 一般加速失效时间模型<a class="anchor" aria-label="anchor" href="#sec5-11"><i class="fas fa-link"></i></a>
+</h2>
+<p>式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-58">(5.58)</a> 中的加速失效时间模型可以推广到研究中每个个体的 <span class="math inline">\(p\)</span> 个解释变量的值已被记录的情况。根据一般加速失效时间模型 (general accelerated failure time model)，第 <span class="math inline">\(i\)</span> 个个体在时刻 <span class="math inline">\(t\)</span> 的风险函数 <span class="math inline">\(h_i(t)\)</span> 为</p>
+<p><span class="math display" id="eq:5-60">\[\begin{align}
+h_i(t)=e^{-\eta_i}h_0(t/e^{\eta_i})
+\tag{5.60}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\eta_i=\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\end{aligned}\]</span></p>
+<p>为模型的线性部分，其中 <span class="math inline">\(x_{ji}\)</span> 是第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体第 <span class="math inline">\(j\)</span> 个解释变量 <span class="math inline">\(X_j(j=1,2,\ldots,p)\)</span> 的值。与比例风险模型一样，基线风险函数 <span class="math inline">\(h_0(t)\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量值全为零的个体在时间 <span class="math inline">\(t\)</span> 的死亡风险。该基线风险是这些个体的生存时间的假定概率分布的风险函数。第 <span class="math inline">\(i\)</span> 个个体对应的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)=S_0\{t/\exp(\eta_i)\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(S_0(t)\)</span> 是基线生存函数。</p>
+<p>参数加速失效时间模型在后文中统一采用模型的对数线性表示。这种表示表明，生存数据的加速失效时间模型与回归分析中使用的一般线性模型密切相关。此外，大多数计算机软件包都采用这种形式的模型来进行加速失效时间建模。</p>
+<div id="sec5-11-2" class="section level3" number="5.11.1">
+<h3>
+<span class="header-section-number">5.11.1</span> 加速失效时间模型的对数线性形式<a class="anchor" aria-label="anchor" href="#sec5-11-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>考虑随机变量 <span class="math inline">\(T_i\)</span> 的对数线性模型，该模型与生存研究中第 <span class="math inline">\(i\)</span> 个个体的寿命相关，模型为</p>
+<p><span class="math display" id="eq:5-61">\[\begin{align}
+\log T_i=\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}+\sigma\epsilon_i
+\tag{5.61}
+\end{align}\]</span></p>
+<p>在此模型中，<span class="math inline">\(\alpha_1,\alpha_2,\ldots,\alpha_p\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1, X_2,...,X_p\)</span> 值的未知系数，其中第 <span class="math inline">\(i\)</span> 个个体的值为 <span class="math inline">\(x_{1i}, x_{2i},...,x_{pi}\)</span>，<span class="math inline">\(\mu,\sigma\)</span> 是另外两个参数，分别称为截距和尺度参数。量 <span class="math inline">\(\epsilon_i\)</span> 是一个随机变量，用于对 <span class="math inline">\(\log T_i\)</span> 值与模型线性部分的偏差进行建模，并假设 <span class="math inline">\(\epsilon_i\)</span> 服从特定的概率分布。在该模型的表述中，<span class="math inline">\(\alpha\)</span> 参数反映了每个解释变量对生存时间的效应；正值表明生存时间随解释变量值的增加而增加，反之亦然。</p>
+<p>为了阐明模型的这种表示与式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-60">(5.60)</a> 中的表示之间的关系，考虑 <span class="math inline">\(T_i\)</span> 的生存函数，其中 <span class="math inline">\(T_i\)</span> 是与第 <span class="math inline">\(i\)</span> 个个体的生存时间相关的随机变量，使用式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a>，这由下式给出</p>
+<p><span class="math display" id="eq:5-62">\[\begin{align}
+S_i(t)=\mathrm{P}(T_i\geqslant t)=\mathrm{P}\left\{\exp(\mu+\boldsymbol{\alpha'x}_i+\sigma\epsilon_i)\geqslant t\right\}
+\tag{5.62}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{\alpha}'\boldsymbol{x}_i=\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\)</span>。</p>
+<p>现在，根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-62">(5.62)</a>，<span class="math inline">\(S_i(t)\)</span> 可写为如下形式</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)&amp;=\text{P}\left\{\exp(\mu+\sigma\epsilon_i)\geqslant t/\exp(\boldsymbol{\alpha'x}_i)\right\}\end{aligned}\]</span></p>
+<p>以及基线生存函数 <span class="math inline">\(S_0(t)\)</span>，即 <span class="math inline">\(\boldsymbol x=\boldsymbol 0\)</span> 的个体的生存函数，为</p>
+<p><span class="math display">\[S_0(t)=\text{P }\{\exp(\mu+\sigma\epsilon_i)\geqslant t\}\]</span></p>
+<p>那么有</p>
+<p><span class="math display" id="eq:5-63">\[\begin{align}
+S_i(t)=S_0\{t/\exp(\boldsymbol{\alpha'x}_i)\}
+\tag{5.63}
+\end{align}\]</span></p>
+<p>这是加速失效时间模型中第 <span class="math inline">\(i\)</span> 个个体生存函数的一般形式。</p>
+<p>使用第 1 章的式 <a href="chap1.html#eq:1-5">(1.5)</a> 可获得风险函数之间的对应关系。具体来说，对式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-63">(5.63)</a> 两边取对数，乘以 −1，并对 <span class="math inline">\(t\)</span> 进行微分，得到</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(-\boldsymbol{\alpha'x}_i)h_0\{t/\exp(\boldsymbol{\alpha'x}_i)\}\end{aligned}\]</span></p>
+<p>这就是式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-60">(5.60)</a> 中的模型，其中 <span class="math inline">\(\eta_i=\boldsymbol{\alpha'x}_i\)</span>。</p>
+<p>第 <span class="math inline">\(i\)</span> 个个体的生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数满足</p>
+<p><span class="math display">\[S_i\{t_i(p)\}=\frac{100-p}{100}\]</span></p>
+<p>并根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-63">(5.63)</a></p>
+<p><span class="math display">\[\begin{aligned}S_i\{t_i(p)\}&amp;=S_0\{t_i(p)/(\exp(\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi})\}\end{aligned}\]</span></p>
+<p>用 <span class="math inline">\(t_0(p)\)</span> 表示基线生存函数 <span class="math inline">\(S_0(t)\)</span> 的第 <span class="math inline">\(p\)</span> 个百分位数，这样 <span class="math inline">\(t_0(p)\)</span> 就是所有解释变量都取值为零的个体的第 <span class="math inline">\(p\)</span> 个百分位数。</p>
+<p><span class="math display">\[\begin{aligned}t_i(p)=\exp(\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi})t_0(p)\end{aligned}\]</span></p>
+<p>这证实了系数 <span class="math inline">\(\alpha\)</span> 可以根据解释变量对生存时间分布百分位数的效应来解释。</p>
+<p>在加速失效时间模型中，第 <span class="math inline">\(i\)</span> 个个体的时间比为 <span class="math inline">\(\exp(\boldsymbol{\alpha'x}_i)\)</span>。根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a>，单个解释变量 <span class="math inline">\(X_j(j = 1, 2,...,p)\)</span> 的值增加一个单位，会导致 <span class="math inline">\(\log T_i\)</span> 增加 <span class="math inline">\(\alpha_j\)</span>。这意味着生存时间增加了 <span class="math inline">\(\exp(\alpha_j)\)</span> 倍。因此，对数线性加速失效时间模型中解释变量系数的指数 (exponentiated coefficients) 可以直接解释为时间比。</p>
+<p>模型的对数线性公式也可给出第 <span class="math inline">\(i\)</span> 个个体生存函数的一般形式，即</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)=\mathrm{P}(T_i\geqslant t)=\mathrm{P}(\log T_i\geqslant\log t)\end{aligned}\]</span></p>
+<p>根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a></p>
+<p><span class="math display" id="eq:5-64">\[\begin{align}
+S_{i}(t) x&amp;=\mathrm{P}(\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}+\sigma\epsilon_i\geqslant\log t)\\
+&amp;=\mathrm{P}\left(\epsilon_i\geqslant\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}\sigma\right)
+\tag{5.64}
+\end{align}\]</span></p>
+<p>如果我们现在将式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a> 的对数线性模型中的随机变量 <span class="math inline">\(\epsilon_i\)</span> 的生存函数写为 <span class="math inline">\(S_{\epsilon_i} (\epsilon)\)</span>，则根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-64">(5.64)</a>，第 <span class="math inline">\(i\)</span> 个个体的生存函数可以表示为</p>
+<p><span class="math display" id="eq:5-65">\[\begin{align}
+S_i(t)&amp;=S_{\epsilon_i}\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)
+\tag{5.65}
+\end{align}\]</span></p>
+<p>该结果显示了如何从 <span class="math inline">\(\epsilon_i\)</span> 分布的生存函数中找到 <span class="math inline">\(T_i\)</span> 的生存函数，反之亦然。结果还表明，可以从 <span class="math inline">\(\epsilon_i\)</span> 的许多概率分布中导出加速失效时间模型，尽管有些分布比其他分布更容易处理。</p>
+<p>下一节将描述一些特定的加速失效时间模型。</p>
+</div>
+</div>
+<div id="sec5-12" class="section level2" number="5.12">
+<h2>
+<span class="header-section-number">5.12</span> 参数加速失效时间模型<a class="anchor" aria-label="anchor" href="#sec5-12"><i class="fas fa-link"></i></a>
+</h2>
+<p>加速失效时间模型的对数线性公式中 <span class="math inline">\(\epsilon_i\)</span> 分布的特定选择（如 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-11">5.11</a> 节所述）将得到与第 <span class="math inline">\(i\)</span> 个个体生存时间相关的随机变量的分布。然而，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a> 中模型的表示所得模型的参数化与 <a href="chap5.html#sec5-1">5.1</a> 节中给出的模型不同。基于生存时间的 Weibull, log-logistic 和 log-normal 分布的参数加速失效时间模型在实践中最常用，因此对这些模型进行详细描述。</p>
+<div id="sec5-12-1" class="section level3" number="5.12.1">
+<h3>
+<span class="header-section-number">5.12.1</span> Weibull 加速失效时间模型<a class="anchor" aria-label="anchor" href="#sec5-12-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设生存时间具有尺度参数 <span class="math inline">\(\lambda\)</span> 和形状参数 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布，写作 <span class="math inline">\(W(\lambda, \gamma)\)</span>，因此基线风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_0(t)=\lambda\gamma t^{\boldsymbol{\gamma}-1}\end{aligned}\]</span></p>
+<p>那么第 <span class="math inline">\(i\)</span> 个个体的风险函数由式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-60">(5.60)</a> 给出</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=e^{-\eta_i}\lambda\gamma(e^{-\eta_i}t)^{\gamma-1}=(e^{-\eta_i})^\gamma\lambda\gamma t^{\gamma-1}\end{aligned}\]</span></p>
+<p>使得该个体的生存时间服从 <span class="math inline">\(W(\lambda e^{-\gamma\eta_i},\gamma)\)</span> 分布。因此，<strong>Weibull 分布具有加速失效时间性</strong> (accelerated failure time property). 事实上，<strong>它是唯一具有比例风险和加速失效时间性的概率分布</strong>。</p>
+<p>由于 Weibull 分布同时具有比例风险性和加速失效时间性，因此两模型的参数之间存在直接的对应关系。如果基线风险是 <span class="math inline">\(W(\lambda,\gamma)\)</span> 分布的风险函数，则在式 <a href="chap5.html#eq:5-41">(5.41)</a> 中的一般比例风险模型下的生存时间具有 <span class="math inline">\(W(\lambda\exp(\boldsymbol{\beta'x}_i),\gamma)\)</span> 的分布，而加速失效时间模型下的生存时间具有 <span class="math inline">\(W(\lambda\exp(-\gamma\boldsymbol{\alpha'x}_i),\gamma)\)</span> 的分布。因此，将加速失效时间模型线性部分的解释变量系数乘以 <span class="math inline">\(-\gamma\)</span> 时，我们得到了比例风险模型中相应的系数 <span class="math inline">\(\beta\)</span>。在对两组进行比较的特殊情况下，加速失效时间模型下 <span class="math inline">\(\phi=e^{\alpha}\)</span> 的时间比对应于比例风险模型中 <span class="math inline">\(\phi^{-\gamma}=e^{-\gamma\alpha}\)</span> 的风险比。</p>
+<p>对于式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a> 中模型的对数线性表示，如果 <span class="math inline">\(T_i\)</span> 具有 Weibull 分布，则 <span class="math inline">\(\epsilon_i\)</span> 实际上具有一种称为 Gumbel 分布的极值分布 (extreme value distribution)。这是一个不对称分布，均值为 0.5772（欧拉常数），方差为 <span class="math inline">\(\pi^2/6\)</span>。Gumbel 分布的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_{\epsilon_i}(\epsilon)=\exp(-e^{\epsilon})\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(-\infty&lt;\epsilon&lt;\infty\)</span>。该分布的累计风险和风险函数分别为 <span class="math inline">\(H_{{\epsilon_i}}(\epsilon)=e^{{\epsilon}}\)</span> 和 <span class="math inline">\(h_{{\epsilon}_i}(\epsilon)=e^\epsilon\)</span>。</p>
+<p>为了证明随机变量 <span class="math inline">\(T_i=\exp(\mu+\boldsymbol{\alpha'x}_i+\sigma\epsilon_i)\)</span> 具有 Weibull 分布，根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-65">(5.65)</a>，<span class="math inline">\(T_i\)</span> 的生存函数为</p>
+<p><span class="math display" id="eq:5-66">\[\begin{align}
+S_i(t)=\exp\left\{-\exp\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)\right\}
+\tag{5.66}
+\end{align}\]</span></p>
+<p>这可以表示为如下形式</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)=\exp\left(-\lambda_it^{1/\sigma}\right)\end{aligned}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\lambda_i=\exp\left\{-(\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi})/\sigma\right\}\end{aligned}\]</span></p>
+<p>根据式 <a href="chap5.html#eq:5-5">(5.5)</a>，它是具有尺度参数 <span class="math inline">\(\lambda_i\)</span> 和形状参数 <span class="math inline">\(\sigma^{−1}\)</span> 的 Weibull 分布的生存函数。因此，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-66">(5.66)</a> 是 <a href="chap5.html#sec5-6">5.6</a> 节中描述的 Weibull 模型生存函数的加速失效时间表示。</p>
+<p>Weibull 加速失效时间模型的累积风险函数可以直接从式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-66">(5.66)</a> 中的生存函数中找到，并由下式给出</p>
+<p><span class="math display">\[\begin{aligned}H_i(t)=-\log S_i(t)=\exp\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}\sigma\right)\end{aligned}\]</span></p>
+<p>也可以表示为 <span class="math inline">\(\lambda_it^{1/\sigma}\)</span>，相应的风险函数由下式给出</p>
+<p><span class="math display" id="eq:5-67">\[\begin{align}
+h_i(t)&amp;=\frac{1}{\sigma t}\exp\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)
+\tag{5.67}
+\end{align}\]</span></p>
+<p>或 <span class="math inline">\(h_{{i}}(t)=\lambda_{{i}}\sigma^{-1}t^{\sigma^{-1}-1}\)</span></p>
+<p>现在，我们将这种形式的模型与 Weibull 比例风险模型的形式进行协调。根据式 <a href="chap5.html#eq:5-43">(5.43)</a>，第 <span class="math inline">\(i\)</span> 个个体的生存函数为</p>
+<p><span class="math display" id="eq:5-68">\[\begin{align}
+S_i(t)=\exp\left\{-\exp(\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi})\lambda t^\gamma\right\}
+\tag{5.68}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 是 Weibull 基线风险函数的参数。式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-68">(5.68)</a> 可以写成以下形式</p>
+<p><span class="math display">\[\begin{align}
+S_i(t)=\exp\left\{-\exp(\gamma\log t+\log\lambda+\boldsymbol{\beta'x}_i)\right\}
+
+\end{align}\]</span></p>
+<p>这表明式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-66">(5.66)</a> 和式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-68">(5.68)</a> 之间存在直接对应关系，即</p>
+<p><span class="math display">\[\begin{aligned}\lambda=\exp(-\mu/\sigma),\quad\gamma=\sigma^{-1},\quad\beta_j=-\alpha_j/\sigma\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,p\)</span>。</p>
+<p>在这种形式的模型中，第 <span class="math inline">\(i\)</span> 个个体生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数为 <span class="math inline">\(t_i(p)\)</span>，其中 <span class="math inline">\(S_i\{t_i(p)\}=1-(p/100)\)</span>，<span class="math inline">\(S_i(t)\)</span> 由式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-66">(5.66)</a> 给出。经直接的代数计算后得到，对该个体，有</p>
+<p><span class="math display" id="eq:5-69">\[\begin{align}
+t_i(p)&amp;=\exp\left[\sigma\log\left\{-\log\left(\frac{100-p}{100}\right)\right\}+\mu+\boldsymbol{\alpha}'\boldsymbol{x}_i\right]
+\tag{5.69}
+\end{align}\]</span></p>
+</div>
+<div id="sec5-12-2" class="section level3" number="5.12.2">
+<h3>
+<span class="header-section-number">5.12.2</span> log-logistic 加速失效时间模型<a class="anchor" aria-label="anchor" href="#sec5-12-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>现在假设生存时间具有 log-logistic 分布。如果式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-60">(5.60)</a> 中的一般加速失效时间模型中的基线风险函数是从参数为 <span class="math inline">\(\theta,\kappa\)</span> 的 log-logistic 分布中导出的，则该函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}h_0(t)=\frac{e^\theta\kappa t^{\kappa-1}}{1+e^\theta t^\kappa}\end{aligned}\]</span></p>
+<p>在加速失效时间模型下，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=e^{-\eta_i}h_0(e^{-\eta_i}t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\eta_i=\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\)</span> 是第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(p\)</span> 个解释变量值的线性组合。因此</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)&amp;=\frac{e^{-\eta_i}e^\theta\kappa(e^{-\eta_i}t)^{\kappa-1}}{1+e^\theta(e^{-\eta_i}t)^\kappa}\end{aligned}\]</span></p>
+<p>即</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\frac{e^{\theta-\kappa\eta_i}\kappa t^{\kappa-1}}{1+e^{\theta-\kappa\eta_i}t^\kappa}\end{aligned}\]</span></p>
+<p>那么，第 <span class="math inline">\(i\)</span> 个个体的生存时间也具有 log-logistic 分布，参数为 <span class="math inline">\(\theta-\kappa\eta_i\)</span> 和 <span class="math inline">\(\kappa\)</span>。因此，log-logistic 分布也具有加速失效时间性。然而，这种分布不具有比例风险性。</p>
+<p>式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a> 中加速失效时间模型的对数线性形式也提供了 log-logistic 分布的表示。现在假设在这个公式中，<span class="math inline">\(\epsilon_i\)</span> 服从均值为零、方差为 <span class="math inline">\(\pi^2/3\)</span> 的 logistic 分布，因此 <span class="math inline">\(\epsilon_i\)</span> 的生存函数为</p>
+<p><span class="math display">\[S_{\epsilon_i}(\epsilon)=\frac1{1+e^\epsilon}\]</span></p>
+<p>使用式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-65">(5.65)</a>，<span class="math inline">\(T_i\)</span> 的生存函数为</p>
+<p><span class="math display" id="eq:5-70">\[\begin{align}
+S_i(t)&amp;=\left\{1+\exp\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)\right\}^{-1}
+\tag{5.70}
+\end{align}\]</span></p>
+<p>根据式 <a href="chap5.html#eq:5-9">(5.9)</a>，当 <span class="math inline">\(T_i\)</span> 具有参数为 <span class="math inline">\(\theta-\kappa\eta_{{i}},\kappa\)</span> 的 logistic 分布时，其中 <span class="math inline">\(\eta_{i}=\alpha_{1}x_{1i}+\alpha_{2}x_{2i}+\cdots+\alpha_{p}x_{pi}\)</span>，<span class="math inline">\(T_i\)</span> 的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)&amp;=\frac{1}{1+e^{\theta-\kappa\eta_i}t^\kappa}\end{aligned}\]</span></p>
+<p>通过将该式与式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-70">(5.70)</a> 中生存函数的表达式进行比较，我们发现参数 <span class="math inline">\(\theta\)</span> 和 <span class="math inline">\(\kappa\)</span> 可以用 <span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 表示，即</p>
+<p><span class="math display">\[\begin{aligned}\theta=-\mu/\sigma,\quad\kappa=\sigma^{-1}\end{aligned}\]</span></p>
+<p>这表明具有 log-logistic 生存时间的加速失效时间模型也可以用对数线性模型来表示。这是计算机软件通常采用的模型形式，因此基于计算机的参数估计通常是 <span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 的估计，而不是 <span class="math inline">\(\theta\)</span> 和 <span class="math inline">\(\kappa\)</span> 的估计。</p>
+<p>使用 <span class="math inline">\(H_i(t)=-\log S_i(t)\)</span> 得到累积风险函数，微分后得到风险函数</p>
+<p><span class="math display" id="eq:5-71">\[\begin{align}
+h_i(t)&amp;=\frac{1}{\sigma t}\left\{1+\exp\left[-\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)\right]\right\}^{-1}
+\tag{5.71}
+\end{align}\]</span></p>
+<p>时间比或中位生存时间等量的估计可以直接从 <span class="math inline">\(\mu,\sigma\)</span> 和 <span class="math inline">\(\alpha\)</span> 的估计中获得。例如，第 <span class="math inline">\(i\)</span> 个个体的时间比为 <span class="math inline">\(\exp(\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi})\)</span>，根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-70">(5.70)</a>，生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数为</p>
+<p><span class="math display">\[\begin{aligned}t_i(p)&amp;=\exp\left\{\sigma\log\left(\frac{p}{100-p}\right)+\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\right\}\end{aligned}\]</span></p>
+<p>中位生存时间简单地为</p>
+<p><span class="math display" id="eq:5-72">\[\begin{align}
+t_i(50)&amp;=\exp\left\{\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\right\}
+\tag{5.72}
+\end{align}\]</span></p>
+<p>因此可以直接从模型的参数估计中获得中位数的估计。</p>
+</div>
+<div id="log-normal-加速失效时间模型" class="section level3" number="5.12.3">
+<h3>
+<span class="header-section-number">5.12.3</span> log-normal 加速失效时间模型<a class="anchor" aria-label="anchor" href="#log-normal-%E5%8A%A0%E9%80%9F%E5%A4%B1%E6%95%88%E6%97%B6%E9%97%B4%E6%A8%A1%E5%9E%8B"><i class="fas fa-link"></i></a>
+</h3>
+<p>如果假设生存时间具有 log-normal 分布，则基线生存函数由下式给出</p>
+<p><span class="math display">\[S_0(t)=1-\Phi\left(\frac{\log t-\mu}\sigma\right)\]</span></p>
+<p>其中 <span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 是两个未知参数。在加速失效时间模型下，第 <span class="math inline">\(i\)</span> 个个体的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)=S_0(e^{-\eta_i}t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\eta_i=\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\)</span> 为第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(p\)</span> 个解释变量值的线性组合。因此</p>
+<p><span class="math display" id="eq:5-73">\[\begin{align}
+S_i(t)=1-\Phi\left(\frac{\log t-\eta_i-\mu}\sigma\right)
+\tag{5.73}
+\end{align}\]</span></p>
+<p>这是个体 <span class="math inline">\(i\)</span> 的生存函数，其生存时间具有参数 <span class="math inline">\(\mu + \eta_i\)</span> 和 <span class="math inline">\(\sigma\)</span> 的 log-normal 分布。因此，log-normal 分布具有加速失效时间性。</p>
+<p>在模型的对数线性公式中，如果 <span class="math inline">\(\log T_i\)</span> 服从正态分布，则与第 <span class="math inline">\(i\)</span> 个个体生存时间相关的随机变量服从 log-normal 分布。因此，我们取式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a> 中的 <span class="math inline">\(\epsilon_i\)</span> 服从标准正态分布，因此 <span class="math inline">\(\epsilon_i\)</span> 的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_{\epsilon_i}(\epsilon)=1-\Phi(\epsilon)\end{aligned}\]</span></p>
+<p>那么，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-65">(5.65)</a> 可直接导出式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-73">(5.73)</a>，并且 <span class="math inline">\(T_i\)</span> 分布的第 <span class="math inline">\(p\)</span> 个百分位可通过令 <span class="math inline">\(S_i\{t_i(p)\}\)</span> 等于 <span class="math inline">\(1 − (p/100)\)</span> 得出，从而得出</p>
+<p><span class="math display">\[\begin{aligned}t_i(p)&amp;=\exp\left\{\sigma\Phi^{-1}(p/100)+\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}\right\}\end{aligned}\]</span></p>
+<p>特别地，<span class="math inline">\(t(50)=\operatorname{exp}(\mu+\boldsymbol{\alpha'x}_i)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的中位生存时间。</p>
+<p>风险函数也可根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-73">(5.73)</a> 中的生存函数中得出，但它的形式比较复杂。</p>
+</div>
+</div>
+<div id="sec5-13" class="section level2" number="5.13">
+<h2>
+<span class="header-section-number">5.13</span> 拟合并比较加速失效时间模型<a class="anchor" aria-label="anchor" href="#sec5-13"><i class="fas fa-link"></i></a>
+</h2>
+<p>使用最大似然法拟合加速失效时间模型。似然函数最好从模型的对数线性表示中导出，然后使用迭代方法获得估计值。<span class="math inline">\(n\)</span> 个观测生存时间 <span class="math inline">\(t_1,t_2,\ldots,t_n\)</span> 的似然由式 <a href="chap5.html#eq:5-14">(5.14)</a> 给出，即</p>
+<p><span class="math display">\[\begin{aligned}L(\boldsymbol{\alpha},\mu,\sigma)&amp;=\prod_{i=1}^n\left\{f_i(t_i)\right\}^{\delta_i}\left\{S_i(t_i)\right\}^{1\boldsymbol{-}\delta_i}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(f_{i}(t_{i})\)</span> 和 <span class="math inline">\(S_{{i}}(t_{{i}})\)</span> 为第 <span class="math inline">\(i\)</span> 个个体在 <span class="math inline">\(t_i\)</span> 处的密度函数和生存函数，以及 <span class="math inline">\(\delta_i\)</span> 是第 <span class="math inline">\(i\)</span> 个观测的事件指示符，若第 <span class="math inline">\(i\)</span> 个观测为事件则 <span class="math inline">\(\delta_i=1\)</span>，若为删失则为 0. 现在，根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-65">(5.65)</a></p>
+<p><span class="math display">\[\begin{aligned}S_i(t_i)=S_{\epsilon_i}(z_i)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(z_i=(\log t_i-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi})/\sigma\)</span>，将上式关于 <span class="math inline">\(t\)</span> 的微分给出</p>
+<p><span class="math display">\[f_i(t_i)=\frac{1}{\sigma t_i}f_{\epsilon_i}(z_i)\]</span></p>
+<p>那么，似然函数可以用 <span class="math inline">\(\epsilon_i\)</span> 的生存函数和密度函数来表示</p>
+<p><span class="math display">\[\begin{aligned}L(\boldsymbol{\alpha},\mu,\sigma)&amp;=\prod_{i=1}^n(\sigma t_i)^{-\delta_i}\left\{f_{\epsilon_i}\left(z_i\right)\right\}^{\delta_i}\left\{S_{\epsilon_i}\left(z_i\right)\right\}^{1-\delta_i}\end{aligned}\]</span></p>
+<p>那么对数似然为</p>
+<p><span class="math display" id="eq:5-74">\[\begin{align}
+\log L(\boldsymbol{\alpha},\mu,\sigma)=\sum_{i=1}^n\left\{-\delta_i\log\sigma-\delta_i\log t_i+\delta_i\log f_{\epsilon_i}(z_i)+(1-\delta_i)\log S_{\epsilon_i}(z_i)\right\}
+\tag{5.74}
+\end{align}\]</span></p>
+<p><span class="math inline">\(p + 2\)</span> 个未知参数 <span class="math inline">\(\mu,\sigma\)</span> 和 <span class="math inline">\(\alpha_1,\alpha_2,\ldots,\alpha_p\)</span> 的最大似然估计是通过使用 <a href="chap3.html#sec3-3-3">3.3.3</a> 节中描述的 Newton-Raphson 程序最大化该函数来找到的。</p>
+<p>请注意，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-74">(5.74)</a> 中对数似然函数的表达式包含项 <span class="math inline">\(-\sum_{i=1}^n\delta_i\log t_i\)</span> ，不涉及任何未知参数。因此，该项可以从对数似然函数中省略，如 <a href="chap5.html#sec5-6-1">5.6.1</a> 节中 Weibull 比例风险模型中所述。事实上，大多数计算机软件给出的用于加速失效时间建模的对数似然值不包括 <span class="math inline">\(-\sum_{i=1}^n\delta_i\log t_i\)</span> 的值。</p>
+<p>拟合模型后，可以计算统计量 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值，并将其用于嵌套模型之间的比较，就像之前在比例风险模型中做的一样。具体来说，为了比较两个嵌套模型，计算两个模型的统计量 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之差，并与卡方分布的百分位点进行比较，其自由度等于模型线性部分中包含的 <span class="math inline">\(\alpha\)</span> 参数的数量。</p>
+<p>一旦确定了合适的模型，就可以获得并绘制生存函数和风险函数的估计。拟合的模型可以根据解释变量影响的时间比或加速因子的估计，或根据生存时间分布的中位数和其他百分位数来解释。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-14" class="example"><strong>示例 5.14  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在此示例中，为患乳腺癌妇女生存时间数据拟合加速失效时间模型。首先考虑 Weibull 加速失效时间模型。与第 <span class="math inline">\(i\)</span> 个女性生存时间 <span class="math inline">\(T_i\)</span> 相关的随机变量的对数线性模型如下：</p>
+<p><span class="math display">\[\begin{aligned}\log T_i=\mu+\alpha x_i+\sigma\epsilon_i\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\epsilon_i\)</span> 具有 Gumbel 分布，<span class="math inline">\(\mu,\sigma\)</span> 和 <span class="math inline">\(\alpha\)</span> 是未知参数，<span class="math inline">\(x_i\)</span> 是与染色相关的解释变量 <span class="math inline">\(X\)</span> 的值，使得如果第 <span class="math inline">\(i\)</span> 个女性的肿瘤呈阴性染色，则 <span class="math inline">\(x_i = 0\)</span>，如果肿瘤染色呈阳性，则 <span class="math inline">\(x_i = 1\)</span>。拟合该模型后，我们得到 <span class="math inline">\(\hat{\mu}=5.854,\hat{\sigma}=1.067\)</span> 以及 <span class="math inline">\(\hat\alpha = -0.997\)</span>。</p>
+<p>对于染色呈阳性的女性，时间比 <span class="math inline">\(e^{\alpha x_i}\)</span> 的估计为 <span class="math inline">\(e^{\large-0.997}=0.37\)</span>。因此，肿瘤染色呈阳性的女性的死亡时间约为肿瘤染色呈阴性的女性的三分之一。等价地，在该模型下，阳性染色可将死亡时间加快约 2.7 倍。这与<a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-13">示例 5.13</a> 中发现的百分位-百分位图的斜率估计一致。</p>
+<p>第 <span class="math inline">\(i\)</span> 个女性的生存函数估计由式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-66">(5.66)</a> 给出</p>
+<p><span class="math display">\[\hat{S_i}(t)=\exp\left\{-\exp\left(\frac{\log t-\hat{\mu}-\hat{\alpha}x_i}{\hat{\sigma}}\right)\right\}\]</span></p>
+<p>并且对于 <span class="math inline">\(x_i\)</span> 的两个值，可以绘制生存函数关于 <span class="math inline">\(t\)</span> 的图形。使用式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-69">(5.69)</a>，在 Weibull 加速失效时间模型下，第 <span class="math inline">\(i\)</span> 名女性的中位生存时间为</p>
+<p><span class="math display">\[\begin{aligned}t_i(50)=\exp\left\{\sigma\log(\log2)+\mu+\alpha x_i\right\}\end{aligned}\]</span></p>
+<p>阴性染色 (<span class="math inline">\(x_i = 0\)</span>) 的女性的中位生存时间估计为 236 天，而阳性染色 (<span class="math inline">\(x_i = 1\)</span>) 的女性的中位生存时间估计为 87 天，正如<a href="chap5.html#exm:ex5-7">示例 5.7</a> 所示。注意两个中位数的比值为 0.37，这是时间比。因此，肿瘤呈阳性染色的女性的中位生存时间约为肿瘤呈阴性染色的女性的三分之一。</p>
+<p>第 <span class="math inline">\(i\)</span> 个女性的风险函数估计由式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-67">(5.67)</a> 给出：</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\hat{\sigma}^{-1}t^{\hat{\sigma}^{-1}-1}\exp\left(\frac{-\hat{\mu}-\hat{\alpha}x_i}{\hat{\sigma}}\right)\end{aligned}\]</span></p>
+<p>即</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)&amp;=0.937t^{-0.063}\exp(-5.488+0.934x_i)\end{aligned}\]</span></p>
+<p>图 5.22 显示了两组妇女的这一函数图。</p>
+<details><summary><font color="#8B2232">图 5.22</font>
+</summary><img src="figure/figure%205.22.png#center" style="width:80.0%"></details><p><br>
+在 <a href="chap5.html#sec5-6">5.6</a> 节给出的 Weibull 模型的比例风险表示中，第 <span class="math inline">\(i\)</span> 名女性在时间 <span class="math inline">\(t\)</span> 的死亡风险为</p>
+<p><span class="math display">\[h_{\boldsymbol{i}}(t)=e^{\boldsymbol{\beta}x_{\boldsymbol{i}}}h_{\boldsymbol{0}}(t)\]</span></p>
+<p>若第 <span class="math inline">\(i\)</span> 位女性的肿瘤染色呈阴性，<span class="math inline">\(x_i\)</span> 的值为零，若肿瘤染色呈阳性，则为一。对于 Weibull 分布，基线风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_0(t)=\lambda\gamma t^{\boldsymbol{\gamma}-1}\end{aligned}\]</span></p>
+<p>这是肿瘤染色呈阴性的女性的风险函数，因此</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=e^{\beta x_i}\lambda\gamma t^{\gamma-1}\end{aligned}\]</span></p>
+<p>参数 <span class="math inline">\(\lambda,\gamma\)</span> 和 <span class="math inline">\(\beta\)</span> 的相应估计为 <span class="math inline">\(\hat \lambda=\exp(-\hat{\mu}/\hat{\sigma})=0.00414,\hat{\gamma}=1/\hat{\sigma}=0.937\)</span> 以及 <span class="math inline">\(\hat{\beta}=-\hat{\alpha}/\hat{\sigma}=0.997\)</span>。Weibull 加速失效时间模型与 Weibull 比例风险模型之间的对应关系意味着后者模型下的风险比为 <span class="math inline">\(e^{-\alpha/\sigma}=e^{\beta}\)</span>，估计为 2.55。这与<a href="chap5.html#exm:ex5-7">示例 5.7</a> 中的值一致。</p>
+<p>我们现在为相同数据集拟合 log-logistic 加速失效时间模型。根据模型的对数线性形式现在得到 <span class="math inline">\(\hat\mu = 5.461,\hat \sigma = 0.805\)</span> 和 <span class="math inline">\(\hat\alpha = −1.149\)</span>。时间比为 <span class="math inline">\(e^\alpha\)</span>，估计值为 <span class="math inline">\(0.32\)</span>。这略小于 Weibull 加速失效时间模型下的结果。</p>
+<p>根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-72">(5.72)</a>，该模型下第 <span class="math inline">\(i\)</span> 名女性的中位生存时间由下式给出</p>
+<p><span class="math display">\[\exp(\mu+\alpha x_i)\]</span></p>
+<p>其中阴性染色女性的中位生存时间估计为 235 天，阳性染色女性的中位生存时间估计为 75 天，这些值与 Weibull 加速失效时间模型所得值非常接近。</p>
+<p>根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-71">(5.71)</a>，第 <span class="math inline">\(i\)</span> 名女性的风险函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\frac{1}{\hat{\sigma}t}\left\{1+\exp\left[-\left(\frac{\log t-\hat{\mu}-\hat{\alpha}x_i}{\hat{\sigma}}\right)\right]\right\}^{-1}\end{aligned}\]</span></p>
+<p>这是</p>
+<p><span class="math display">\[\hat{h}_i(t)=1.243t^{-1}\left\{1+t^{-1.243}\exp\left(6.787-1.428x_i\right)\right\}^{-1}\]</span></p>
+<p>图 5.23 显示了两组妇女的这一函数图。这可以与图 5.22 进行比较。</p>
+<details><summary><font color="#8B2232">图 5.23</font>
+</summary><img src="figure/figure%205.23.png#center" style="width:80.0%"></details><p><br>
+在这两种模型下，阴性染色者的风险函数非常相似。然而，log-logistic 模型下阳性染色者的风险函数与 Weibull 模型下的风险函数不同。拟合的 Weibull 和 log-logistic 模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量的值分别为 121.77 和 118.495. 在此基础上，log-logistic 模型提供了稍好的拟合。第 <a href="chap7.html#chap7">7</a> 章讨论的残差分析可能有助于在这两个模型之间进行选择，尽管对于这个小数据集，这样的分析不太可能提供非常丰富的信息。</p>
+<p>最后，根据 <a href="chap5.html#sec5-1-3">5.1.3</a> 节给出的模型参数化，基线风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_0(t)=\frac{e^\theta\kappa t^{\kappa-1}}{1+e^\theta t^\kappa}\end{aligned}\]</span></p>
+<p>因此研究中第 <span class="math inline">\(i\)</span> 个女性的风险函数是</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\frac{e^{\theta-\kappa\alpha x_i}\kappa t^{\kappa-1}}{1+e^{\theta-\kappa\alpha x_i}t^\kappa}\end{aligned}\]</span></p>
+<p><span class="math inline">\(\theta,\kappa\)</span> 的相应估计为 <span class="math inline">\(\hat\theta=-\hat\mu/\hat\sigma=-6.787,\hat{\kappa}=1/\hat{\sigma}=1.243\)</span>。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-15" class="example"><strong>示例 5.15  (前列腺癌两种疗法的比较) </strong></span><br></p>
+<p>使用 log-logistic 加速失效时间模型进一步说明生存数据建模，这里考虑比较前列腺癌两种疗法的临床试验数据。这些数据首先在<a href="chap1.html#exm:ex1-4">示例 1.4</a> 中给出，并在<a href="chap3.html#exm:ex3-6">示例 3.6</a> 和 3.12 中使用 Cox 回归模型进行了分析。为了确定在 log-logistic 加速失效时间模型线性部分中应包含的项，可以再次遵循<a href="chap3.html#exm:ex3-6">示例 3.6</a> 中描述的程序。表 5.9 显示了具有四个预后变量（Age、Shb、Size 和 Index）所有组合的拟合模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量的值。</p>
+<details><summary><font color="#8B2232">表 5.9</font>
+</summary><img src="figure/table%205.9.png#center" style="width:80.0%"></details><p><br>
+正如<a href="chap3.html#exm:ex3-6">示例 3.6</a>，模型中需要变量 Size 和 Index. 当省略这两个变量中的任何一个时，<span class="math inline">\(-2\log\hat{L}\)</span> 值的相应增量是显著的，当 Age 或 Shb 添加到模型中时，<span class="math inline">\(-2\log\hat{L}\)</span> 都不会显著减小。</p>
+<p>当在包含 Size 和 Index 的模型中加入与治疗效应对应的项 Treat 时，<span class="math inline">\(-2\log\hat{L}\)</span> 减小为 21.245. 将该 1.867 的减小量与自由度为一的卡方分布的百分位点相比时，在 10% 的水平上并不显著 (<span class="math inline">\(P=0.172\)</span>)。也没有证据表明 Treat 与预后变量 Size 和 Index 之间有任何交互作用，因此结论为：治疗效应在统计学上不显著。</p>
+<p>治疗效应的大小可以用时间比或加速因子来评估。根据模型的对数线性形式，与第 <span class="math inline">\(i\)</span> 个患者的生存时间 <span class="math inline">\(T_i\)</span> 相关的随机变量为：</p>
+<p><span class="math display">\[\begin{aligned}\log T_i=\mu+\alpha_1\textit{Size}_i+\alpha_2\textit{Inde}x_i+\alpha_3\textit{Treat}_i+\sigma\epsilon_i\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\epsilon_i\)</span> 具有 logistic 分布，<span class="math inline">\(Size_i\)</span> 和 <span class="math inline">\(Index_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的肿瘤大小和 Gleason 指数的值，如果第 <span class="math inline">\(i\)</span> 个个体在安慰剂组，则 <span class="math inline">\(Treat_i\)</span> 为零，如果在治疗组，则为一。该模型中未知参数的最大似然估计为
+<span class="math inline">\(\hat{\mu}=7.661,\hat{\sigma}=0.338,\hat{\alpha}_1=-0.029,\hat{\alpha}_2=-0.293\)</span> 和 <span class="math inline">\(\hat{\alpha}_3=0.573\)</span>。<span class="math inline">\(\alpha\)</span> 的值表明，肿瘤大小和肿瘤指数越大，生存时间往往越短，而接受活性治疗的个体生存时间往往越长。</p>
+<p>使用式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-70">(5.70)</a>，第 <span class="math inline">\(i\)</span> 个患者拟合的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}\hat{S}_i(t)=\left[1+\exp\left\{\frac{\log t-\hat{\mu}-\hat{\alpha}_1\textit{Size}_i-\hat{\alpha}_2\textit{Index}_i-\hat{\alpha}_3\textit{Treat}_i}{\hat{\sigma}}\right\}\right]^{-1}\end{aligned}\]</span></p>
+<p>可以写成以下形式</p>
+<p><span class="math display">\[\hat{S_i}(t)=\left\{1+t^{1/\hat{\sigma}}\exp\left(\hat{\zeta_i}\right)\right\}^{-1}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\hat{\zeta}_i&amp;=\frac{1}{\hat{\sigma}}\left\{-\hat{\mu}-\hat{\alpha}_1\textit{Size}_i-\hat{\alpha}_2\textit{Inde}x_i-\hat{\alpha}_3\textit{Treat}_i\right\}\end{aligned}\]</span></p>
+<p>也就是</p>
+<p><span class="math display">\[\begin{aligned}\hat{\zeta}_i&amp;=-22.645+0.085\textit{ Size}_i+0.865\text{ }Index_i-1.693\textit{ Treat}_i\end{aligned}\]</span></p>
+<p>对累积风险函数估计 <span class="math inline">\(\hat{H_{i}}(t)=-\operatorname{log}\hat{S_{i}}(t)\)</span> 关于 <span class="math inline">\(t\)</span> 微分，可以得到相应的风险函数估计。这给出了</p>
+<p><span class="math display">\[\hat{h}_i(t)=\frac1{\hat{\sigma}t}\left\{1+t^{-1/\hat{\sigma}}\exp\left(-\hat{\zeta}_i\right)\right\}^{-1}\]</span></p>
+<p>也可直接从式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-71">(5.71)</a> 给出的风险函数获得该结果。</p>
+<p>治疗组中的个体相对于对照组中的个体的时间比估计为 <span class="math inline">\(e^{0.573}=1.77\)</span>。对这一结果的解释是，考虑到肿瘤的大小和指数后，己烯雌酚治疗的效应是使生存时间几乎翻倍。这种效应可能具有临床重要性，尽管它在统计上并不显著。然而，在接受这种解释之前，应使用适当的诊断来检查拟合模型的充分性。</p>
+<p>通过对时间比对数的置信限求指数来找到时间比的置信区间。在此示例中，治疗效应时间比对数是风险函数模型中 <span class="math inline">\(Treat\)</span> 的系数估计 -0.573，该标准误估计为 0.473. 因此，时间比的 95% 置信限为 <span class="math inline">\(\exp\{0.573\pm1.96\times0.473\}\)</span>，所求区间为 0.70 到 4.48. 请注意，此区间估计包括 1，这与之前发现的非显著治疗效应一致。</p>
+<p>最后，根据 <a href="chap5.html#sec5-1-3">5.1.3</a> 节的模型的参数化，第 <span class="math inline">\(i(i=1,2,\ldots,38)\)</span> 个患者的拟合风险函数为</p>
+<p><span class="math display">\[\hat{h}_i(t)=e^{\boldsymbol{-}\hat{\eta}_i}\hat{h}_0(e^{\boldsymbol{-}\hat{\eta}_i}t)\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\hat{\eta_i}=-0.029\text{ }Size_i-0.293\text{ }Index_i+0.573\text{ }Treat_i\end{aligned}\]</span></p>
+<p>并且根据式 <a href="chap5.html#eq:5-8">(5.8)</a></p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_0(t)=\frac{e^{{\hat{\theta}}}\hat{\kappa}t^{{\hat{\kappa}}-1}}{1+e^{\hat{\theta}}t^{\hat{\kappa}}}\end{aligned}\]</span></p>
+<p>这种形式的基线风险函数估计 <span class="math inline">\(\hat{h}_0(t)\)</span> 的参数估计为 <span class="math inline">\(\hat{\theta}=-22.644\)</span> 和 <span class="math inline">\(\hat{\kappa}=2.956\)</span>，该函数的图形如图 5.24 所示。</p>
+<details><summary><font color="#8B2232">图 5.24</font>
+</summary><img src="figure/figure%205.24.png#center" style="width:80.0%"></details><p><br>
+该图表明基线风险随着时间的推移而增加。与拟合的 Weibull 模型的基线风险函数的比较（也在图中）表明，在 log-logistic 模型下，基线风险函数估计不会增加得那么快。</p>
+</div>
+</div>
+</div>
+<div id="sec5-14" class="section level2" number="5.14">
+<h2>
+<span class="header-section-number">5.14</span> 参数模型中解释的变异的度量<a class="anchor" aria-label="anchor" href="#sec5-14"><i class="fas fa-link"></i></a>
+</h2>
+<p>Cox 回归模型中解释的变异的度量在第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12">3.12</a> 节中进行了描述。本节将描述与参数加速失效时间模型中解释的变异的一般度量方法。根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a>，该模型有</p>
+<p><span class="math display">\[\begin{aligned}Y_i=\log T_i=\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}+\sigma\epsilon_i\end{aligned}\]</span></p>
+<p>其形式类似于第 3 章式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-33">(3.33)</a> 中的一般线性模型。然而，一般线性模型中的项 <span class="math inline">\(\epsilon_i\)</span> 被 <span class="math inline">\(\sigma\epsilon_i\)</span> 取代，其中 <span class="math inline">\(\sigma\)</span> 是加速失效时间模型中的尺度参数，而 <span class="math inline">\(\epsilon_i\)</span> 的分布取决于生存时间的假定分布。类似于式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-35">(3.35)</a> 中 <span class="math inline">\(R^2\)</span> 的统计量为</p>
+<p><span class="math display" id="eq:5-75">\[\begin{align}
+R_{P}^{2}=\frac{\hat{V}_{P}}{\hat{V}_{P}+\hat{\sigma}^{2}\operatorname{var}\left(\epsilon_{i}\right)}
+\tag{5.75}
+\end{align}\]</span></p>
+<p>其中，如第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-4">3.12.4</a> 节所述，<span class="math inline">\(\hat{V}_P\)</span> 是拟合的加速失效时间模型中风险评分的样本方差，而 <span class="math inline">\(\hat{\sigma}^{2}\)</span> 是尺度参数估计。</p>
+<p>在 Weibull 分布的特殊情况下，<span class="math inline">\(\operatorname{var}\left(\epsilon_i\right)=\pi^2/6\)</span>，这来自 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12-1">5.12.1</a> 节。通过取 <span class="math inline">\(\sigma=1\)</span>，这种解释的变异的度量也可用于 Cox 比例风险模型，这是第 3 章式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-35">(3.35)</a> 中的 <span class="math inline">\(R^2_P\)</span> 统计量。</p>
+<p>当为具有 log-logistic 分布的生存时间拟合加速失效时间模型，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-75">(5.75)</a> 中 <span class="math inline">\(\mathrm{var}\left(\epsilon_{\boldsymbol{i}}\right)=\pi^{2}/3\)</span>，而对于 log-normal 生存时间 <span class="math inline">\(\mathrm{var}\left(\epsilon_{i}\right)=1\)</span>。</p>
+<p><span class="math inline">\(R^2_D\)</span> 统计量（在第 3 章的 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-4">3.12.4</a> 节中描述）可以以类似的方式适用于参数生存模型。得到</p>
+<p><span class="math display">\[\begin{aligned}R_D^2&amp;=\frac{D_0^2}{D_0^2+\hat{\sigma}^2\operatorname{var}\left(\epsilon_i\right)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(D_0\)</span> 是仅包含此项的 Cox 回归模型中正态得分变量的系数。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-16" class="example"><strong>示例 5.16  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>为了说明如何使用生存数据 Weibull 模型的解释的变异的度量，考虑多发性骨髓瘤患者生存时间数据，<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-17">示例 3.17</a> 中给出了拟合 Cox 回归模型的三个 <span class="math inline">\(R^2\)</span> 统计量。对于包含变量 Hb 和 Bun 的 Weibull 模型，<span class="math inline">\(R^2_P = 0.25\)</span> 且 <span class="math inline">\(R^2_D = 0.23\)</span>。对于包含所有 7 个变量的模型，<span class="math inline">\(R^2_P = 0.30\)</span> 以及 <span class="math inline">\(R^2_D = 0.34\)</span>。这些值与拟合相应的 Cox 回归模型得到的值非常相似，因此 Cox 和 Weibull 模型具有相似的解释力。</p>
+</div>
+</div>
+<div id="sec5-14-1" class="section level3" number="5.14.1">
+<h3>
+<span class="header-section-number">5.14.1</span> 参数模型的预测能力<a class="anchor" aria-label="anchor" href="#sec5-14-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13-4">3.13.4</a> 节描述了在评估 Cox 回归模型预测能力时使用的时依 ROC. 事实上，一旦估计了风险评分，这项技术就可以用于任何生存数据模型。不涉及新的原则。</p>
+</div>
+</div>
+<div id="sec5-15" class="section level2" number="5.15">
+<h2>
+<span class="header-section-number">5.15</span> 比例几率模型<a class="anchor" aria-label="anchor" href="#sec5-15"><i class="fas fa-link"></i></a>
+</h2>
+<p>在一般比例几率模型 (general proportional odds model) 中，个体生存超过时间 <span class="math inline">\(t\)</span> 的几率 (odds) 表示为</p>
+<p><span class="math display" id="eq:5-76">\[\begin{align}
+\frac{S_i(t)}{1-S_i(t)}&amp;=e^{\eta_i}\frac{S_0(t)}{1-S_0(t)}
+\tag{5.76}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\eta_i=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\end{aligned}\]</span></p>
+<p>为在第 <span class="math inline">\(i\)</span> 个个体上测量的 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 值的线性组合，基线生存函数 <span class="math inline">\(S_0(t)\)</span>，是解释变量都取零值的个体的生存函数。</p>
+<p>在该模型中，解释变量对生存超过 <span class="math inline">\(t\)</span> 的几率起乘性作用。因此，相对于解释变量全部为零的个体，第 <span class="math inline">\(i\)</span> 个个体生存超过 <span class="math inline">\(t\)</span> 的几率之比的对数就是 <span class="math inline">\(\eta_i\)</span>。因此，该模型是对数几率比 (log-odds ratio) 的线性模型。</p>
+<p>现在考虑有两个组别的研究的特殊情况，在该研究中，个体接受标准治疗或新治疗。如果一个个体接受标准治疗，则让指示变量 <span class="math inline">\(X\)</span> 取零，如果接受新治疗，则取一。则第 <span class="math inline">\(i\)</span> 个个体生存超过时间 <span class="math inline">\(t\)</span> 的几率为</p>
+<p><span class="math display">\[\begin{aligned}\frac{S_i(t)}{1-S_i(t)}&amp;=e^{\beta x_i}\frac{S_0(t)}{1-S_0(t)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体的 <span class="math inline">\(X\)</span> 值。因此，如果 <span class="math inline">\(S_N (t)\)</span> 和 <span class="math inline">\(S_S(t)\)</span> 分别是新治疗和标准治疗个体的生存函数，则</p>
+<p><span class="math display">\[\begin{aligned}\frac{S_N(t)}{1-S_N(t)}&amp;=e^\beta\frac{S_S(t)}{1-S_S(t)}\end{aligned}\]</span></p>
+<p>对数几率比就是 <span class="math inline">\(\beta\)</span>。因此，模型线性部分的参数具有直接的解释。</p>
+<p>对于比例风险模型，可以获得基线风险函数的非参数估计。通过从数据中估计模型线性部分的 <span class="math inline">\(\beta\)</span> 参数以及基线生存函数来拟合模型。比例几率模型的全参数版本可以通过使用生存时间的特定概率分布来导出。下面 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-15-1">5.15.1</a> 节描述了一种这样的模型。</p>
+<p>比例几率模型的一个特别重要的性质涉及第 <span class="math inline">\(i\)</span> 个个体的风险函数与基线风险的比值 <span class="math inline">\(h_{{i}}(t)/h_{0}(t)\)</span>。可以证明，在时间 <span class="math inline">\(t = 0\)</span> 时该比值为 <span class="math inline">\(e^{-\eta_i}\)</span> 而在 <span class="math inline">\(t = \infty\)</span> 时该比值收敛为 <span class="math inline">\(1\)</span>。为了证明这一点，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-76">(5.76)</a> 中的模型可以改写为</p>
+<p><span class="math display">\[S_i(t)=S_0(t)\left\{e^{-\eta_i}+(1-e^{-\eta_i})S_0(t)\right\}^{-1}\]</span></p>
+<p>取对数得到</p>
+<p><span class="math display" id="eq:5-77">\[\begin{align}
+\log S_i(t)=\log S_0(t)-\log\left\{e^{-\eta_i}+(1-e^{-\eta_i})S_0(t)\right\}
+\tag{5.77}
+\end{align}\]</span></p>
+<p>使用式 <a href="chap1.html#eq:1-5">(1.5)</a> 的一般结果，风险函数为：</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=-\frac{\mathrm{d}}{\mathrm{d}t}\log S_{{i}}(t)\end{aligned}\]</span></p>
+<p>因此将式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-77">(5.77)</a> 的两边关于 <span class="math inline">\(t\)</span> 微分</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)&amp;=h_0(t)-\frac{(1-e^{-\eta_i})f_0(t)}{e^{-\eta_i}+(1-e^{-\eta_i})S_0(t)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(f_0(t)\)</span> 是基线概率密度函数。再改写该式，得到</p>
+<p><span class="math display" id="eq:5-78">\[\begin{align}
+h_i(t)&amp;=h_0(t)-\frac{f_0(t)}{(e^{\eta_i}-1)^{-1}+S_0(t)}
+\tag{5.78}
+\end{align}\]</span></p>
+<p>根据式 <a href="chap1.html#eq:1-4">(1.4)</a> 中，我们还得到 <span class="math inline">\(h_0(t)=f_0(t)/S_0(t)\)</span>，并将 <span class="math inline">\(f_0(t)\)</span> 代入式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-78">(5.78)</a>，得到</p>
+<p><span class="math display">\[h_i(t)=h_0(t)\left\{1-\frac{S_0(t)}{(e^{\eta_i}-1)^{-1}+S_0(t)}\right\}\]</span></p>
+<p>最后再改写，风险比由下式给出：</p>
+<p><span class="math display">\[\begin{aligned}\frac{h_i(t)}{h_0(t)}&amp;=\{1+(e^{\eta_i}-1)S_0(t)\}^{-1}\end{aligned}\]</span></p>
+<p>当 <span class="math inline">\(t\)</span> 从 <span class="math inline">\(0\)</span> 增加到 <span class="math inline">\(\infty\)</span> 时，基线生存函数从 <span class="math inline">\(1\)</span> 单调减小到 <span class="math inline">\(0\)</span>。当 <span class="math inline">\(S_0(t)= 1\)</span> 时，风险比为 <span class="math inline">\(e^{-\eta_i}\)</span>，当 <span class="math inline">\(t\)</span> 增加到 <span class="math inline">\(\infty\)</span> 时，风险比收敛为 <span class="math inline">\(1\)</span>。</p>
+<p>在实际应用中，两组或多组患者的风险函数通常随时间收敛。例如，在临床试验对患者进行的随访研究中，治疗对生存率的影响，或疾病的初始阶段可能会逐渐消失。同样，在将患有某种疾病的患者组与无疾病个体的对照组进行比较的研究中，有效的疗法会使每组的生存经历随时间变得更加相似。这表明比例几率模型收敛风险函数的性质，可能是相当有价值的。然而，这个通用模型在实践中没有得到广泛应用的原因有两个。其一，计算机软件一般不能用于拟合基线生存函数形式未指定的比例几率模型。其二，该模型可能得到与含时依变量的 Cox 回归模型相似的结果，该时依协变量能产生非比例风险，<a href="chap4.html#sec4-4-3">4.4.3</a> 节提及了这种为非比例风险生存数据建模的特殊方法，这将在第 <a href="chap8.html#chap8">8</a> 章进行全面考虑。</p>
+<div id="sec5-15-1" class="section level3" number="5.15.1">
+<h3>
+<span class="header-section-number">5.15.1</span> log-logistic 比例几率模型<a class="anchor" aria-label="anchor" href="#sec5-15-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>若假设个体的生存时间具有 log-logistic 分布，则基线生存函数为</p>
+<p><span class="math display">\[\left.S_0(t)=\left\{\begin{matrix}1+e^\theta t^\kappa\end{matrix}\right.\right\}^{-1}\]</span></p>
+<p>其中 <span class="math inline">\(\theta\)</span> 和 <span class="math inline">\(\kappa\)</span> 为未知参数。生存超过时间 <span class="math inline">\(t\)</span> 的基线几率由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\frac{S_0(t)}{1-S_0(t)}&amp;=e^{\large-\theta}t^{\large-\kappa}\end{aligned}\]</span></p>
+<p>因此，第 <span class="math inline">\(i\)</span> 个个体生存超过时间 <span class="math inline">\(t\)</span> 的几率为</p>
+<p><span class="math display">\[\begin{aligned}\frac{S_i(t)}{1-S_i(t)}&amp;=e^{\eta_i-\theta}t^{-\kappa}\end{aligned}\]</span></p>
+<p>因此，第 <span class="math inline">\(i\)</span> 个个体的生存时间具有参数为 <span class="math inline">\(\theta-\eta_i\)</span> 和 <span class="math inline">\(\kappa\)</span> 的 log-logistic 分布。因此，<strong>log-logistic 分布具有比例几率性</strong> (proportional odds property)，该分布是与比例几率模型结合使用的自然分布。事实上，<strong>这是唯一同时具有加速失效时间性和比例几率性的分布</strong>。</p>
+<p>该结果还意味着，式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-76">(5.76)</a> 中比例几率模型线性部分中的 <span class="math inline">\(β\)</span> 系数估计可以通过将式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-70">(5.70)</a> 的 log-logistic 加速失效时间模型中的 <span class="math inline">\(\alpha\)</span> 系数乘以 <span class="math inline">\(\hat{\kappa}=\hat{\sigma}^{-1}\)</span>，其中 <span class="math inline">\(\hat\sigma\)</span> 是参数 <span class="math inline">\(\sigma\)</span> 的估计。那么可以根据加速失效时间模型获得比例几率模型解释变量的系数，反之亦然。因此，基于比例几率模型的生存分析结果可以用时间比、加速因子或生存超过一定时间的几率比来解释，以更方便的为准。</p>
+<p>如其他生存数据模型一样，可以使用最大似然法拟合比例几率模型。然后，可以在统计量 <span class="math inline">\(-2 \log \hat{L}\)</span> 的基础上对替代模型进行比较。</p>
+<p>在具有两个组别的研究中，可以很容易地对模型的适用性进行初步检查。第 <span class="math inline">\(i\)</span> 个个体生存超过时间 <span class="math inline">\(t\)</span> 的对数几率为</p>
+<p><span class="math display">\[\begin{aligned}\log\left\{\frac{S_i(t)}{1-S_i(t)}\right\}&amp;=\beta x_i-\theta-\kappa\log t\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是一个指示变量的值，如果一个个体在一个组中，则该值为零，如果在另一组中，那么该值为一。然后为每组中的个体获得生存函数的 Kaplan-Meier 估计，并绘制生存超过时间 <span class="math inline">\(t\)</span> 的对数几率估计 <span class="math inline">\(\log\left\{\hat{S}_i(t)/[1-\hat{S}_i(t)]\right\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 的图形。如果图中显示了两条平行的直线，则表明 log-logistic 模型是合适的。如果线是直的但不平行，这表明模型中的参数 <span class="math inline">\(\kappa\)</span> 在两个治疗组中不相同。若显示了平行的曲线，则表明尽管比例几率假设是有效的，但生存时间不能视为具有 log-logistic 分布。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-17" class="example"><strong>示例 5.17  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在本示例中，为了说明比例几率模型的使用，为乳腺癌症患者生存时间数据拟合该模型。为评估比例几率模型的适用性，计算了肿瘤呈阴性和阳性染色的女性的生存函数的 Kaplan-Meier 估计。对于这两组女性，估计了生存超过时间 <span class="math inline">\(t\)</span> 的对数几率，并绘制其关于 <span class="math inline">\(\log t\)</span> 的图形，如图 5.25 所示。这些线是相当直且平行的，因此我们继续使用 log-logistic 比例几率模型来总结这些数据。</p>
+<details><summary><font color="#8B2232">图 5.25</font>
+</summary><img src="figure/figure%205.25.png#center" style="width:80.0%"></details><p><br>
+可以使用用于拟合 log-logistic 加速失效时间模型的软件来拟合该模型。在<a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex5-14">示例 5.14</a> 中为癌症患者生存数据拟合了前者模型。比例几率模型中 <span class="math inline">\(\kappa\)</span> 和 <span class="math inline">\(\theta\)</span> 的估计分别为 1.243 和 −6.787，与加速失效时间模型中的估计相同。然而，比例几率模型线性部分中 <span class="math inline">\(\beta\)</span> 的估计为 <span class="math inline">\(\hat{\beta}=-1.149\times1.243=-1.428\)</span>。这是相对于阴性染色女性，阳性染色女性生存超过时间 <span class="math inline">\(t\)</span> 的几率比的对数的估计。相应的几率比为 <span class="math inline">\(e^{-1.428}=0.24\)</span>。因此，相比肿瘤染色呈阳性的女性，肿瘤染色呈阴性的女性生存超过 <span class="math inline">\(t\)</span> 的几率大约是其四倍。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec5-16" class="section level2" number="5.16">
+<h2>
+<span class="header-section-number">5.16</span> 治愈率建模<a class="anchor" aria-label="anchor" href="#sec5-16"><i class="fas fa-link"></i></a>
+</h2>
+<p>在生存分析中，通常假设如果随访时间足够长，所有个体最终都会经历兴趣终点。如果终点是因任何原因的死亡，情况必然如此。然而，在一些研究中，相当一部分人可能在研究结束之前没有经历终点。这可能是因为治疗有效地治愈了患者。例如，在癌症试验中，兴趣可能集中在两种疗法的比较上，其中终点是死于特定类型的癌症。如果治疗有效，在相对较长的随访期内，将会有许多患者免死于癌症。这可能导致删失观测的比例比通常遇到的更大，这种情况有时称为重删失 (heavy censoring). 然而，严格来说，在随访期间未死亡个体的时间是删失的，而那些被治愈的个体不会死于所研究的疾病。</p>
+<p>已被治愈的个体，或更一般地说，那些无法再经历所研究事件的个体，最终会因某种原因而失效 (fail)，但可能会存活很长一段时间。在这种情况下，根据一组个体估计的生存函数将倾向于在某个正值处趋于平稳。那么可以假设总体由个体混合而成：易受终点影响的人，和那些不易受终点影响的人。后者对应于治愈的个体，长期生存的比例称为治愈分数 (cured fraction). 然后可以采用生存分析的标准方法，以便对治愈概率与事件发生时间同时建模。</p>
+<p>事件发生时间的模型可以扩展为包含治愈分数 <span class="math inline">\(\pi\)</span>，即治愈概率。在全参数模型中，生存函数变为</p>
+<p><span class="math display" id="eq:5-79">\[\begin{align}
+S(t)=(1-\pi)S_n(t)+\pi
+\tag{5.79}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(S_n(t)\)</span> 是未治愈个体的生存函数。在式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-79">(5.79)</a> 中，<span class="math inline">\(S(t)\)</span> 是由治愈和未治愈个体组成的群体的总体生存函数，该模型称为参数混合模型 (parametric mixture model). 当 <span class="math inline">\(t \rightarrow \infty\)</span> 时，未治愈个体的生存函数趋于零，因此，根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-79">(5.79)</a>，<span class="math inline">\(S(t)\)</span> 趋于 <span class="math inline">\(\pi\)</span>，即治愈概率 (probability of cure). 整个群体对应的风险函数为</p>
+<p><span class="math display" id="eq:5-80">\[\begin{align}
+h(t)&amp;=-\frac{\text{d}\log S(t)}{\text{d}t}=\frac{f_n(t)}{S_n(t)+\pi/(1-\pi)}
+\tag{5.80}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}f_n(t)=-\frac{\mathrm{d}}{\mathrm{d}t}S_n(t)\end{aligned}\]</span></p>
+<p>是未治愈个体的密度函数。</p>
+<p>如果对未治愈个体的生存时间假定一个比例风险模型，则该个体在时间 <span class="math inline">\(t\)</span> 时的死亡风险为</p>
+<p><span class="math display">\[h_{{n}{i}}(t)=\exp(\boldsymbol{\beta'x}_{\boldsymbol{i}})h_{{n}0}(t)\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{\beta'x}_i=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\)</span> 为在该个体上测量的 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1, X_2,...,X_p\)</span> 值的线性组合。<span class="math inline">\(h_{n0}(t)\)</span> 为未治愈个体的基线风险函数。那么未治愈个体的生存函数为</p>
+<p><span class="math display">\[S_{ni}(t)=[S_{n0}(t)]^{\exp(\boldsymbol{\beta'x}_i)}\]</span></p>
+<p>其中 <span class="math inline">\(S_{n0}(t)=\exp\{-\int_0^th_{n0}(u)\mathrm{d}u\}\)</span> 为其基线生存函数。</p>
+<p>此外，治愈概率可能取决于许多解释变量（尤其是与治疗组相关的变量），表示为 <span class="math inline">\(Z_1,Z_2,\ldots,Z_p\)</span>。然后，可以通过对治愈分数进行 logistic 变换，使其成为变量值 <span class="math inline">\(z_{1i},z_{2i},\ldots,z_{pi}\)</span> 的线性组合，来为第 <span class="math inline">\(i\)</span> 个个体的治愈概率关于这些变量的依赖性进行建模。那么</p>
+<p><span class="math display">\[\begin{aligned}\text{logit }(\pi_i)=\log\left(\frac{\pi_i}{1-\pi_i}\right)=\phi_0+\boldsymbol{\phi'z}_i\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(i=1,2,\ldots,n,\boldsymbol{\phi'z}_i=\phi_0+\phi_1z_{1i}+\phi_2z_{2i}+\cdots+\phi_pz_{pi}\)</span>。<span class="math inline">\(\phi_0,\phi_1,\ldots,\phi_p\)</span> 为未知参数。那么治愈概率为</p>
+<p><span class="math display">\[\begin{aligned}\pi_i=\{1+\exp(-\boldsymbol{\phi'z}_i)\}^{-1}\end{aligned}\]</span></p>
+<p>未治愈个体的生存模型和治愈概率模型可能会出现相同的解释变量。此外，与生存模型不同，治愈概率模型通常包含一个常数项 <span class="math inline">\(\phi_0\)</span>，这是在模型中没有其他解释变量时，共同治愈概率 (common cure probability) 的 logistic 变换。</p>
+<p>现假设未治愈个体的生存时间可以使用 Weibull 分布进行建模，基线风险函数为 <span class="math inline">\(h_{\boldsymbol{n}0}(t)=\lambda\gamma t^{{\gamma}-1}\)</span>。未治愈个体的风险函数为</p>
+<p><span class="math display" id="eq:5-81">\[\begin{align}
+h_{ni}(t)=\exp(\boldsymbol{\beta'x}_i)\lambda\gamma t^{\gamma-1}
+\tag{5.81}
+\end{align}\]</span></p>
+<p>相应的生存函数为</p>
+<p><span class="math display" id="eq:5-82">\[\begin{align}
+S_{ni}(t)=[\exp(-\lambda t^\gamma)]^{\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)}=\exp\{-e^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}\lambda t^\gamma\}
+\tag{5.82}
+\end{align}\]</span></p>
+<p>如同本章描述的其他模型，可以使用最大似然法拟合包含治愈分数的模型。假设数据由 <span class="math inline">\(n\)</span> 个生存时间 <span class="math inline">\(t_1,t_2,\ldots,t_n\)</span> 组成，并且 <span class="math inline">\(δ_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的事件指示符，因此如果第 <span class="math inline">\(i\)</span> 个个体死亡，则 <span class="math inline">\(δ_i=1\)</span>，否则为 0. 根据式 <a href="chap5.html#eq:5-44">(5.44)</a>，似然函数为</p>
+<p><span class="math display">\[L(\boldsymbol{\beta},\boldsymbol{\phi},\lambda,\gamma)=\prod_{i=1}^n\left\{h_i(t_i)\right\}^{\delta_i}S_i(t_i)\]</span></p>
+<p>这里，通过将式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-81">(5.81)</a> 和 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-82">(5.82)</a> 中的 <span class="math inline">\(h_{ni}(t_i)\)</span> 和 <span class="math inline">\(S_{ni}(t_i)\)</span> 代入式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-79">(5.79)</a> 和 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-80">(5.80)</a> 从而得到 <span class="math inline">\(h_i(t_i)\)</span> 和 <span class="math inline">\(S_i(t_i)\)</span>。</p>
+<p>然后可以使用计算机软件来最大化相应对数似然函数 <span class="math inline">\(\log L(\boldsymbol{\beta},\boldsymbol{\phi},\lambda,\gamma)\)</span> 以进行数值优化。这一过程得到未知参数 <span class="math inline">\(\hat{\boldsymbol{\beta}},\hat{\boldsymbol{\phi}},\hat{\lambda},\hat{{\gamma}}\)</span> 的估计及其标准误。此外，在治愈概率模型或未治愈个体的生存模型中具有不同解释变量的模型，可以以通常的方式使用统计量 <span class="math inline">\(-2\log L(\hat{\boldsymbol{\beta}},\hat{\boldsymbol{\phi}},\hat{\lambda},\hat{\gamma})\)</span> 的值进行模型比较。</p>
+<p>可以对该模型进行许多扩展。例如，可以使用加速失效时间模型来代替未治愈个体的比例风险模型。</p>
+</div>
+<div id="sec5-17" class="section level2" number="5.17">
+<h2>
+<span class="header-section-number">5.17</span> 协变量调整的影响<a class="anchor" aria-label="anchor" href="#sec5-17"><i class="fas fa-link"></i></a>
+</h2>
+<p>作为本章的结尾，以一个示例来说明生存数据参数模型开发过程中可能遇到的一个重要特征。在线性回归分析中，向模型添加协变量的一个效果是减小残差均方，从而提高基于模型的估计（如治疗效应）的精度。经解释变量调整的治疗效应估计，相比未调整的，具有更小的标准误。然而在生存数据建模中，包含有意义的 (relevant) 解释变量通常对参数估计的标准误影响甚微。事实上在调整协变量后，治疗效应估计的标准误甚至会更大。本质上，这是因为在是否包含协变量的两个模型中，治疗效应的解释不同，这一观点来自 Ford, Norrie and Ahmadi (1995). 尽管如此，将有意义的解释变量纳入模型，并检查拟合模型是否合适，以确保获得治疗效应的准确估计，仍然是非常重要的。</p>
+<p>为了更详细地说明这一点，假设 <span class="math inline">\(t_i\)</span> 是随机变量 <span class="math inline">\(T_i\)</span> 的观测值，它与第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体的生存时间相关。我们将考虑这样的情况：有两个治疗组，每组有 <span class="math inline">\(n/2\)</span> 个个体，有一个可用于每个个体的解释变量。这两个解释变量标记为 <span class="math inline">\(X_1,X_2\)</span>，其中 <span class="math inline">\(X_1\)</span> 表示治疗效应，取值为 0 或 1. 第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(X_1,X_2\)</span> 的值分别表示为 <span class="math inline">\(x_{1i},x_{2i}\)</span>，并且我们写 <span class="math inline">\(z_{ji}=x_{ji}-\bar{x}_{j}\)</span>，其中 <span class="math inline">\(\bar x_j\)</span> 是解释变量 <span class="math inline">\(X_j\)</span> 的样本均值，<span class="math inline">\(j=1,2\)</span>。将采用比例风险模型来计算第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 时的死亡风险关于 <span class="math inline">\(z_{1i},z_{2i}\)</span> 值的依赖性，其中基线风险是恒定值 <span class="math inline">\(\lambda\)</span>。因此，风险函数可表示为</p>
+<p><span class="math display" id="eq:5-83">\[\begin{align}
+h_i(t)=\lambda\exp(\beta_1z_{1{i}}+\beta_2z_{2{i}})
+\tag{5.83}
+\end{align}\]</span></p>
+<p>在此模型下，生存时间服从均值为 <span class="math inline">\(\{\lambda\exp(\beta_1z_{1i}+\beta_2z_{2i})\}^{-1}\)</span> 指数分布，使用 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12-1">5.12.1</a> 节给出的结果，该模型也可用加速失效时间形式表示为</p>
+<p><span class="math display" id="eq:5-84">\[\begin{align}
+\log T_i=\mu-\beta_1z_{1i}-\beta_2z_{2i}+\epsilon_i
+\tag{5.84}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\mu=-\operatorname{log}\lambda\)</span> 并且 <span class="math inline">\(\epsilon_i\)</span> 具有 Gumbel 分布，即 <span class="math inline">\(\log \epsilon_i\)</span> 具有单位指数分布。式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-83">(5.83)</a> 或 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-84">(5.84)</a> 所示的模型将称为模型 (1).</p>
+<p>使用附录 <a href="A.html#A">A</a> 中给出的最大似然估计结果，可证明模型 (1) 中治疗效应估计 <span class="math inline">\(\hat{\beta}_{1}\)</span> 的近似方差为</p>
+<p><span class="math display">\[\begin{aligned}\text{var }(\hat{\beta}_1)&amp;=\frac{1}{[1-\{\text{ corr }(z_1,z_2)\}^2]\sum_{i=1}^nz_{1i}^2}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\mathrm{corr}\left(z_1,z_2\right)\)</span> 是 <span class="math inline">\(z_{1i}\)</span> 和 <span class="math inline">\(z_{2i}\)</span> 值之间的样本相关系数。由于 <span class="math inline">\(z_{1i}\)</span> 要么为 -0.5 要么为 0.5，并且两组个体数相等，则 <span class="math inline">\(\sum_{{i}=1}^nz_{1{i}}^2=n/4\)</span>，所以</p>
+<p><span class="math display" id="eq:5-85">\[\begin{align}
+\text{var }(\hat{\beta}_1)&amp;=\frac{4}{n[1-\{\text{ corr }(z_1,z_2)\}^2]}
+\tag{5.85}
+\end{align}\]</span></p>
+<p>现在考虑只包括与治疗效应相关的变量 <span class="math inline">\(X_1\)</span> 的模型，因此</p>
+<p><span class="math display" id="eq:5-86">\[\begin{align}
+h_i(t)=\lambda\exp(\beta_1z_{1{i}})
+\tag{5.86}
+\end{align}\]</span></p>
+<p>或等价地</p>
+<p><span class="math display" id="eq:5-87">\[\begin{align}
+\log T_i=\mu-\beta_1z_{1i}+\epsilon_i
+\tag{5.87}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\log \epsilon_i\)</span> 也具有单位指数分布。式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-86">(5.86)</a> 或 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-87">(5.87)</a> 描述的模型称为模型 (2). 在该模型中，<span class="math inline">\(\hat \beta_1\)</span> 的近似方差为 <span class="math inline">\(\text{var }(\hat{\beta}_1)=4n^{{-}1}\)</span>。由于式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-85">(5.85)</a> 中的项 <span class="math inline">\(1-\{\text{ corr }(z_1,z_2)\}^2\)</span> 始终小于等于 1，因此模型 (1) 中 <span class="math inline">\(\hat \beta_1\)</span> 的方差大于等于模型 (2) 中 <span class="math inline">\(\hat \beta_1\)</span> 的方差。因此，在模型 (1) 中添加解释变量 <span class="math inline">\(X_2\)</span> 并不能减小治疗效应估计的方差。</p>
+<p>究其原因，在于模型 (1) 和模型 (2) 不能同时对同一数据集有效。如果模型 (1) 是正确的，但实际拟合了模型 (2)，则式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-87">(5.87)</a> 中的残差项不是 <span class="math inline">\(\epsilon_i\)</span>，而是 <span class="math inline">\(\epsilon_i−\beta_2 z_{2i}\)</span>。类似地，模型 (2) 是正确的，但实际拟合了模型 (1)，我们不能假设式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-84">(5.84)</a> 中的 <span class="math inline">\(\log \epsilon_i\)</span> 具有单位指数分布。此外，由于模型中包含冗余参数 <span class="math inline">\(\beta_2\)</span>，反而降低了参数 <span class="math inline">\(\beta_1\)</span> 估计的精度。</p>
+<p>Ford, Norrie and Ahmadi (1995) 的论文中给出了更详细的分析和模拟研究，这些研究证实了一个普遍的观点：在生存数据模型中包含解释变量不能预期增加治疗效应估计的精度。</p>
+</div>
+<div id="sec5-18" class="section level2" number="5.18">
+<h2>
+<span class="header-section-number">5.18</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec5-18"><i class="fas fa-link"></i></a>
+</h2>
+<p>Johnson, Kotz and Balakrishnan (1994) 给出了指数分布、Weibull 分布和其他连续分布的性质。Chhikara and Folks (1989) 对逆高斯分布进行了详细的研究。Gaver and Acar (1979) 讨论了二次风险函数的使用，Hjorth (1980) 提出了浴缸风险函数。</p>
+<p>Barnett (1999), Cox and Hinkley (1974) 对最大似然估计理论进行了深入的讨论，Hinkley, Reid and Snell (1991) 对主要结果进行了有用的总结。Everitt (1987) 和 Thisted (1988) 描述了用于获得最大似然估计的数值方法，特别是 Newton-Raphson 程序；另请参见第 3 章 <a href="chap3.html#sec3-3-3">3.3.3</a> 节的说明。Byar (1982) 提供了 Cox 和 Weibull 比例风险模型的比较。</p>
+<p>Cox and Oakes (1984) 表明，Weibull 分布是唯一同时具有比例风险性和加速失效时间性的分布。他们还证明，log-logistic 分布是唯一具有加速失效时间性和比例几率性的分布。另一种具有比例风险性的分布是 Pareto 分布。该模型在实践中很少使用，可参阅 Davis and Feldstein (1979) 了解更多详细信息。</p>
+<p>许多关于生存分析的主要教科书都包含对生存数据的对数线性模型的描述；特别是 Cox and Oakes (1984), Kalbfleisch and Prentice (2002), Klein and Moeschberger (2005) 和 Lawless (2002).</p>
+<p>Wei (1992) 引入了加速失效时间模型的非参数版本，它不需要指定生存数据的概率分布。该文以及 Fisher (1992) 的讨论，包含了是否应更广泛地在生存数据分析中使用加速失效时间模型的评论。</p>
+<p>Crowder et al. (1991) 描述了加速失效时间和比例几率模型在可靠性数据分析中的应用。Bennett (1983a) 引入了生存数据的一般比例几率模型，Bennett (1983b) 描述了 log-logistic 比例几率模型。该模型由 Yang and Prentice (1999) 进一步发展。</p>
+<p>定义并比较 Weibull 模型解释的变异的度量的论文包括 Kent and O’Quigley (1988) 以及 Royston and Sauerbrei (2004) 的论文，详见第 <a href="chap3.html#chap3">3</a> 章。Chan, Xu and Chambers (2018) 研究了式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-75">(5.75)</a>中关于解释的变异的度量 <span class="math inline">\(R^2_P\)</span> 在不同加速失效时间模型中的性能。</p>
+<p>对生存数据进行建模的一种更通用的方法是使用一系列生存时间分布，其中以 Weibull 和 log-logistic 作为特殊情况。那么可以在似然框架内做出替代分布之间的选择。具体来说，指数分布, Weibull 分布, log-logistic 分布, log-normal 分布和 gamma 分布是 Kalbfleisch and Prentice (2002) 描述的广义 F 分布的特例。然而，这种方法只会在分析死亡数相对较多的数据集时富有信息。</p>
+<p>RamlauHansen (1983) 以及 Klein and Moeschberger (2005) 的文章中描述了基于核平滑的风险函数的估计。许多作者描述了包含治愈分数的参数混合模型及其对半参数模型的扩展，如 Fareway (1982), Kuk and Chen (1992), Taylor (1995), Sy and Taylor (2000) 以及 Peng and Dear (2000).</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></div>
+<div class="next"><a href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B">►参数回归模型</a></li>
+<li>
+<a class="nav-link" href="#sec5-10"><span class="header-section-number">5.10</span> 用于两组比较的加速失效时间模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec5-10-1"><span class="header-section-number">5.10.1</span> 与比例风险模型的比较</a></li>
+<li><a class="nav-link" href="#sec5-10-2"><span class="header-section-number">5.10.2</span> 百分位-百分位图</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec5-11"><span class="header-section-number">5.11</span> 一般加速失效时间模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec5-11-2"><span class="header-section-number">5.11.1</span> 加速失效时间模型的对数线性形式</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec5-12"><span class="header-section-number">5.12</span> 参数加速失效时间模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec5-12-1"><span class="header-section-number">5.12.1</span> Weibull 加速失效时间模型</a></li>
+<li><a class="nav-link" href="#sec5-12-2"><span class="header-section-number">5.12.2</span> log-logistic 加速失效时间模型</a></li>
+<li><a class="nav-link" href="#log-normal-%E5%8A%A0%E9%80%9F%E5%A4%B1%E6%95%88%E6%97%B6%E9%97%B4%E6%A8%A1%E5%9E%8B"><span class="header-section-number">5.12.3</span> log-normal 加速失效时间模型</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec5-13"><span class="header-section-number">5.13</span> 拟合并比较加速失效时间模型</a></li>
+<li>
+<a class="nav-link" href="#sec5-14"><span class="header-section-number">5.14</span> 参数模型中解释的变异的度量</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec5-14-1"><span class="header-section-number">5.14.1</span> 参数模型的预测能力</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec5-15"><span class="header-section-number">5.15</span> 比例几率模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec5-15-1"><span class="header-section-number">5.15.1</span> log-logistic 比例几率模型</a></li></ul>
+</li>
+<li><a class="nav-link" href="#sec5-16"><span class="header-section-number">5.16</span> 治愈率建模</a></li>
+<li><a class="nav-link" href="#sec5-17"><span class="header-section-number">5.17</span> 协变量调整的影响</a></li>
+<li><a class="nav-link" href="#sec5-18"><span class="header-section-number">5.18</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

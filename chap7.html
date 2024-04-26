@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 7 章 参数模型的模型检查 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="评估模型充分性的诊断程序对于参数模型与 Cox 回归模型一样重要。基于残差的程序尤为重要，因此，本章首先定义了参数模型的残差，其中一些残差来源于第 4 章描述的 Cox 回归模型。接着，对假设为 Weibull 分布，log-logistic 分布和 lognormal...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 7 章 参数模型的模型检查 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="评估模型充分性的诊断程序对于参数模型与 Cox 回归模型一样重要。基于残差的程序尤为重要，因此，本章首先定义了参数模型的残差，其中一些残差来源于第 4 章描述的 Cox 回归模型。接着，对假设为 Weibull 分布，log-logistic 分布和 lognormal...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 7 章 参数模型的模型检查 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="评估模型充分性的诊断程序对于参数模型与 Cox 回归模型一样重要。基于残差的程序尤为重要，因此，本章首先定义了参数模型的残差，其中一些残差来源于第 4 章描述的 Cox 回归模型。接着，对假设为 Weibull 分布，log-logistic 分布和 lognormal...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="active" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap7" class="section level1" number="7">
+<h1>
+<span class="header-section-number">第 7 章</span> 参数模型的模型检查<a class="anchor" aria-label="anchor" href="#chap7"><i class="fas fa-link"></i></a>
+</h1>
+<p>评估模型充分性的诊断程序对于参数模型与 Cox 回归模型一样重要。基于残差的程序尤为重要，因此，本章首先定义了参数模型的残差，其中一些残差来源于第 <a href="chap4.html#chap4">4</a> 章描述的 Cox 回归模型。接着，对假设为 Weibull 分布，log-logistic 分布和 lognormal 分布的模型对数据的适用性，提供了图形程序的总结。随后，考虑其他检验参数回归模型拟合度的方法，以及检测有影响的观测的方法。最后总结了如何在拟合 Weibull 比例风险模型后检验比例风险假设。</p>
+<div id="sec7-1" class="section level2" number="7.1">
+<h2>
+<span class="header-section-number">7.1</span> 参数模型的残差<a class="anchor" aria-label="anchor" href="#sec7-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>假设 <span class="math inline">\(T_i\)</span> 是与第 <span class="math inline">\(i\)</span> 个个体生存时间相关的随机变量，<span class="math inline">\(i=1,2,\ldots,n\)</span>，并且 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span> 是该个体的 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 的值。为 <span class="math inline">\(T_i\)</span> 假定加速失效时间模型，我们有</p>
+<p><span class="math display">\[\begin{aligned}\log T_i=\mu+\alpha_1x_{1i}+\alpha_2x_{2i}+\cdots+\alpha_px_{pi}+\sigma\epsilon_i\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\epsilon_i\)</span> 是一个随机变量，其概率分布取决于 <span class="math inline">\(T_i\)</span> 采用的分布，并且 <span class="math inline">\(\mu,\sigma\)</span> 和 <span class="math inline">\(\alpha_j,j=1,2,\ldots,p\)</span> 是未知参数。如果第 <span class="math inline">\(i\)</span> 个个体的观测生存时间删失，相应的残差也将删失，使这些量的解释变得复杂。</p>
+<div id="sec7-1-1" class="section level3" number="7.1.1">
+<h3>
+<span class="header-section-number">7.1.1</span> 标准化残差<a class="anchor" aria-label="anchor" href="#sec7-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>加速失效时间建模中采用的残差的自然形式是<strong>标准化残差</strong> (standardized residual)，定义为</p>
+<p><span class="math display" id="eq:7-1">\[\begin{align}
+r_{Si}=\left\{\log t_{i}-\hat{\mu}-\hat{\alpha}_{1}x_{1i}-\hat{\alpha}_{2}x_{2i}-\cdots-\hat{\alpha}_{p}x_{pi}\right\}/\hat{\sigma}
+\tag{7.1}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(t_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的观测生存时间， <span class="math inline">\(\hat{\mu},\hat{\sigma},\hat{\alpha}_j\)</span> 是拟合的加速失效时间模型的参数估计，<span class="math inline">\(j=1,2,\ldots,p\)</span>。这个残差具有“观测值-拟合值”的形式，如果模型是正确的，则预期它具有与加速失效时间模型中的 <span class="math inline">\(\epsilon_i\)</span> 相同的分布。例如，如果 <span class="math inline">\(T_i\)</span> 采用 Weibull 分布，如果拟合模型是正确的，则预期 <span class="math inline">\(r_{Si}\)</span> 的表现就好像它们是来自 Gumbel 分布的删失样本。残差的生存函数估计将类似于 <span class="math inline">\(\epsilon_i\)</span> 的生存函数，即 <span class="math inline">\(S_{\epsilon_i}(\epsilon)\)</span>。使用第 4 章 <a href="chap4.html#sec4-1-1">4.1.1</a> 节中的一般结果，<span class="math inline">\(− \log S_{\epsilon_i}(\epsilon)\)</span> 具有单位指数分布，因此如果拟合模型是合适的，则 <span class="math inline">\(− \log S_{\epsilon_i}(\epsilon)\)</span> 将具有近似单位指数分布。这为可用于评估模型充分性的诊断图提供了基础，如第 <a href="chap7.html#sec7-2-4">7.2.4</a> 节所述。</p>
+</div>
+<div id="sec7-1-2" class="section level3" number="7.1.2">
+<h3>
+<span class="header-section-number">7.1.2</span> Cox-Snell 残差<a class="anchor" aria-label="anchor" href="#sec7-1-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>第 4 章 <a href="chap4.html#sec4-1-1">4.1.1</a> 节中为 Cox 回归模型定义的 Cox-Snell 残差本质上是第 <span class="math inline">\(i\)</span> 个观测在相应事件时间 <span class="math inline">\(t_i\)</span> 时的累积风险函数的估计。类似形式的残差也可用于评估参数模型的充分性。主要区别在于，现在生存函数和风险函数是参数函数，取决于生存时间采用的分布。</p>
+<p>参数模型的 <strong>Cox-Snell 残差</strong>定义为</p>
+<p><span class="math display" id="eq:7-2">\[\begin{align}
+r_{C{i}}=\hat{H}_{{i}}(t_{{i}})=-\log\hat{S}_{{i}}(t_{{i}})
+\tag{7.2}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat H_i(t_i),\hat Si (t_i)\)</span> 分别为 <span class="math inline">\(t_i\)</span> 处的累积风险函数和生存函数估计。使用第 5 章的式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-65">(5.65)</a> 拟合加速失效时间模型，第 <span class="math inline">\(i\)</span> 个个体的生存函数估计为</p>
+<p><span class="math display" id="eq:7-3">\[\begin{align}
+\hat{S}_i(t)&amp;=S_{\epsilon_i}\left(\frac{\log t-\hat{\mu}-\hat{\alpha}_1x_{1i}-\hat{\alpha}_2x_{2i}-\cdots-\hat{\alpha}_px_{pi}}{\hat{\sigma}}\right)
+\tag{7.3}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(S_{\epsilon_i}(\epsilon)\)</span> 是加速失效时间模型中 <span class="math inline">\(\epsilon_i\)</span> 的生存函数，<span class="math inline">\(\hat \alpha_j\)</span> 是 <span class="math inline">\(x_{ji}\)</span> 的系数估计，<span class="math inline">\(j = 1, 2,...,p\)</span>，<span class="math inline">\(\hat{\mu},\hat{\sigma}\)</span> 是 <span class="math inline">\({\mu},{\sigma}\)</span> 的估计。第 5 章 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12">5.12</a> 节描述了一些常用的 <span class="math inline">\(T_i\)</span> 分布的 <span class="math inline">\(S_{\epsilon_i}(\epsilon)\)</span> 形式。</p>
+<p>与 Cox 回归模型的情况一样，当拟合了正确的模型时，Cox-Snell 残差可视为具有单位指数分布，且删失观测得到删失残差；详细信息请参见 <a href="chap4.html#sec4-1-1">4.1.1</a> 节。式 <a href="chap7.html#eq:7-2">(7.2)</a> 中的 Cox-Snell 残差也与式 <a href="chap7.html#eq:7-1">(7.1)</a> 中的标准化残差非常密切相关，因为从式 <a href="chap7.html#eq:7-3">(7.3)</a> 中，我们可看出 <span class="math inline">\(r_{Ci}=-\log S_{\epsilon_{i}}\left(r_{Si}\right)\)</span>。因此，评估标准化残差是否具有特定分布相当于评估相应的 Cox-Snell 残差是否具有单位指数分布。</p>
+</div>
+<div id="sec7-1-3" class="section level3" number="7.1.3">
+<h3>
+<span class="header-section-number">7.1.3</span> 鞅残差<a class="anchor" aria-label="anchor" href="#sec7-1-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>鞅残差度量了在区间 <span class="math inline">\((0, t_i)\)</span> 内的实际观测死亡数（0 或 1）与模型预测值之间的差异。对具有异常大的鞅残差的观测，模型拟合效果不佳。类似于第 4 章式 <a href="chap4.html#eq:4-6">(4.6)</a> 中为 Cox 回归模型定义的<strong>鞅残差</strong> (martingale residuals)</p>
+<p><span class="math display" id="eq:7-4">\[\begin{align}
+r_{Mi}=\delta_i-r_{Ci}
+\tag{7.4}
+\end{align}\]</span></p>
+<p>其中，<span class="math inline">\(\delta_i\)</span> 是第 <span class="math inline">\(i\)</span> 个观测的事件指示符，若该观测是事件则 <span class="math inline">\(\delta_i=1\)</span>，若为删失则为 <span class="math inline">\(\delta_i=0\)</span>；<span class="math inline">\(r_{Ci}\)</span> 是式 <a href="chap7.html#eq:7-2">(7.2)</a> 中给出的 Cox-Snell 残差。</p>
+<p>由于 <a href="chap7.html#sec7-2-1">7.2.1</a> 节给出的原因，参数加速失效时间模型的鞅残差之和为零，但并非关于零对称分布。严格来说，将这些残差称为鞅残差是不合适的，因为它们的推导是基于鞅方法的，不能延伸到加速失效时间模型。然而，为了语义上的方便，我们将仍将式 <a href="chap7.html#eq:7-4">(7.4)</a> 中的量称为鞅残差。</p>
+</div>
+<div id="sec7-1-4" class="section level3" number="7.1.4">
+<h3>
+<span class="header-section-number">7.1.4</span> 偏差残差<a class="anchor" aria-label="anchor" href="#sec7-1-4"><i class="fas fa-link"></i></a>
+</h3>
+<p><strong>偏差残差</strong> (deviance residuals) 在第 4 章式 <a href="chap4.html#eq:4-7">(4.7)</a> 中首次提出，可看作是使鞅残差在零附近对称分布的一种尝试，定义为</p>
+<p><span class="math display" id="eq:7-5">\[\begin{align}
+r_{Di}=\operatorname{sgn}(r_{Mi})\left[-2\left\{r_{Mi}+\delta_i\log(\delta_i-r_{Mi})\right\}\right]^{\frac{1}{2}}
+\tag{7.5}
+\end{align}\]</span></p>
+<p>由此定义得到的残差偏差通常与可比的 Cox 回归模型的残差相似。然而，式 <a href="chap7.html#eq:7-5">(7.5)</a> 中的 <span class="math inline">\(r_{Di}\)</span> 值通常与式 <a href="chap7.html#eq:7-1">(7.1)</a> 中的标准化残差 <span class="math inline">\(r_{Si}\)</span> 具有相反的符号。这是因为参数加速失效时间模型基于生存时间的对数，而不是风险函数。因此，将加速失效时间模型的偏差残差定义为值 <span class="math inline">\(-r_{Di}\)</span> 更为合适，该在一些生存分析软件包中使用。还需要注意的是，式 <a href="chap7.html#eq:7-5">(7.5)</a> 中的偏差残差不是拟合的参数模型偏差的组成部分，但为方便起见，仍将其称为偏差残差。</p>
+</div>
+<div id="sec7-1-5" class="section level3" number="7.1.5">
+<h3>
+<span class="header-section-number">7.1.5</span> 得分残差<a class="anchor" aria-label="anchor" href="#sec7-1-5"><i class="fas fa-link"></i></a>
+</h3>
+<p>与 Cox 回归模型中的得分残差或 Schoenfeld 残差类似，<strong>得分残差</strong> (score residuals) 可以针对任何参数模型进行定义。得分残差是对数似然函数关于未知参数 <span class="math inline">\(\mu,\sigma\)</span> 和 <span class="math inline">\(\alpha_j(j=1,2,\ldots,p)\)</span> 的导数的组成部分，并在这些参数的最大似然估计值 <span class="math inline">\(\hat{\mu},\hat{\sigma}\)</span> 和 <span class="math inline">\(\hat \alpha_j\)</span> 处进行求值。根据第 5 章的式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-74">(5.74)</a> ，<span class="math inline">\(n\)</span> 个观测的对数似然函数为</p>
+<p><span class="math display">\[\begin{aligned}\log L(\boldsymbol{\alpha},\mu,\sigma)&amp;=\sum_{i=1}^n\left\{-\delta_i\log(\sigma t_i)+\delta_i\log f_{\epsilon_i}(z_i)+(1-\delta_i)\log S_{\epsilon_i}(z_i)\right\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(z_i=(\log t_i-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi})/\sigma,f_{\epsilon_i}(\epsilon)\)</span> 和 <span class="math inline">\(S_{\epsilon_i}(\epsilon)\)</span> 分别为 <span class="math inline">\(\epsilon_i\)</span> 的密度和生存函数，<span class="math inline">\(\delta_i\)</span> 为事件指示符。</p>
+<p>对该对数似然函数关于参数 <span class="math inline">\(\mu,\sigma\)</span> 和 <span class="math inline">\(\alpha_j(j=1,2,\ldots,p)\)</span> 进行微分，得到导数</p>
+<p><span class="math display">\[\begin{aligned}
+&amp;\begin{aligned}\frac{\partial\log L}{\partial\mu}\end{aligned} \begin{aligned}=\sigma^{-1}\sum_{i=1}^ng(z_i),\end{aligned}  \\
+&amp;\begin{aligned}\frac{\partial\log L}{\partial\sigma}\end{aligned} =\left.\sigma^{-1}\sum_{i=1}^n\left\{z_ig(z_i)-\delta_i\right\},\right.  \\
+&amp;\begin{aligned}\frac{\partial\log L}{\partial\alpha_j}\end{aligned} =\sigma^{-1}\sum_{i=1}^nx_{ji}g(z_i)
+\end{aligned}\]</span></p>
+<p>其中函数 <span class="math inline">\(g(z_i)\)</span> 为</p>
+<p><span class="math display" id="eq:7-6">\[\begin{align}
+g(z_i)=\frac{(1-\delta_i)f_{\epsilon_i}(z_i)}{S_{\epsilon_i}\left(z_i\right)}-\frac{\delta_if_{\epsilon_i}^{\prime}\left(z_i\right)}{f_{\epsilon_i}\left(z_i\right)}
+\tag{7.6}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(f'_{{i}}(z_{{i}})\)</span> 为 <span class="math inline">\(f_{{i}}\left(z_{{i}}\right)\)</span> 关于 <span class="math inline">\(z_i\)</span> 的导数。那么，每个导数在未知参数最大似然估计处的值，其第 <span class="math inline">\(i\)</span> 个分量就是相应项的残差得分。因此，根据式 <a href="chap7.html#eq:7-1">(7.1)</a> 中的标准化残差的定义，<span class="math inline">\(\mu\)</span> 的第 <span class="math inline">\(i\)</span> 个得分残差为</p>
+<p><span class="math display">\[\hat{\sigma}^{-1}g(r_{S{i}})\]</span></p>
+<p>尺度参数 <span class="math inline">\(\sigma\)</span> 的第 <span class="math inline">\(i\)</span> 个得分残差为</p>
+<p><span class="math display">\[\hat{\sigma}^{-1}\left\{r_{Si}\left.g(r_{Si})-\delta_i\right\}\right.\]</span></p>
+<p>模型中的第 <span class="math inline">\(j\)</span> 个解释变量 <span class="math inline">\(X_j\)</span> 的第 <span class="math inline">\(i\)</span> 个得分残差为</p>
+<p><span class="math display">\[r_{U{j}i}=\hat{\sigma}^{{-}1}x_{{j}{i}}g(r_{S{i}})\]</span></p>
+<p>其中，<span class="math inline">\(X_j\)</span> 的得分残差是最重要的，在 <a href="chap4.html#sec4-1-6">4.1.6</a> 节中表示为 <span class="math inline">\(r_{U{j}i}\)</span>。这些残差的特定表达式将在后续部分针对一些特定的参数模型给出。由于得分残差的和是对数似然函数在其最大值处的导数，因此这些残差之和必为零。</p>
+</div>
+</div>
+<div id="sec7-2" class="section level2" number="7.2">
+<h2>
+<span class="header-section-number">7.2</span> 特定参数模型的残差<a class="anchor" aria-label="anchor" href="#sec7-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>在本节中，描述了基于 Weibull, log-logistic 和 log-normal 分布的生存时间参数模型的残差形式。</p>
+<div id="sec7-2-1" class="section level3" number="7.2.1">
+<h3>
+<span class="header-section-number">7.2.1</span> Weibull 分布<a class="anchor" aria-label="anchor" href="#sec7-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p><a href="chap7.html#sec7-1">7.1</a> 节中描述的残差可以与 Weibull 模型的比例风险或加速失效时间的表示法结合使用。我们从第 <a href="chap5.html#chap5">5</a> 章中描述的比例风险模型开始，根据该模型，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 时的死亡风险为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi})h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(h_0(t)=\lambda\gamma t^{\boldsymbol{\gamma}-1}\)</span> 为基线风险函数。累积风险函数的相应估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{H}_i(t)&amp;=\exp(\hat{\beta}_1x_{1i}+\hat{\beta}_2x_{2i}+\cdots+\hat{\beta}_px_{pi})\hat{\lambda}t\hat{\gamma}\end{aligned}\]</span></p>
+<p>它们是如式 <a href="chap7.html#eq:7-2">(7.2)</a> 定义的 Cox-Snell 残差。</p>
+<p>在模型的加速失效时间版本中，<span class="math inline">\(\epsilon_i\)</span> 具有 Gumbel 分布，其生存函数为</p>
+<p><span class="math display" id="eq:7-7">\[\begin{align}
+S_{\epsilon_{i}}(\epsilon)=\operatorname{exp}(-e^{\epsilon})
+\tag{7.7}
+\end{align}\]</span></p>
+<p>标准化残差如式 <a href="chap7.html#eq:7-1">(7.1)</a> 所示，如果拟合了适当的模型，则预期这些残差将表现为来自 Gumbel 分布的可能删失样本。这相当于评估 Cox-Snell 残差（定义如下）是否具有单位指数分布。</p>
+<p>根据式 <a href="chap7.html#eq:7-7">(7.7)</a>，Cox-Snell 残差 <span class="math inline">\(r_{Ci}=-\log S_{\epsilon_{i}}\left(r_{Si}\right)\)</span> 是标准化残差的指数，即 <span class="math inline">\(r_{Ci}=\exp(r_{Si})\)</span>。使用式 <a href="chap7.html#eq:7-4">(7.4)</a> 和 <a href="chap7.html#eq:7-5">(7.5)</a>，这些残差将立即得到 Weibull 模型的鞅残差和偏差残差。</p>
+<p>Weibull 模型的得分残差可从 <a href="chap7.html#sec7-1-5">7.1.5</a> 节的一般结果中得出。这里，根据式 <a href="chap7.html#eq:7-7">(7.7)</a> 中的 <span class="math inline">\(S_{\epsilon_i}(z_i)=\exp(-e^{{z_i}})\)</span>，对 <span class="math inline">\(S_{\epsilon_i}(z_i)\)</span> 求导并乘以 -1 得到 <span class="math inline">\(f_{\epsilon_i}(z_i)=e^{z_i}\exp(-e^{z_i})\)</span>。此外有 <span class="math inline">\(f'_{\epsilon_i}(z_i)=(1-e^{z_i})f_{\epsilon_i}(z_i)\)</span>，将其代入式 <a href="chap7.html#eq:7-6">(7.6)</a> 后，经过一些代数计算后可得到 <span class="math inline">\(g(z_i)=e^{z_i}-\delta_i\)</span>。模型中第 <span class="math inline">\(j\)</span> 个解释变量 <span class="math inline">\(X_j\)</span> 的第 <span class="math inline">\(i\)</span> 个得分残差为</p>
+<p><span class="math display">\[\begin{aligned}r_{Uji}=\hat{\sigma}^{-1}x_{ji}\left(e^{r_{Si}}-\delta_{i}\right)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(r_{Si}\)</span> 是第 <span class="math inline">\(i\)</span> 个标准化残差，<span class="math inline">\(\delta_i\)</span> 是事件指示符。</p>
+<p>我们还注意到，<span class="math inline">\(\mu\)</span> 的第 <span class="math inline">\(i\)</span> 个得分残差是 <span class="math inline">\(\hat{\sigma}^{-1}(e^{r_{S}i}-\delta_{i})\)</span>，即 <span class="math inline">\(\hat{\sigma}^{-1}(r_{Ci}-\delta_{i})\)</span>。由于这些得分残差之和为零，因此式 <a href="chap7.html#eq:7-4">(7.4)</a> 中定义的鞅残差之和在 Weibull 模型中必为零。</p>
+</div>
+<div id="sec7-2-2" class="section level3" number="7.2.2">
+<h3>
+<span class="header-section-number">7.2.2</span> log-logistic 分布<a class="anchor" aria-label="anchor" href="#sec7-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在 log-logistic 加速失效时间模型中，随机变量 <span class="math inline">\(\epsilon_i\)</span> 具有 logistic 分布，其生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_{\epsilon_i}(\epsilon)=\left(1+e^{\epsilon}\right)^{-1}\end{aligned}\]</span></p>
+<p>因此，如果拟合模型正确，根据式 <a href="chap7.html#eq:7-1">(7.1)</a> 获得的标准化残差应该表现为 logistic 分布的样本。等价地，log-logistic 加速失效时间模型的 Cox-Snell 残差由下式给出</p>
+<p><span class="math display">\[\begin{aligned}r_{Ci}=-\log S_{\epsilon_i}(r_{Si})\end{aligned}\]</span></p>
+<p>即</p>
+<p><span class="math display">\[\begin{aligned}r_{Ci}=\log\left\{1+\exp\left(r_{Si}\right)\right\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(r_{Si}\)</span> 是第 <span class="math inline">\(i\)</span> 个标准化残差。得分残差根据 <a href="chap7.html#sec7-1-5">7.1.5</a> 节一般结果得出，使用式 <a href="chap7.html#eq:7-6">(7.6)</a> 我们发现模型中第 <span class="math inline">\(j\)</span> 个解释变量的第 <span class="math inline">\(i\)</span> 个得分残差为</p>
+<p><span class="math display">\[r_{Uji}=\hat{\sigma}^{-1}x_{ji}\left\{\frac{\exp(r_{Si})-\delta_i}{1+\exp(r_{Si})}\right\}\]</span></p>
+</div>
+<div id="log-normal-分布" class="section level3" number="7.2.3">
+<h3>
+<span class="header-section-number">7.2.3</span> log-normal 分布<a class="anchor" aria-label="anchor" href="#log-normal-%E5%88%86%E5%B8%83"><i class="fas fa-link"></i></a>
+</h3>
+<p>若假定生存时间呈 log-normal 分布，则加速失效时间模型的对数线性公式中的 <span class="math inline">\(\epsilon_i\)</span> 呈正态分布。根据式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-73">(5.73)</a> ，第 <span class="math inline">\(i\)</span> 个个体的生存函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{S}_i(t)&amp;=1-\Phi\left(\frac{\log t-\hat{\mu}-\hat{\alpha}_1x_{1i}-\hat{\alpha}_2x_{2i}-\cdots-\hat{\alpha}_px_{pi}}{\hat{\sigma}}\right)\end{aligned}\]</span></p>
+<p>因此 Cox-Snell 残差变为</p>
+<p><span class="math display">\[\begin{aligned}r_{Ci}=-\log\left\{1-\Phi\left(r_{Si}\right)\right\}\end{aligned}\]</span></p>
+<p>如往常一样，<span class="math inline">\(r_{Si}\)</span> 是式 <a href="chap7.html#eq:7-1">(7.1)</a> 中的第 <span class="math inline">\(i\)</span> 个标准化残差。同样，鞅残差和偏差残差也是从这些标准化残差中得出的，而得分残差则是根据 <a href="chap7.html#sec7-1-5">7.1.5</a> 节的结果中得出的。具体来说，<span class="math inline">\(X_j\)</span> 的第 <span class="math inline">\(i\)</span> 个得分残差是</p>
+<p><span class="math display">\[r_{Uji}=\hat{\sigma}^{-1}\left\{\frac{(1-\delta_i)f_{\epsilon_i}(r_{Si})}{1-\Phi(r_{Si})}+\delta_ir_{Si}\right\}\]</span></p>
+<p>其中 <span class="math inline">\(f_{\epsilon_i}(r_{Si})\)</span> 是 <span class="math inline">\(r_{Si}\)</span> 处的标准正态密度函数，<span class="math inline">\(\Phi(r_{Si})\)</span> 是相应的分布函数。</p>
+</div>
+<div id="sec7-2-4" class="section level3" number="7.2.4">
+<h3>
+<span class="header-section-number">7.2.4</span> 残差分析<a class="anchor" aria-label="anchor" href="#sec7-2-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>在为生存数据拟合参数模型后进行残差分析时，将 Cox-Snell 残差的分布与单位指数分布进行比较是最有用的方式之一。如 <a href="chap7.html#sec7-1-1">7.1.1</a> 节所述，这相当于将标准化残差的分布与加速失效时间模型的对数线性形式中的随机变量 <span class="math inline">\(\epsilon_i\)</span> 的分布进行比较。这种比较是通过绘制残差的累积风险或对数累积风险图来完成的，如第 4 章 <a href="chap4.html#sec4-2-1">4.2.1</a> 节所示，其中使用 Cox 回归模型的残差说明了该图形的用途。总之，获得了 Cox-Snell 残差的生存函数的 Kaplan-Meier 估计 <span class="math inline">\(\hat{S}(r_{Ci})\)</span>，并绘制 <span class="math inline">\(-\log\hat S(r_{Ci})\)</span> 关于 <span class="math inline">\(r_{Ci}\)</span> 的图形。若得到单位斜率和零截距的直线，则表明拟合的模型是合适的。或者，若拟合的生存模型令人满意，残差的对数累积风险图，即 <span class="math inline">\(\log\{-\log\hat{S}(r_{Ci})\}\)</span> 关于 <span class="math inline">\(\log r_{Ci}\)</span> 的图形，也将呈现一条具有单位斜率和零截距的直线。</p>
+<p>在 <a href="chap4.html#sec4-2-1">4.2.1</a> 节对这种图表的使用提出了许多批评。然而，对于参数模型得出的残差，这些批评没有那么大的影响。其原因在于，Cox 回归模型中使用的基线累积风险函数的非参数估计现在被参数函数的估计所取代。该函数通常仅取决于两个参数 <span class="math inline">\(\mu,\sigma\)</span>，因此当为生存数据拟合加速失效时间模型时，需估计的参数较少。因此，当拟合了正确的模型时，参数模型的 Cox-Snell 残差更有可能通过单位指数分布来近似。</p>
+<p>其他有用的残差图包括鞅残差或偏差残差的索引图，可用于识别模型未能很好拟合的观测。鞅残差或偏差残差与生存时间、生存时间秩次或解释变量的图形，可以显示模型在特定时间或解释变量的特定值上是否拟合不佳。鞅残差或偏差残差关于加速因子估计 <span class="math inline">\(\operatorname{exp}(-\hat{\boldsymbol{\alpha}}^{\prime}\boldsymbol{x}_i)\)</span>、时间比估计 <span class="math inline">\(\operatorname{exp}(\hat{\boldsymbol{\alpha}}^{\prime}\boldsymbol{x}_i)\)</span> 或加速失效时间模型的线性分量估计 <span class="math inline">\(\hat{\boldsymbol{\alpha}}^{\prime}\boldsymbol{x}_i\)</span> 的图形，也提供了关于残差与个体可能的生存时间之间关系的信息。那些加速因子估计较大的个体往往生存时间较短。得分残差的索引图，或得分残差关于生存时间、生存时间的秩次的图形，可在对模型充分性进行更全面的评估时进行检查。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex7-1" class="example"><strong>示例 7.1  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>第 5 章的<a href="chap5.html#exm:ex5-11">示例 5.11</a> 提供了卵巢癌患者生存时间的数据。使用 Weibull 比例风险模型对数据进行分析，所选模型包含与女性年龄（Age）和女性所属治疗组（Treat）对应的变量。在模型的加速失效时间表示中，第 <span class="math inline">\(i\)</span> 个女性的生存函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{S}_i(t)&amp;=S_{\epsilon_i}\left(\frac{\log t-\hat{\mu}-\hat{\alpha}_1Age_i-\hat{\alpha}_2Treat_i}{\hat{\sigma}}\right)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(S_{\epsilon_i}(\epsilon)=\exp(-e^{\epsilon})\)</span>，因此</p>
+<p><span class="math display">\[\begin{aligned}\hat{S_i}(t)&amp;=\exp\left\{-\exp\left(\frac{\log t-10.4254+0.0790Age_i-0.5615Treat_i}{0.5489}\right)\right\}\end{aligned}\]</span></p>
+<p>标准化残差值为</p>
+<p><span class="math display">\[\begin{aligned}r_{Si}&amp;=(\log t_i-10.4254+0.0790Age_i-0.5615Treat_i)/0.5489\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(i=1,2,\ldots,26\)</span>。这些值在表 7.1 中给出，还给出了 Cox-Snell 残差的值，对于 Weibull 模型，这些值为 <span class="math inline">\(r_{Ci}=\exp(r_{S{i}})\)</span>。</p>
+<details><summary><font color="#8B2232">表 7.1</font>
+</summary><img src="figure/table%207.1.png#center" style="width:80.0%"></details><p><br>
+图 7.1 给出了 Cox-Snell 残差的累积风险图。在此图中，绘制的点位于截距和斜率分别接近于零和一的直线上。然而也有一些证据表明存在系统性偏离直线的情况，这让人对拟合模型的充分性产生了一些担忧。</p>
+<details><summary><font color="#8B2232">图 7.1</font>
+</summary><img src="figure/figure%207.1.png#center" style="width:80.0%"></details><p><br>
+鞅残差和偏差残差 <span class="math inline">\(r_{Mi}\)</span> 和 <span class="math inline">\(r_{Di}\)</span> 关于生存时间秩次的图形分别如图 7.2 和 7.3 所示。两图表均显示出，具有较长生存时间的观测往往具有较小的残差，但这些观测也是删失观测。</p>
+<details><summary><font color="#8B2232">图 7.2</font>
+</summary><img src="figure/figure%207.2.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 7.3</font>
+</summary><img src="figure/figure%207.3.png#center" style="width:80.0%"></details><p><br>
+图 7.4 显示了模型中的变量 Age 和 Treat 的得分残差关于生存时间秩次的图形。Age 的得分残差图显示，存在三个具有相对较大残差的观测，它们对应于表 5.6 原始数据集中的患者 14, 4 和 26. 然而，这些观测似乎并没有什么异常之处。患者 26 的 Treat 得分残差也比其他患者稍大。这表明该模型未能很好地拟合患者 14, 4 和 26 的数据。</p>
+<details><summary><font color="#8B2232">图 7.4</font>
+</summary><img src="figure/figure%207.4.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+</div>
+<div id="sec7-3" class="section level2" number="7.3">
+<h2>
+<span class="header-section-number">7.3</span> 比较观测的和拟合的生存函数<a class="anchor" aria-label="anchor" href="#sec7-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>在参数建模中，生存函数估计是生存时间 <span class="math inline">\(t\)</span> 的连续函数，因此可针对模型中包含的解释变量的特定值绘制该函数。当只有一个生存数据样本且没有解释变量时，拟合的生存函数可以直接与生存函数的 Kaplan-Meier 估计进行比较，如第 2 章 <a href="chap2.html#sec2-1-2">2.1.2</a> 节所述。如果拟合的生存函数接近 Kaplan-Meier 估计（这是一个阶跃函数），拟合的模型是数据的合适总结。同样，假设模型包含一两个因素，这些因素根据治疗组对个体进行分类，或提供治疗组和性别之间的交叉分类。对于由模型中各因素水平的组合定义的每一组个体，可以将拟合的生存函数与相应的生存函数的 Kaplan-Meier 估计进行比较。</p>
+<p>在记录多个解释变量值的情况下，会根据拟合模型的线性部分的估计值形成个体组。对于第 <span class="math inline">\(i\)</span> 个个体（其在模型中解释变量的值为 <span class="math inline">\(\boldsymbol x_i\)</span>），此线性部分在比例风险模型中就是风险评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span>，在加速失效时间模型中则是 <span class="math inline">\(\hat{\boldsymbol{\alpha}}^{\prime}\boldsymbol{x}_i\)</span>。接下来的讨论基于风险评分进行，其中较大的正值对应较高的风险，但同样也可以基于加速失效时间模型的线性部分、加速因子值或时间比值来进行。</p>
+<p>将每个个体的风险评分值按升序排列，并将个体根据这些值分为若干组。例如，如果考虑三个组，就会有风险评分值低、中、高的个体。以这种方式形成的实际组数将取决于数据集的大小。对于较大的数据集，可能构建五个甚至七个组。具体来说，如果有五个组，那么每个组中将有 20% 的个体；风险评分值最低和最高的个体将分别处于低风险和高风险，而中间的 20% 的个体将处于中风险。</p>
+<p>下一步是比较每组中观测的和拟合的生存函数。假设 <span class="math inline">\(\hat{S}_{ij}(t)\)</span> 是第 <span class="math inline">\(j\)</span> 组中第 <span class="math inline">\(i\)</span> 个个体基于模型的生存函数估计。然后根据下式获得每个组（或仅获得具有最小、中等和最高风险评分的组）的平均生存函数</p>
+<p><span class="math display">\[\bar{S}_j(t)=\frac1{n_j}\sum_{i=1}^{n_j}\hat{S}_{ij}(t)\]</span></p>
+<p>其中 <span class="math inline">\(n_j\)</span> 是第 <span class="math inline">\(j\)</span> 组的观测数。对于一系列 <span class="math inline">\(t\)</span> 值，我们会得到 <span class="math inline">\(\bar{S}_j(t)\)</span> 的值，因此，对于每个 <span class="math inline">\(j\)</span> 值，将 <span class="math inline">\(\bar{S}_j(t)\)</span> 的值关于 <span class="math inline">\(t\)</span> 值作图，可以得到一条平滑曲线。而对于特定组，对应的观测生存函数是该组个体生存函数的 Kaplan-Meier 估计。将这两组估计叠加在一起，可以直观地表示观测生存函数与拟合生存函数之间的一致性。此程序与 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-11-1">3.11.1</a> 节中描述的用于 Cox 回归模型的程序类似。</p>
+<p>使用这种方法，通常比基于残差的图形更容易检测出与拟合模型的偏差。然而，该程序可能因使用相同的拟合模型来定义组并获得每组的生存函数估计而受到批评。如果数据集足够大，则可以根据一半数据估计生存函数，并根据另一半数据评估模型的拟合度。此外，由于该方法基于风险评分的值，事实上，有可能存在具有不同解释变量值但碰巧具有相同风险评分值的个体，该方法没有考虑到这些个体的差异。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex7-2" class="example"><strong>示例 7.2  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>在本例中，我们检查 Weibull 比例风险模型对 26 名卵巢癌女性患者接受治疗后的生存时间数据的拟合情况。拟合包含变量 Age 和 Treat 的 Weibull 模型，如<a href="chap5.html#exm:ex5-11">示例 5.11</a> 所示，因此第 <span class="math inline">\(i\)</span> 个个体拟合的生存函数为</p>
+<p><span class="math display" id="eq:7-8">\[\begin{align}
+\hat{S}_i(t)=\exp\left\{-e^{\hat{\eta}_i}\hat{\lambda}t^{\hat{\gamma}}\right\}
+\tag{7.8}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{\eta}_i=0.144\,Age_i-1.023\,Treat_i\)</span> 为风险评分，<span class="math inline">\(i=1,2,\ldots,26\)</span>。这等价于<a href="chap7.html#exm:ex7-1">示例 7.1</a> 使用的模型的加速失效时间表示。然后将 <span class="math inline">\(\hat \eta_i\)</span> 的值按升序排列并分为三组，如表 7.2 所示。</p>
+<details><summary><font color="#8B2232">表 7.2</font>
+</summary><img src="figure/table%207.2.png#center" style="width:80.0%"></details><p><br>
+下一步是通过对三组患者的生存函数估计值进行平均，来获得每组的平均生存函数（如式 <a href="chap7.html#eq:7-8">(7.8)</a> 所示），其中考虑的时间点有 <span class="math inline">\(t = 0, 1,..., 1230\)</span>。三个平均生存函数如图 7.5 所示。然后计算表 7.2 中所示的三组中每个个体的生存函数的 Kaplan-Meier 估计，这也显示在图 7.5 中。</p>
+<details><summary><font color="#8B2232">图 7.5</font>
+</summary><img src="figure/figure%207.5.png#center" style="width:80.0%"></details><p><br>
+从该图中，我们看到该模型对高危组患者的拟合很好。但对于中等风险组，观测生存函数和拟合生存函数之间的一致性不太好，因为拟合模型对生存函数的估计有点过高。事实上，该组的患者具有最大的鞅残差值，这也表明拟合模型没有充分总结这些个体的死亡时间。低风险组中只有 1 例死亡，因此模型对于这组患者的拟合情况几乎无从得知。</p>
+</div>
+</div>
+</div>
+<div id="sec7-4" class="section level2" number="7.4">
+<h2>
+<span class="header-section-number">7.4</span> 识别有影响的观测<a class="anchor" aria-label="anchor" href="#sec7-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>与拟合 Cox 回归模型时一样，识别对特定参数估计或整组参数估计产生不当影响的观测非常重要。本节依次考虑这两个方面的影响。</p>
+<p>Weibull 比例风险模型的许多影响诊断可从模型的加速失效时间表示中导出，但它们也适用于该系列的其他模型。这些诊断是根据模型中所有 <span class="math inline">\(p + 2\)</span> 个 的估计参数及其方差-协方差阵计算得出的。为了方便起见，<span class="math inline">\(p + 2\)</span> 个参数的向量将用 <span class="math inline">\(\boldsymbol \theta\)</span> 表示，因此 <span class="math inline">\(\boldsymbol{\theta'}=(\mu,\alpha_1,\alpha_2,\ldots,\alpha_p,\sigma)\)</span>。向量 <span class="math inline">\(\hat{\boldsymbol \theta}'\)</span> 表示参数估计的相应向量。</p>
+<div id="sec7-4-1" class="section level3" number="7.4.1">
+<h3>
+<span class="header-section-number">7.4.1</span> 观测对单个参数估计的影响<a class="anchor" aria-label="anchor" href="#sec7-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在省略第 <span class="math inline">\(i\)</span> 个观测的情况下，<span class="math inline">\(\boldsymbol \theta\)</span> 向量的第 <span class="math inline">\(j\)</span> 个分量 <span class="math inline">\(\boldsymbol \theta_j\)</span> 估计值变化量近似为如下 <span class="math inline">\((p + 2) × 1\)</span> 矢量的第 <span class="math inline">\(j\)</span> 个分量</p>
+<p><span class="math display" id="eq:7-9">\[\begin{align}
+\mathrm{var}\left(\hat{\boldsymbol{\theta}}\right)\boldsymbol{u}_i
+\tag{7.9}
+\end{align}\]</span></p>
+<p>在式 <a href="chap7.html#eq:7-9">(7.9)</a> 中，<span class="math inline">\(\mathrm{var}\left(\hat{\boldsymbol{\theta}}\right)\)</span> 是 <span class="math inline">\(\boldsymbol \theta\)</span> 参数估计的方差-协方差阵，<span class="math inline">\(\boldsymbol u_i\)</span> 是第 <span class="math inline">\(i\)</span> 个观测的对数似然关于 <span class="math inline">\(\boldsymbol \theta\)</span> 中 <span class="math inline">\(p+2\)</span> 个参数的一阶偏导数值的 <span class="math inline">\((p + 2) × 1\)</span> 向量，在 <span class="math inline">\(\hat{\boldsymbol \theta}\)</span> 处求值。</p>
+<p>而 <span class="math inline">\(\boldsymbol u_i\)</span> 是一个 <span class="math inline">\((p + 2) × 1\)</span> 向量，包含了第 <span class="math inline">\(i\)</span> 个观测的对数似然函数关于 <span class="math inline">\(\boldsymbol \theta\)</span> 中 <span class="math inline">\(p+2\)</span> 个参数的一阶偏导数在 <span class="math inline">\(\hat{\boldsymbol \theta}\)</span> 处的值。</p>
+<p>因此，向量 <span class="math inline">\(\boldsymbol u_i\)</span> 是第 <span class="math inline">\(i\)</span> 个观测的得分残差值向量，在 <a href="chap7.html#sec7-1-5">7.1.5</a> 节中定义。</p>
+<p>量 <span class="math inline">\(\Delta_i\hat{\alpha}_j\)</span> 是式 <a href="chap7.html#eq:7-9">(7.9)</a> 中向量的第 <span class="math inline">\(2\)</span> 至第 <span class="math inline">\(p − 1\)</span> 个分量，但我们继续将其称为 delta-betas 而不是 delta-alphas. 这些值可以通过除以 <span class="math inline">\(\hat\alpha_j\)</span> 的标准误来标准化，从而得到标准化的 delta-betas. 索引图或 <span class="math inline">\(\Delta_i\hat{\alpha}_j\)</span> 标准化或非标准化值的图形提供了这方面的影响的信息性总结。</p>
+</div>
+<div id="sec7-4-2" class="section level3" number="7.4.2">
+<h3>
+<span class="header-section-number">7.4.2</span> 观测对参数估计集的影响<a class="anchor" aria-label="anchor" href="#sec7-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>参数生存模型中 <span class="math inline">\(n\)</span> 个观测中的每一个对参数估计集的影响可以使用似然位移 (likelihood displacement) 来度量。这在第 4 章 <a href="chap4.html#sec4-3">4.3</a> 节中结合 Cox 回归模型进行了描述，它只是为完整数据集拟合的模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值与为移除第 i 行的数据集拟合的模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之差，<span class="math inline">\(i = 1, 2,...,n\)</span>。实际上该统计量为矩阵 <span class="math inline">\(\boldsymbol{U}\operatorname{var}\left(\hat{\boldsymbol{\theta}}\right)\boldsymbol{U}^{\prime}\)</span> 的对角元，这是最简单的计算方式，其中 <span class="math inline">\(\boldsymbol{U}\)</span> 为 <span class="math inline">\(n \times (p + 2)\)</span> 矩阵，其元素为 <span class="math inline">\(\partial\log L_i/\partial\theta_j,j=1,2,\ldots,p{+}2\)</span>, 其中 <span class="math inline">\(\theta_j\)</span> 是参数向量 <span class="math inline">\(\boldsymbol \theta\)</span> 的第 <span class="math inline">\(j\)</span> 个参数估计，<span class="math inline">\(\mathrm{var}\left(\hat{\boldsymbol{\theta}}\right)\)</span> 是参数估计的方差-协方差阵，<span class="math inline">\(L_i\)</span> 是第 <span class="math inline">\(i\)</span> 个观测的似然贡献。该统计量的较大值表明相应的观测对拟合模型中的参数估计有所影响。</p>
+<p>Hall, Rogers and Pregibon (1982) 提出了另外两个度量第 <span class="math inline">\(i\)</span> 个观测对构成向量 <span class="math inline">\(\boldsymbol \theta\)</span> 的参数集的影响的总结指标：统计量 <span class="math inline">\(F_i\)</span> 和 <span class="math inline">\(C_i\)</span>。量 <span class="math inline">\(F_i\)</span> 由下式给出</p>
+<p><span class="math display" id="eq:7-10">\[\begin{align}
+F_i=\frac{\boldsymbol{u'}_i\boldsymbol{R^{-1}}\boldsymbol{u}_i}{(p+2)\{1-\boldsymbol{u'}_i\boldsymbol{R^{-1}}\boldsymbol{u}_i\}}
+\tag{7.10}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\((p + 2) \times (p + 2)\)</span> 矩阵 <span class="math inline">\(\boldsymbol R\)</span> 为得分残差的叉乘矩阵，即 <span class="math inline">\(\boldsymbol R = \sum_{i=1}^n\boldsymbol{u}_i\boldsymbol{u}_i^{\prime}\)</span>。等价地，<span class="math inline">\(\boldsymbol{R}=\boldsymbol{U'U}\)</span>，其中 <span class="math inline">\(\boldsymbol{U}\)</span> 是 <span class="math inline">\(n \times (p + 2)\)</span> 矩阵，其第 <span class="math inline">\(i\)</span> 行是得分残差向量 <span class="math inline">\(\boldsymbol u'_i\)</span> 的转置。第 <span class="math inline">\(i\)</span> 个观测对参数估计集影响的另一个度量是统计量</p>
+<p><span class="math display" id="eq:7-11">\[\begin{align}
+C_i=\frac{\boldsymbol{u'}_i\mathrm{var}\left(\boldsymbol{\theta}\right)\boldsymbol{u}_i}{\{1-\boldsymbol{u'}_i\mathrm{var}\left(\hat{\boldsymbol{\theta}}\right)\boldsymbol{u}_i\}^2}
+\tag{7.11}
+\end{align}\]</span></p>
+<p>统计量 <span class="math inline">\(F_i\)</span> 和 <span class="math inline">\(C_i\)</span> 的通常具有截然不同的值。然而，在每种情况下，较大的统计量表明相应的观测是有影响的。需要通过从数据集中省略该观测并重新拟合模型来研究这些观测究竟如何影响了估计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex7-3" class="example"><strong>示例 7.3  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>我们现在继续研究卵巢癌化疗后的生存时间数据中是否存在任何有影响的观测。年龄和治疗的非标准化 delta-betas，关于生存时间的秩次制图，如图 7.6 和 7.7 所示。</p>
+<details><summary><font color="#8B2232">图 7.6</font>
+</summary><img src="figure/figure%207.6.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 7.7</font>
+</summary><img src="figure/figure%207.7.png#center" style="width:80.0%"></details><p><br>
+在图 7.6 中，两个观测的 Age 的 delta-betas 值相对较大，对应于原始数据集的患者 4 和 5 中。这两名女性的生存时间都很短，而且其中一名年龄相对较大，为 74 岁，另一名相对年轻，为 43 岁。图 7.7 中显示的 Treat 的 delta-betas 没有显示任何异常特征。</p>
+<p>接下来我们研究每个观测对参数估计集的影响。图 7.8 显示了似然位移统计量关于生存时间秩次的图形。</p>
+<details><summary><font color="#8B2232">图 7.8</font>
+</summary><img src="figure/figure%207.8.png#center" style="width:80.0%"></details><p><br>
+式 <a href="chap7.html#eq:7-10">(7.10)</a> 和 <a href="chap7.html#eq:7-11">(7.11)</a> 中定义的 <span class="math inline">\(F_i\)</span> 和 <span class="math inline">\(C_i\)</span> 的值关于生存时间秩次的图形绘制在图 7.9 和 7.10 中。图 7.9 清晰地表明与患者 5 对应的观测是有影响的，并且应更详细地研究患者 1, 4, 14 和 26 的影响。图 7.10 强烈表明患者 5 和 26 的数据是有影响的。</p>
+<details><summary><font color="#8B2232">图 7.9</font>
+</summary><img src="figure/figure%207.9.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 7.10</font>
+</summary><img src="figure/figure%207.10.png#center" style="width:80.0%"></details><p><br>
+在为所有 26 名患者拟合的模型中，拟合的风险函数的线性部分为</p>
+<p><span class="math display">\[0.144\textit{ Age}_i-1.023\textit{ Treat}_i\]</span></p>
+<p>而依次省略观测 1, 4, 5, 14 和 26 后成为：</p>
+<ul>
+<li>省略患者 1： <span class="math inline">\(\text{ }0.142\,Age_i-1.016\,Treat_i\)</span>
+</li>
+<li>省略患者 4： <span class="math inline">\(\text{ }0.175\,Age_i-1.190\,Treat_i\)</span>
+</li>
+<li>省略患者 5： <span class="math inline">\(\text{ }0.177\,Age_i-0.710\,Treat_i\)</span>
+</li>
+<li>省略患者 14：<span class="math inline">\(0.149\,Age_i-1.318\,Treat_i\)</span>
+</li>
+<li>省略患者 26：<span class="math inline">\(0.159\,Age_i-0.697\,Treat_i\)</span>
+</li>
+</ul>
+<p>这些结果表明，省略患者 1 的数据对参数估计的影响很小。当省略患者 4 的数据时，Age 的系数估计受影响最大，而当省略患者 14 的数据时，Treat 的系数变化最大。如果省略患者 5 或 26 的数据，这两个估计都会受到相当大的影响。</p>
+<p>当为所有 26 名患者拟合模型时，接受联合治疗 (Treat = 2) 的患者相对于接受单一治疗 (Treat = 1) 的患者的风险比估计为 <span class="math inline">\(e^{-1.023}=0.36\)</span>。当依次省略患者 1, 4, 5, 14 和 26 的观测时，经年龄调整的风险比估计分别为 0.36, 0.30, 0.49, 0.27 和 0.50。患者 5 和 26 的数据显然对风险比估计影响最大；在每种情况下，估计值都会增加，而治疗效应会减小。忽略患者 4 或 14 的数据会降低风险比估计，从而增加治疗效应估计。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec7-5" class="section level2" number="7.5">
+<h2>
+<span class="header-section-number">7.5</span> 检验 Weibull 模型的比例风险<a class="anchor" aria-label="anchor" href="#sec7-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>Weibull 模型最常用作参数比例风险模型，因此检验比例风险假设是否成立非常重要。在第 4 章的 <a href="chap4.html#sec4-4-3">4.4.3</a> 节展示了如何使用时依变量变量来检验 Cox 回归模型中风险的比例性。包含时依变量的参数模型更加复杂，并且由于用于拟合此类模型的软件尚未广泛使用，因此此处将不再给出有关此方法的进一步细节。</p>
+<p>在 Weibull 模型中，多组（例如 <span class="math inline">\(g\)</span> 组）之间比例风险的假设对应于每组基线风险函数的形状参数 <span class="math inline">\(\gamma\)</span> 相同的假设。检验这一假设的一种方法是对每组拟合一个单独的 Weibull 模型，其中模型的线性部分在每组中都是相同的。为每组数据拟合的模型将具有不同的形状参数以及不同的尺度参数。然后，将这 <span class="math inline">\(g\)</span> 个单独模型的统计量 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值相加，这对应于每组具有不同形状参数的模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span>，记作 <span class="math inline">\(-2\operatorname{log}\hat{L}_1\)</span>。然后，我们将这 <span class="math inline">\(g\)</span> 组数据合并并拟合一个 Weibull 比例风险模型，该模型包括与组别效应相关的因素，以及该因素与模型中其他项之间的交互作用。那么，该模型对应于每组具有共同的形状参数。在模型中考虑了组别效应，使得每组有不同的尺度参数。然后，将该模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值（记作 <span class="math inline">\(-2\operatorname{log}\hat{L}_0\)</span>）与 <span class="math inline">\(-2\operatorname{log}\hat{L}_1\)</span> 比较。这两个统计量之差是因将 Weibull 形状参数限制为相等而导致的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的变化，并可与自由度为 <span class="math inline">\(g−1\)</span> 的卡方分布的分位点相比较。如果差值不大，则比例风险假设是合理的。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex7-4" class="example"><strong>示例 7.4  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>第 5 章<a href="chap5.html#exm:ex5-11">示例 5.11</a> 中给了卵巢癌治疗后生存研究的数据，现用该数据说明检验两个治疗组中每个患者的 Weibull 形状参数相同这一假设的程序。第一步是为每个治疗组的数据拟合仅包含 Age 的 Weibull 比例风险模型。当为单一化疗组数据拟合该模型时，统计量 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 22.851，而接受联合治疗组的模型统计量为 16.757. 两 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之和为 39.608，这是两个治疗组具有不同形状参数且每组具有不同 Age 系数的 Weibull 模型的统计量。对于每个治疗组具有不同年龄效应、治疗效应和共同形状参数的模型，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 39.708。因此，将形状参数限制为相等时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的变化为 0.10，与一个自由度的卡方分布相比，该变化并不显著。因此可以认为两个形状参数是相等的。</p>
+</div>
+</div>
+<p>第 <a href="chap6.html#chap6">6</a> 章描述了比例风险模型的一些替代模型，第 <a href="chap11.html#chap11">11</a> 章进一步探讨了如何处理风险不成比例的情况。</p>
+</div>
+<div id="sec7-6" class="section level2" number="7.6">
+<h2>
+<span class="header-section-number">7.6</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec7-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>与 Cox 回归模型的模型检查文献相比，关于参数生存模型中模型检查的文献相对较少。Hall, Rogers and Pregibon (1982) 描述了 Weibull 比例风险模型的残差和影响的度量。Hollander and Proschan (1979) 展示了如何评估一组未删失的观测样本是否来自特定的概率分布。Weissfeld and Schneider (1994) 描述并展示了一些可用于生存数据参数模型的残差。Cohen and Barnett (1995) 描述了如何使用模拟包络线 (simulated envelopes) 来帮助解释残差的累积风险图。Weissfeld and Schneider (1990) 以及 Escobar and Meeker (1992) 给出了用于参数生存建模的影响诊断方法。这些论文涉及基于局部影响 (local influence) 的观点，Cook (1986) 对此进行了一般性的探讨，Rancel and Sierra (2001) 给出了综述。Ciampi and Etezadi-Amoli (1985) 提出了一种根据风险函数的一般模型检验比例风险和加速失效时间假设的方法。Copas and Heydari (1997) 给出了参数模型的一个有趣的应用，该模型基于假释囚犯再次犯罪的时间的数据，其中包括模型的检验。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></div>
+<div class="next"><a href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap7"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li>
+<a class="nav-link" href="#sec7-1"><span class="header-section-number">7.1</span> 参数模型的残差</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec7-1-1"><span class="header-section-number">7.1.1</span> 标准化残差</a></li>
+<li><a class="nav-link" href="#sec7-1-2"><span class="header-section-number">7.1.2</span> Cox-Snell 残差</a></li>
+<li><a class="nav-link" href="#sec7-1-3"><span class="header-section-number">7.1.3</span> 鞅残差</a></li>
+<li><a class="nav-link" href="#sec7-1-4"><span class="header-section-number">7.1.4</span> 偏差残差</a></li>
+<li><a class="nav-link" href="#sec7-1-5"><span class="header-section-number">7.1.5</span> 得分残差</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec7-2"><span class="header-section-number">7.2</span> 特定参数模型的残差</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec7-2-1"><span class="header-section-number">7.2.1</span> Weibull 分布</a></li>
+<li><a class="nav-link" href="#sec7-2-2"><span class="header-section-number">7.2.2</span> log-logistic 分布</a></li>
+<li><a class="nav-link" href="#log-normal-%E5%88%86%E5%B8%83"><span class="header-section-number">7.2.3</span> log-normal 分布</a></li>
+<li><a class="nav-link" href="#sec7-2-4"><span class="header-section-number">7.2.4</span> 残差分析</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec7-3"><span class="header-section-number">7.3</span> 比较观测的和拟合的生存函数</a></li>
+<li>
+<a class="nav-link" href="#sec7-4"><span class="header-section-number">7.4</span> 识别有影响的观测</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec7-4-1"><span class="header-section-number">7.4.1</span> 观测对单个参数估计的影响</a></li>
+<li><a class="nav-link" href="#sec7-4-2"><span class="header-section-number">7.4.2</span> 观测对参数估计集的影响</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec7-5"><span class="header-section-number">7.5</span> 检验 Weibull 模型的比例风险</a></li>
+<li><a class="nav-link" href="#sec7-6"><span class="header-section-number">7.6</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

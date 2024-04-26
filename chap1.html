@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 1 章 生存分析 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="生存分析 (survival analysis) 是一种分析数据的术语，该数据以时间为形式，用于描述从定义明确的时间起点 (time origin)...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 1 章 生存分析 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="生存分析 (survival analysis) 是一种分析数据的术语，该数据以时间为形式，用于描述从定义明确的时间起点 (time origin)...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 1 章 生存分析 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="生存分析 (survival analysis) 是一种分析数据的术语，该数据以时间为形式，用于描述从定义明确的时间起点 (time origin)...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="active" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap1" class="section level1" number="1">
+<h1>
+<span class="header-section-number">第 1 章</span> 生存分析<a class="anchor" aria-label="anchor" href="#chap1"><i class="fas fa-link"></i></a>
+</h1>
+<p><strong>生存分析</strong> (survival analysis) 是一种分析数据的术语，该数据以时间为形式，用于描述从定义明确的时间起点 (time origin) 到某个特定事件或终点的发生。在医学研究中，时间起点通常对应于将个体招募到实验研究中，例如比较两种或多种治疗的临床试验。这又可能与特定疾病的诊断、治疗方案的开始或某些不良事件的发生相吻合。如果终点是患者的死亡，那么得出的数据就是实际的生存时间。然而，当终点不是致命的，例如疼痛减轻或症状复发时，也可以获得类似形式的数据。</p>
+<div id="sec1-1" class="section level2" number="1.1">
+<h2>
+<span class="header-section-number">1.1</span> 生存分析的应用<a class="anchor" aria-label="anchor" href="#sec1-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>这本书的重点是生物医学中事件发生时间 (time-to-event) 数据的分析，在生物医学中，生存分析这一术语被广泛使用，即使终点不是死亡。然而，同样的技术也可用于许多其他应用领域，在这些领域中，它们被不同地称为事件历史分析 (event history analysis)、持续时间分析 (duration analysis)、转移分析 (transition analysis)、可靠性分析 (reliability analysis) 或失效时间建模 (failure-time modelling) 。生存分析在许多领域有所应用，本节概述了其中的一些。</p>
+<p>在犯罪学中，获释的囚犯可能会继续犯罪，从获释到随后犯罪的时间就是生存时间。这里，由于可能犯下的罪行不同，可能存在多种终点。对不同罪行发生时间及其影响因素的比较，将有助于对释放到社区的罪犯进行辅导。该领域的其他应用还包括犯罪生涯的持续时间、从犯罪到随后被捕的时间以及假释的持续时间。</p>
+<p>在工程学中，从器械（如洗碗机或洗衣机）出现机械问题到该器械再次正常工作的这段时间，对于维护客户满意度至关重要。有些物品可能无法修复，因此无法记录修复时间。同时，调查与维修时间相关的因素也很重要，比如物品的使用年限、使用程度以及保养状况等。</p>
+<p>在实验性农业中，种子发芽的时间、植物发病的时间以及农作物收获的时间都是事件发生时间。通常有很多因素可能会影响这些持续时间，确定最重要的因素将使实践得以完善。例如，用除草剂处理一块土地后，化学品首次出现效果的时间就是生存时间，影响这一时间的因素可能有助于确定产品的特性。此时，很难记录除草剂出现效果的确切时间，只有在一定的时间段内才能知道是否产生了效果。</p>
+<p>在金融领域，从提交申请到获得批准，处理抵押贷款申请所需的时间产生了事件发生时间的数据。有些申请没有进行到终点，可能是因为房屋销售失败，或者申请人安排了其他资金来源。然而，这也可能是因为申请流程已经花费了很长时间，因此必须考虑这些因撤销申请而删失 (censored) 的时间。同样，一家公司偿还贷款所花费的时间也会产生生存数据，其中因贷款违约而产生的删失时间也包含在内。信贷公司可能非常关心诸如公司规模、年龄以及贷款规模等因素如何影响还款时间。</p>
+<p>在人力资源领域，雇主可能会调查在特定时间段内开始工作的员工的在职时长。在分析时，许多员工可能仍在工作，因此他们只能提供关于在职时间的部分信息。特别令人感兴趣的是影响在职期的因素，如初始工资、工资涨幅、员工的资质等。填补招聘职位所需的时间或首次晋升所需的时间都是该领域生存时间的进一步实例。在大型组织的不同部门之间，对这些事件发生时间的比较可能特别有助于识别好的管理规范。</p>
+<p>在市场营销领域，客户流失率是一个重要的业务指标，它指的是在特定时间段内停用公司产品或服务的客户比例。之所以这一指标如此重要，很大程度上是因为获取新客户的成本往往远高于留住现有客户的成本。生存分析在该领域有众多应用，例如客户离开公司的时间、取消服务协议的时间、升级产品（如 iPhone 或电脑）的时间，以及计算机软件或 iCloud 存储服务的订阅时长等。在所有这些情况下，客户流失的原因可能有很多，如服务不佳、产品质量低劣以及成本问题等。流失时间还可能取决于一些其他因素，比如客户是否是通过其他客户推荐获得的、客户在客服电话上花费的时间以及是否有优惠活动可用等。对这些因素对客户留存时间的影响进行分析，有助于公司了解如何留住客户。</p>
+<p>在政治学领域，在选举过程后组建政府的时间有时可能很短，但在其他情况下，各政党之间可能需要长时间的谈判。政府组建的延误可能会对政治或经济产生不利影响。研究相关因素，如参与谈判的政党数量、最大政党所占的多数席位以及各参与政党在意识形态上的冲突等，都有助于确定政府组建的时间。此外，在政治学领域，事件发生时间分析的其他应用还包括政治生涯的长度、内阁政府的任期以及美国参议员的任期。在国际关系领域，战争的持续时间、贸易协定的期限以及政府的任期等，都适用于生存分析的方法。</p>
+<p>在心理学领域，心理治疗疗程结束与行为发生临床显著变化之间的时间区间与潜在问题的治疗有关。例如，在治疗酒精滥用问题时，识别与戒酒所需时间相关的因素至关重要。这些因素可能包括家族酒精依赖史、社会经济地位、个性问题、在就业保障和维持方面的困难，以及个体交往对象的吸烟和饮酒习惯。识别导致戒酒的因素可能有助于相关患者的管理。</p>
+<p>本书的重点是生存分析在医学研究数据中的应用，因此，大部分一般性讨论将以个体患者从进入研究到死亡或其他终点的生存时间来表述。</p>
+</div>
+<div id="sec1-2" class="section level2" number="1.2">
+<h2>
+<span class="header-section-number">1.2</span> 生存数据的特殊特征<a class="anchor" aria-label="anchor" href="#sec1-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>我们必须首先考虑为什么生存数据不适用于数据分析中使用的标准统计程序。其中一个原因是生存数据通常不是对称分布的。通常，由一组相似个体的生存时间构建的直方图会倾向于正偏态分布，也就是说，直方图在包含最多观测的区间的右侧会有一个较长的“尾巴”。因此，假设这类数据具有正态分布是不合理的。这个问题可以通过首先对数据进行转换以获得更对称的分布来解决，例如取对数。然而，更好的方法是采用其他分布。</p>
+<p>生存数据的主要特征是生存时间经常是删失的 (censored)。这使得标准方法不适用。下一节将描述删失的具体内容。</p>
+<div id="sec1-2-1" class="section level3" number="1.2.1">
+<h3>
+<span class="header-section-number">1.2.1</span> 删失<a class="anchor" aria-label="anchor" href="#sec1-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>个体的生存时间称为删失，是指对该个体而言，感兴趣的终点尚未观察到。这可能是因为研究的数据要在一些人还活着的时候进行分析。或者在分析时个体的生存状态可能未知，因为该个体已经失访 (lost to follow-up). 例如，假设某患者在被招募参加临床试验后，搬到国内的另一个地区或另一个国家，无法再追踪到。关于该患者的生存经历，唯一可获得的信息是他或她最后一次被确认存活的日期。这个日期可能是患者最后一次到诊所进行常规检查的日期。</p>
+<p>当已知死亡原因与治疗无关时，实际的生存时间也可视为删失。然而，很难确定患者的死亡是否与他正在接受的特定治疗有关。例如，考虑一位参加前列腺癌替代疗法临床试验的患者，他遭遇了致命的交通事故。这场事故可能是由于眩晕发作导致的，而眩晕可能是分配给该患者的治疗方案的副作用。如果是这样的话，那么死亡就与治疗有关。在这种情况下，所有原因导致的死亡的生存时间，或患者正在接受治疗的主要疾病以外的其他原因导致的死亡时间，也可能需要进行生存分析。</p>
+<p>在每种情况下，在时间 <span class="math inline">\(t_0\)</span> 进入研究的患者在时间 <span class="math inline">\(t_0+t\)</span> 死亡。然而，<span class="math inline">\(t\)</span> 是未知的，要么是因为此人还活着，要么是由于他或她已失访。如果个体最后的已知生存时间为 <span class="math inline">\(t_0+c\)</span>，则时间 <span class="math inline">\(c\)</span> 称为删失生存时间 (censored survival time). 这种删失发生在个体进入研究之后，即最后已知生存时间的右侧，因此称为<strong>右删失</strong> (right censoring). 右删失生存时间小于实际但未知的生存时间。研究观察期结束时发生的右删失通常称为<strong>行政删失</strong> (administrative censoring).</p>
+<p>另一种形式的审查是<strong>左删失</strong> (left censoring)，当个体的实际生存时间小于观测时间时就会遇到这种情况。考虑一项研究以说明这种形式的删失，该研究的兴趣集中在手术切除原发肿瘤后特定癌症的复发时间。术后三个月对患者进行检查以确定癌症是否复发，这时可能会发现部分患者出现了复发。对于此类患者，实际复发时间不到三个月，这些患者的复发时间是左删失。左删失的发生率远低于右删失，因此本书的重点将放在右删失生存数据的分析中。</p>
+<p>另一种类型的删失是<strong>区间删失</strong> (interval censoring). 此时，已知个体在一段时间内经历过某个事件。再次考虑上述左删失讨论中使用的有关肿瘤复发时间的例子。如果患者在三个月后观察到疾病已痊愈，但在术后六个月检查时发现疾病复发，则该患者的实际复发时间在三个月至六个月之间。观测复发时间称为区间删失。我们将在第 <a href="chap9.html#chap9">9</a> 章讨论区间删失。</p>
+</div>
+<div id="sec1-2-2" class="section level3" number="1.2.2">
+<h3>
+<span class="header-section-number">1.2.2</span> 独立删失<a class="anchor" aria-label="anchor" href="#sec1-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在分析删失的生存数据时，一个重要的假设是，个体的实际生存时间 <span class="math inline">\(t\)</span> 不依赖于任何导致该个体的生存时间在时间 <span class="math inline">\(c\)</span> 删失的机制，其中 <span class="math inline">\(c&lt;t\)</span>。这种类型的删失称为<strong>独立删失</strong>或<strong>非信息性删失</strong> (independent or non-informative censoring). 这意味着，如果我们考虑一组具有相同相关预后变量值的个体，则生存时间在时间 <span class="math inline">\(c\)</span> 处删失的个体必须代表该组中生存到该时间的所有其他个体。如果删失过程随机进行，则生存时间删失的患者将代表删失时处于风险中的患者。类似地，当要在日历时间中的预定点或在每个患者的时间起点之后的固定时间区间分析生存数据时，仍然活着的个体的预后可视为与删失独立，只要在检查数据之前指定分析时间即可。然而，如果个体的生存时间因身体状况恶化而停止治疗导致删失，则不能做出这一假设。此类删失称为<strong>相依删失</strong>或<strong>信息性删失</strong> (dependent or informative censoring). 本书中大多数章节介绍的生存分析方法仅在独立性删失的假设下才有效，但第 <a href="chap14.html#chap14">14</a> 章将介绍能够考虑相依删失的技术。</p>
+</div>
+<div id="sec1-2-3" class="section level3" number="1.2.3">
+<h3>
+<span class="header-section-number">1.2.3</span> 研究时间和患者时间<a class="anchor" aria-label="anchor" href="#sec1-2-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>在典型的研究中，患者并非都在同一时间招募，而是在数月甚至数年的时间内陆续招募。招募完成后，将对患者进行跟踪调查，直至其去世，或者直至研究结束，此时将分析数据。尽管可以观察到一些患者的实际生存时间，但一些患者可能会在招募后失去联系，而其他患者在研究结束时可能仍然健在。个体参与研究的时间段称为研究时间 (study time).</p>
+<p>临床试验中八个人的研究时间如图 1.1 所示，其中进入研究的时间用“•”表示。该图显示，个体 1, 4, 5 和 8 在研究过程中死亡 (D)，个体 2 和 7 失访 (L)，个体 3 和 6 在观察期结束时仍然活着 (A).</p>
+<p>就每个患者而言，试验在 <span class="math inline">\(t_0\)</span> 开始。图 1.1 所示的八个个体的相应生存时间如图 1.2 所示。患者在研究中经历的时间段，从其时间起点开始测量，通常称为患者时间 (patient time). 从时间起点到患者死亡 (D) 的时间段即为生存时间，这是为个体 1, 4, 5 和 8 记录的。剩余个体的生存时间是右删失的 (C).</p>
+<details><summary><font color="#8B2232">图 1.1</font>
+</summary><img src="figure/figure%201.1.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 1.2</font>
+</summary><img src="figure/figure%201.2.png#center" style="width:80.0%"></details><p><br>
+在实践中，记录的实际数据将是每个个体进入研究的日期，以及每个个体死亡或最后已知存活的日期。然后可以计算生存时间，以天、周或月为单位，以最合适的为准。大多数用于生存分析的计算机软件包都可以根据日期形式的数据执行此类计算。</p>
+</div>
+</div>
+<div id="sec1-3" class="section level2" number="1.3">
+<h2>
+<span class="header-section-number">1.3</span> 一些示例<a class="anchor" aria-label="anchor" href="#sec1-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>在本节中，通过许多示例说明生存数据的基本特征。这些示例中的数据将用于说明后续章节中介绍的一些统计技术。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex1-1" class="example"><strong>示例 1.1  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在涉及避孕措施的试验中，预防怀孕是评估可接受性的一个明显标准。然而，现代避孕措施的失败率非常低，因此，诸如闭经（长期无出血）、不规则或延长出血等出血障碍的发生情况，在评估某种避孕方法时变得尤为重要。为了推动对分析避孕试验中女性月经出血数据方法的研究，世界卫生组织提供了涉及多种不同类型避孕方法的临床试验数据 (WHO, 1987). 这些数据集的一部分涉及女性开始使用某种避孕方法到停用该方法的时间，如果已知停用原因，则记录停用原因。表 1.1 中的数据指的是从开始使用一种特定类型的宫内节育器 (intrauterine device, IUD)，称为 Multiload 250，到因月经出血问题而停用该设备所经历的周数。这些数据来自 18 名女性，她们的年龄都在 18 至 35 岁之间，且都有过两次怀孕经历。删失的停用时间用星号标记。</p>
+<details><summary><font color="#8B2232">表 1.1</font>
+</summary><img src="figure/table%201.1.png#center" style="width:80.0%"></details><p><br>
+在此示例中，时间起点对应于女性使用宫内节育器的第一天，终点是因出血问题导致的停用。研究中的一些女性因为想要怀孕或不再需要避孕药而停用宫内节育器，而其他女性则只是失访。这些原因导致了 13, 18, 23, 38, 54 和 56 周的删失停用时间。该研究方案要求记录每位女性的月经出血经历，为期两年。出于实际原因，每个女性在招募后两年内都无法接受检查以确定她们是否仍在使用宫内节育器，这就是为什么有 3 个停用时间大于 104 周的右删失时间。</p>
+<p>分析这些数据的一个目的是总结停用时间的分布。然后我们可能希望估计停用宫内节育器的中位时间，或者估计女性在特定时间段后停用该设备的概率。事实上，以时间为函数的这种估计概率图将为数据提供一个有用的总结。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex1-2" class="example"><strong>示例 1.2  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>乳腺癌是西方国家女性最常见的癌症形式之一。然而，肿瘤的生物学行为往往难以预测，许多研究集中在肿瘤是否可能已经转移或扩散到身体的其他器官。大约 80% 的原发性乳腺癌女性患者可能患有已经转移到其他部位的肿瘤。如果能确定这些患者，可以针对她们进行辅助治疗，而剩下的 20% 可以通过手术治愈。</p>
+<p>Middlesex Hospital 开展了一项调查，相关记录可见 Leathem and Brooks (1987). 该调查旨在评估一种组织化学标志物，用以区分已经发生转移和未发生转移的原发性乳腺癌。研究中的标志物是一种来自罗马蜗牛 Helix pomatia 的白蛋白腺凝集素，即 Helix pomatia agglutinin (HPA). 这种标志物与发生局部淋巴结转移的乳腺癌细胞结合，而经 HPA 染色的细胞可以通过显微镜检查来识别。为了探究 HPA 染色是否可用于预测罹患乳腺癌女性的生存状况，研究者开展了一项回顾性研究，研究对象为接受乳腺癌手术治疗的女性的病历记录。对这些女性的肿瘤切片进行 HPA 处理，随后将每个肿瘤分为阳性染色和阴性染色，其中阳性染色表示肿瘤具有转移潜力。该研究于 1987 年 7 月结束，此时计算了死于乳腺癌的女性的生存时间。对于 1987 年 7 月时生存状态未知的女性，从手术日期到她们最后一次被确认存活的日期之间的时间视为删失生存时间。死于乳腺癌以外原因的女性的生存时间也视为右删失。表 1.2 中的数据指的是 1969 年 1 月至 1971 年 12 月期间接受单纯或根治性乳房切除术治疗的 II 级、III 级或 IV 级肿瘤的女性的生存月数。在表中，每位女性的生存时间根据其肿瘤是否为阳性染色进行分类。</p>
+<details><summary><font color="#8B2232">表 1.2</font>
+</summary><img src="figure/table%201.2.png#center" style="width:80.0%"></details><p><br>
+在分析这项研究的数据时，我们特别感兴趣的是，这两组女性的生存经历是否存在差异。如果有证据表明，那些 HPA 染色阴性的女性在术后往往比那些染色阳性的女性活得更长，我们将得出结论，癌症患者的预后取决于染色程序的结果。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex1-3" class="example"><strong>示例 1.3  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>多发性骨髓瘤是一种恶性疾病，其特征是异常浆细胞（一种白细胞）在骨髓中积聚。骨内异常浆细胞的增殖导致疼痛和骨组织的破坏。多发性骨髓瘤患者也会出现贫血、出血、反复感染和虚弱。这种情况总是致命的，除非接受治疗。Medical Center of the University of West Virginia, USA 进行了一项研究，其目的是检验某些解释变量或协变量的值与患者生存时间之间的关系。在这项研究中，主要响应变量是多发性骨髓瘤从诊断到死亡的时间，以月为单位。</p>
+<p>表 1.3 中的数据来自 Krall, Uthoff and Harley (1975)，涉及 48 名患者，他们的年龄都在 50 至 80 岁之间。到研究完成时，部分患者还未死亡，因此他们的生存时间是右删失的。表中个体生存状态的编码规则为：0 表示删失观测，1 表示多发性骨髓瘤死亡。</p>
+<details><summary><font color="#8B2232">表 1.3</font>
+</summary><img src="figure/table%201.3.png#center" style="width:80.0%"></details><p><br>
+在诊断时，记录了每位患者的许多解释变量的值。这些包括患者的年龄（岁）、性别（1 = 男性，2 = 女性）、血尿素氮 (Bun) 水平、血清钙 (Ca)、血红蛋白 (Hb)、骨髓中血浆细胞的百分比 (Pcells) 和一个指示变量 (Protein)，用于指示尿液中是否存在 Bence-Jones 蛋白（0 = 不存在，1 = 存在）。</p>
+<p>分析这些数据的主要目的是研究风险因素 Bun, Ca, Hb, Pcells 和 Protein 对多发性骨髓瘤患者生存时间的影响。这些风险因素的影响可能会因患者的年龄或性别而改变，因此，还需要研究生存时间与重要风险因素之间的关系在每个性别以及不同年龄组中的一致性程度。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex1-4" class="example"><strong>示例 1.4  (前列腺癌两种疗法的比较) </strong></span><br></p>
+<p>1967年，Veteran’s Administration Cooperative Urological Research Group 开始了一项随机对照临床试验，以比较前列腺癌的疗法。该试验是双盲的，研究中使用的两种疗法是安慰剂和 1.0 毫克己烯雌酚 (DES)。每天口服治疗。研究的时间起点是患者被随机分配接受治疗的日期，终点是患者死于前列腺癌的日期。</p>
+<p>完整的数据集在 Andrews and Herzberg (1985) 中给出，但本例中使用的数据来自患有 III 期癌症的患者，即有证据表明这些患者的肿瘤局部扩展至前列腺包膜之外，但血清前列腺酸性磷酸酶未升高。此外，这些患者没有心血管病史，在试验开始时心电图结果正常，白天没有卧床休息。除了记录研究中每个患者的生存时间外，还记录了许多其他预后因素的信息。其中包括患者进入试验时的年龄、他们的血清血红蛋白水平（单位：g/100 ml）、原发肿瘤大小（单位：cm<sup>2</sup>）以及肿瘤分期和分级的综合指数值。这个指数称为 Gleason 指数；越晚期，该指数的值就越大。</p>
+<p>表 1.4 给出了 38 名患者的记录数据，其中生存时间以月为单位。因其他原因死亡或失访的患者的生存时间视为删失。研究结束时，若患者死于前列腺癌，则与个体状态相关的变量的值为 1，若生存时间删失，则为 0。当个体接受 DES 治疗时，与治疗组别相关的变量取值为 2，而当个体接受安慰剂治疗时，变量取值为 1.</p>
+<details><summary><font color="#8B2232">表 1.4</font>
+</summary><img src="figure/table%201.4.png#center" style="width:80.0%"></details><p><br>
+本研究的主要目的是确定是否有证据表明接受 DES 治疗的患者比接受安慰剂治疗的患者生存时间更长。由于本例所依据的数据来自一项随机试验，人们可能会期望两组治疗患者中预后因素（即患者年龄、血清血红蛋白水平、肿瘤大小和 Gleason 指数）的分布是相似的。然而，依赖这一假设并不明智。例如，结果表明安慰剂组患者的肿瘤平均大小可能大于接受 DES 治疗的患者。如果大肿瘤患者的预后比小肿瘤患者差，那么治疗效果就会被高估，除非在分析中充分考虑肿瘤的大小。因此，首先有必要确定是否有任何协变量与生存时间相关。若如此，在比较两个治疗组患者的生存时间时，需要考虑这些变量的效应。</p>
+</div>
+</div>
+</div>
+<div id="sec1-4" class="section level2" number="1.4">
+<h2>
+<span class="header-section-number">1.4</span> 生存函数，风险函数和累积风险函数<a class="anchor" aria-label="anchor" href="#sec1-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>在总结生存数据时，主要关注三个函数，即<strong>生存函数</strong> (survival or survivor function)、<strong>风险函数</strong> (hazard function) 和<strong>累积风险函数</strong> (cumulative hazard function). 因此，这些函数在第一章中定义。</p>
+<div id="sec1-4-1" class="section level3" number="1.4.1">
+<h3>
+<span class="header-section-number">1.4.1</span> 生存函数<a class="anchor" aria-label="anchor" href="#sec1-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>个体的实际生存时间 <span class="math inline">\(t\)</span> 可以视为变量 <span class="math inline">\(T\)</span> 的观测，其中 <span class="math inline">\(T\)</span> 可以取任意非负值。<span class="math inline">\(T\)</span> 可取的值具有概率分布，我们将 <span class="math inline">\(T\)</span> 称为与生存时间相关的随机变量。现假设该随机变量具有概率密度函数为 <span class="math inline">\(f(t)\)</span> 的概率分布。<span class="math inline">\(T\)</span> 的分布函数由下式给出</p>
+<p><span class="math display" id="eq:1-1">\[\begin{equation}
+F(t)=\mathrm{P}(T&lt;t)=\int_0^tf(u)\mathrm{d}u
+\tag{1.1}
+\end{equation}\]</span></p>
+<p>表示生存时间小于某个值 <span class="math inline">\(t\)</span> 的概率。该函数也称为累积发生率函数 (cumulative incidence function)，因为它总结了在时间 <span class="math inline">\(t\)</span> 之前发生的死亡的累积概率</p>
+<p><strong>生存函数</strong> <span class="math inline">\(S(t)\)</span> 定义为生存时间大于等于 <span class="math inline">\(t\)</span> 的概率，因此根据式 <a href="chap1.html#eq:1-1">(1.1)</a></p>
+<p><span class="math display" id="eq:1-2">\[\begin{equation}
+S(t)=\text{P}(T\geqslant t)=1-F(t)
+\tag{1.2}
+\end{equation}\]</span></p>
+<p>因此，生存函数可以用来表示一个个体在任何给定时间之后生存的概率。</p>
+</div>
+<div id="sec1-4-2" class="section level3" number="1.4.2">
+<h3>
+<span class="header-section-number">1.4.2</span> 风险函数<a class="anchor" aria-label="anchor" href="#sec1-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p><strong>风险函数</strong> (hazard function) 广泛用于表示某个时间 <span class="math inline">\(t\)</span> 发生的事件（如死亡）的风险或危险 (hazard or risk). 该函数是从一个个体在时间 <span class="math inline">\(t\)</span> 死亡的概率中获得的，前提是这个个体已经生存到了这个时间。为了正式定义等下函数，考虑与个体生存时间相关的随机变量 <span class="math inline">\(T\)</span> 在 <span class="math inline">\(t\)</span> 和 <span class="math inline">\(t+\delta t\)</span> 之间的概率，条件是 <span class="math inline">\(T\)</span> 大于等于 <span class="math inline">\(t\)</span>，即 <span class="math inline">\(P(t \le T &lt; t + \delta t | T \ge t)\)</span>。风险函数 <span class="math inline">\(h(t)\)</span> 是该量的极限值，因为 <span class="math inline">\(\delta t\)</span> 趋于零，所以</p>
+<p><span class="math display" id="eq:1-3">\[\begin{equation}
+h(t)=\lim_{\delta t\to0}\left\{\frac{\text{P}(t\leqslant T&lt;t+\delta t\mid T\geqslant t)}{\delta t}\right\}
+\tag{1.3}
+\end{equation}\]</span></p>
+<p>函数 <span class="math inline">\(h(t)\)</span> 也称为<strong>风险率</strong> (hazard rate)、<strong>瞬时死亡率</strong> (instantaneous death rate)、<strong>强度率</strong> (intensity rate) 或<strong>死亡作用力</strong> (force of motality).</p>
+<p>根据式 <a href="chap1.html#eq:1-3">(1.3)</a> 中风险函数的定义，<span class="math inline">\(h(t)\)</span> 是时间 <span class="math inline">\(t\)</span> 处的事件率，前提是事件在 <span class="math inline">\(t\)</span> 之前没有发生。具体而言，如果生存时间以天为单位，<span class="math inline">\(h(t)\)</span> 是在第 <span class="math inline">\(t\)</span> 天开始时有事件发生风险的个体在该天经历事件的近似概率。时间 <span class="math inline">\(t\)</span> 的风险函数也可以视为个体在单位时间内经历的预期事件数，假设在此之前没有发生过事件，并假设风险在该时间段内是恒定的。</p>
+<p>根据式 <a href="chap1.html#eq:1-3">(1.3)</a> 中风险函数的定义，生存函数和风险函数之间存在一些有用的关系。根据概率论，以事件 <span class="math inline">\(B\)</span> 的发生为条件，事件 <span class="math inline">\(A\)</span> 的概率由 <span class="math inline">\(\text{P}(A|B)=\text{P}(AB)/\text{P}(B)\)</span> 给出，其中 <span class="math inline">\(\text{P}(AB)\)</span> 是 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 共同发生的概率。使用该关系，式 <a href="chap1.html#eq:1-3">(1.3)</a> 风险函数定义中的条件概率</p>
+<p><span class="math display">\[\begin{aligned}\frac{\mathrm{P}(t\leqslant T&lt;t+\delta t)}{\mathrm{P}(T\geqslant t)}\end{aligned}\]</span></p>
+<p>等于</p>
+<p><span class="math display">\[\begin{aligned}\frac{F(t+\delta t)-F(t)}{S(t)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(F(t)\)</span> 为 <span class="math inline">\(T\)</span> 的分布函数。那么</p>
+<p><span class="math display">\[h(t)=\lim_{\delta t\to0}\left\{\frac{F(t+\delta t)-F(t)}{\delta t}\right\}\frac{1}{S(t)}\]</span></p>
+<p>现在</p>
+<p><span class="math display">\[\lim_{\delta t\to0}\left\{\frac{F(t+\delta t)-F(t)}{\delta t}\right\}\]</span></p>
+<p>是 <span class="math inline">\(F(t)\)</span> 关于 <span class="math inline">\(t\)</span> 的导数的定义式，也就是 <span class="math inline">\(f(t)\)</span>，因此</p>
+<p><span class="math display" id="eq:1-4">\[\begin{equation}
+h(t)=\frac{f(t)}{S(t)}
+\tag{1.4}
+\end{equation}\]</span></p>
+<p>总之，式 <a href="chap1.html#eq:1-1">(1.1)</a>, <a href="chap1.html#eq:1-2">(1.2)</a> 和 <a href="chap1.html#eq:1-4">(1.4)</a> 表明，利用 <span class="math inline">\(f(t),S(t),h(t)\)</span> 中的任何一个可以确定其他两个。</p>
+</div>
+<div id="sec1-4-3" class="section level3" number="1.4.3">
+<h3>
+<span class="header-section-number">1.4.3</span> 累积风险函数<a class="anchor" aria-label="anchor" href="#sec1-4-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>根据式 <a href="chap1.html#eq:1-4">(1.4)</a> 可以得出</p>
+<p><span class="math display" id="eq:1-5">\[\begin{equation}
+h(t)=-\frac{\mathrm{d}}{\mathrm{d}t}\{\log S(t)\}
+\tag{1.5}
+\end{equation}\]</span></p>
+<p>因此</p>
+<p><span class="math display" id="eq:1-6">\[\begin{equation}
+S(t)=\exp\left\{-H(t)\right\}
+\tag{1.6}
+\end{equation}\]</span></p>
+<p>其中</p>
+<p><span class="math display" id="eq:1-7">\[\begin{equation}
+H(t)=\int_0^th(u)\mathrm{d}u
+\tag{1.7}
+\end{equation}\]</span></p>
+<p>函数 <span class="math inline">\(H(t)\)</span> 在生存分析中作用广泛，称为<strong>集成</strong>或<strong>累积风险函数</strong> (integrated or cumulative hazard function). 根据式 <a href="chap1.html#eq:1-6">(1.6)</a>，累积风险函数也可根据生存函数得到，因为</p>
+<p><span class="math display" id="eq:1-8">\[\begin{equation}
+H(t)=-\log S(t)
+\tag{1.8}
+\end{equation}\]</span></p>
+<p>累积风险函数 <span class="math inline">\(H(t)\)</span> 是直到时间 <span class="math inline">\(t\)</span> 时发生事件的累积风险。如果事件是死亡，则 <span class="math inline">\(H(t)\)</span> 总结了截至时间 <span class="math inline">\(t\)</span> 的死亡风险，前提是死亡在 <span class="math inline">\(t\)</span> 之前尚未发生。时间 <span class="math inline">\(t\)</span> 处的累积风险函数也可解释为从时间起点到 <span class="math inline">\(t\)</span> 的时间区间内发生事件的预期数量。</p>
+<p>累积风险函数有可能大于 1. 使用式 <a href="chap1.html#eq:1-8">(1.8)</a>，当 <span class="math inline">\(-\log S(t)\geqslant1\)</span> 即 <span class="math inline">\(S(t)\leqslant e^{-1}=0.37\)</span> 时，<span class="math inline">\(H(t)\geqslant1\)</span>。当时间 <span class="math inline">\(t\)</span> 之后发生事件的概率小于 0.37 时，累积风险大于 1，这意味着在时间区间 <span class="math inline">\((0, t)\)</span> 内预计会发生多个事件。因此生存函数 <span class="math inline">\(S(t)\)</span> 可以更准确地定义为时间 <span class="math inline">\(t\)</span> 之后发生一个或多个事件的概率。将累积风险函数解释为预期事件数仅在事件可能重复发生的情况下是合理的，例如当事件是感染、偏头痛或癫痫发作的发生；而当感兴趣的事件是死亡时，这种解释依赖于个体在死亡发生后立即复活！分析事件多次发生时间的方法将在第 <a href="chap13.html#chap13">13</a> 章讨论，并且当可能发生多次事件时，对风险和累积风险函数更数学的解释包含在该章的 <a href="chap13.html#sec13-1">13.1</a> 节中。</p>
+<p>在生存数据分析中，根据生存时间估计生存函数、风险函数和累积风险函数。第 <a href="chap2.html#chap2">2</a> 章和第 <a href="chap3.html#chap3">3</a> 章描述了不需要指定 <span class="math inline">\(T\)</span> 的概率密度函数形式的估计方法，而第 <a href="chap5.html#chap5">5</a> 章介绍了基于特定生存时间分布假设的方法。</p>
+</div>
+</div>
+<div id="sec1-5" class="section level2" number="1.5">
+<h2>
+<span class="header-section-number">1.5</span> 用于生存分析的计算机软件<a class="anchor" aria-label="anchor" href="#sec1-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>本书将要介绍的大多数生存数据分析技术都需要合适的计算机软件来实施。目前已有许多用于生存分析的计算机软件包，但商业软件包，例如，SAS (SAS Institute Inc.)、Stata (StataCorp) 和 S-PLUS (TIBCO Software Inc.) 具有最广泛的功能。此外，R 统计计算环境 (R Core Team, 2021) 是一款免费软件，根据 GNU General Public
+License 条款发布。S-PLUS 和 R 都是 S 统计编程语言的现代实现，并包含一系列全面的用于生存分析的模块。本书后续章节描述的任何分析都可以使用这四个软件包中的任何一个来执行。由于 R 的广泛使用且易于获取，因此第 <a href="chap17.html#chap17">17</a> 章详细描述了其在生存分析中的应用。</p>
+<p>在某些情况下，软件包生成的输出中的数值结果可能有所不同。这通常是由于使用不同的默认计算方法造成的。当数据集包含两个或多个具有相同生存时间的个体时，就会出现一个特别重要的例子。在这种情况下，SAS phreg 程序和 R 函数 <code>coxph</code> (Theerneau, 2022) 默认采用不同的方法来处理这些相关观测，从而导致输出存在差异。默认设置当然可以更改，第 <a href="chap3.html#chap3">3</a> 章第 <a href="chap3.html#sec3-3-2">3.3.2</a> 节描述了生存时间结 (tied survival times) 的处理。有关使用 R 函数 coxph 的更多详细信息可以在第 <a href="chap17.html#chap17">17</a> 章第 <a href="chap17.html#sec17-4">17.4</a> 节中找到。数值上的差异也可能是由于控制某些迭代过程收敛的参数使用不同的设置以及用于数值优化的不同方法造成的。</p>
+</div>
+<div id="sec1-6" class="section level2" number="1.6">
+<h2>
+<span class="header-section-number">1.6</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec1-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>许多关于医学研究统计的一般书籍都介绍了生存数据分析中使用的技术，例如 Altman (1991) 和 Armitage, Berry and Matthews (2002) 的书籍。 Machin, Cheung and Parmar (2006) 提供了使用非技术语言分析临床试验生存数据的实用指南。</p>
+<p>有许多教科书介绍了生存分析的方法，并通过实例加以说明。Lee and Wang (2013) 从生物学和医学的角度提供了广泛的主题概述，而 Marubini and Valsecchi (1995) 则描述了临床试验和观察性研究中生存数据的分析。Hosmer、Lemeshow和May（2008）对生存分析进行了平衡的阐述，其中包括模型开发和拟合模型中参数估计的解释等优秀章节。Kleinand Moeschberger (2005) 在其综合教科书中包含了许多示例数据集和练习，而 Kleinbaum and Klein (2012) 则提供了一本关于生存分析的自学教材。Mills (2010) 也提供了一本使用 R 和 Stata 的生存和事件历史分析实用指南。Breslow and Day (1987) 以及 Woodward (2014) 描述了生存分析在流行病学数据分析中的应用。Crowder et al. (1991) 和 Meeker, Escobar amd Pascual (2022) 介绍了生存分析在其他领域的应用，他们重点关注可靠性数据的分析，而 Box-Steffensmeier and Jones (2004) 则从非数学的角度介绍了社会科学中的事件发生时间分析。</p>
+<p>Kalbfleisch and Prentice (2002) 以及 Lawless (2002) 对该主题进行了全面描述。这些书是为研究生统计学家或研究工作者编写的，通常视为参考书，而不是介绍性文本。Cox and Oakes (1984) 的研究专著以及 Hinkley, Reid and Snell (1991) 专门讨论生存分析的章节对生存分析进行了简要回顾。Hougaard (2000) 关于多变量生存数据的书在介绍了生存分析的基本特征后，讨论了更先进的主题。Aalen, Borgan and Gjessing (2008) 展示了如何使用随机过程分析删失数据，结合了医学实际例子。Therneau and Grambsch (2000) 将生存分析的介绍建立在计数过程方法的基础上，从而使材料更加数学化。Harrell (2015) 详细介绍了其他文本中没有的统计模型开发过程中出现的许多问题，包括对案例研究的广泛讨论。</p>
+<p>有很多关于特定软件包在数据分析中的使用的一般性书籍，其中一些书籍详细描述了这些软件包在生存数据分析中的应用。Allison (2010) 为 SAS 软件在生存分析中的应用提供了全面的指南。Cleves, Gould and Marchenko (2016) 介绍了 Stata 在生存分析中的应用，而 Kohler and Kreuter (2012) 则提供了 Stata 在数据分析中使用的一般介绍。Therneau and Grambsch (2000) 详细描述了如何使用 SAS 和 S-PLUS 来拟合 Cox 回归模型及其扩展。该书还描述了一些 SAS 宏和 S-PLUS 函数，这些函数补充了这些软件包中可用的标准函数。Tableman and Kim (2004) 也描述了 S-PLUS 在生存分析中的应用，而 Broström (2022) 和 Moore (2016) 则展示了 R 在生存数据分析中的应用。Venables and Ripley (2002) 描述了如何在 S 环境中进行图形和数值数据分析，这种环境在 R 和 S-PLUS 中都可实现；请注意，S 代码通常可以在 R 下运行。关于 R 的更多参考文献见第 <a href="chap17.html#chap17">17</a> 章末尾。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="%E7%9B%AE%E5%BD%95.html">目录</a></div>
+<div class="next"><a href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap1"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="nav-link" href="#sec1-1"><span class="header-section-number">1.1</span> 生存分析的应用</a></li>
+<li>
+<a class="nav-link" href="#sec1-2"><span class="header-section-number">1.2</span> 生存数据的特殊特征</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec1-2-1"><span class="header-section-number">1.2.1</span> 删失</a></li>
+<li><a class="nav-link" href="#sec1-2-2"><span class="header-section-number">1.2.2</span> 独立删失</a></li>
+<li><a class="nav-link" href="#sec1-2-3"><span class="header-section-number">1.2.3</span> 研究时间和患者时间</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec1-3"><span class="header-section-number">1.3</span> 一些示例</a></li>
+<li>
+<a class="nav-link" href="#sec1-4"><span class="header-section-number">1.4</span> 生存函数，风险函数和累积风险函数</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec1-4-1"><span class="header-section-number">1.4.1</span> 生存函数</a></li>
+<li><a class="nav-link" href="#sec1-4-2"><span class="header-section-number">1.4.2</span> 风险函数</a></li>
+<li><a class="nav-link" href="#sec1-4-3"><span class="header-section-number">1.4.3</span> 累积风险函数</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec1-5"><span class="header-section-number">1.5</span> 用于生存分析的计算机软件</a></li>
+<li><a class="nav-link" href="#sec1-6"><span class="header-section-number">1.6</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

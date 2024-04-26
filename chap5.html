@@ -1,0 +1,1692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 5 章 参数回归模型 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="当 Cox 回归模型用于生存数据分析时，不需要假设生存时间特定形式的概率分布。因此，风险函数不局限于特定的函数形式，该模型具有灵活性和广泛的适用性。另一方面，如果特定概率分布的假设对于数据是有效的，基于这种假设的推断将更加精确。具体来说，相对风险和中位生存时间等量的估计往往比没有分布假设的情况下具有更小的标准误。假设生存时间具有特定概率分布的模型称为参数模型 (parametric...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 5 章 参数回归模型 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="当 Cox 回归模型用于生存数据分析时，不需要假设生存时间特定形式的概率分布。因此，风险函数不局限于特定的函数形式，该模型具有灵活性和广泛的适用性。另一方面，如果特定概率分布的假设对于数据是有效的，基于这种假设的推断将更加精确。具体来说，相对风险和中位生存时间等量的估计往往比没有分布假设的情况下具有更小的标准误。假设生存时间具有特定概率分布的模型称为参数模型 (parametric...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 5 章 参数回归模型 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="当 Cox 回归模型用于生存数据分析时，不需要假设生存时间特定形式的概率分布。因此，风险函数不局限于特定的函数形式，该模型具有灵活性和广泛的适用性。另一方面，如果特定概率分布的假设对于数据是有效的，基于这种假设的推断将更加精确。具体来说，相对风险和中位生存时间等量的估计往往比没有分布假设的情况下具有更小的标准误。假设生存时间具有特定概率分布的模型称为参数模型 (parametric...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="active" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap5" class="section level1" number="5">
+<h1>
+<span class="header-section-number">第 5 章</span> 参数回归模型<a class="anchor" aria-label="anchor" href="#chap5"><i class="fas fa-link"></i></a>
+</h1>
+<p>当 Cox 回归模型用于生存数据分析时，不需要假设生存时间特定形式的概率分布。因此，风险函数不局限于特定的函数形式，该模型具有灵活性和广泛的适用性。另一方面，如果特定概率分布的假设对于数据是有效的，基于这种假设的推断将更加精确。具体来说，相对风险和中位生存时间等量的估计往往比没有分布假设的情况下具有更小的标准误。假设生存时间具有特定概率分布的模型称为参数模型 (parametric models)，是本章的主题。</p>
+<p>在生存数据分析中起核心作用的概率分布是 Weibull 分布，由 W. Weibull 于 1951 年在工业可靠性测试中引入。事实上，<strong>就像正态分布在线性模型中的核心地位一样，Weibull 分布是生存数据参数分析的核心</strong>。因此，<a href="chap5.html#sec5-5">5.5</a> 节至 <a href="chap5.html#sec5-7">5.7</a> 节对基于 Weibull 分布的模型进行了详细讨论。</p>
+<p>尽管比例风险模型在生存数据分析中具有广泛的应用，但能与该模型一起使用的生存时间概率分布却相对较少。此外，现有的分布，主要是 Weibull 分布和 Gompertz 分布，会导致风险函数随着时间的推移而增加或减少。一个涵盖更广泛生存时间分布的模型是加速失效时间模型 (accelerated failure time model)，这在 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-10">5.10</a> 节至 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-13">5.13</a> 节中描述。在比例风险假设不成立的情况下，基于该系列的模型可能是富有成效的。同样，加速失效时间模型中的生存时间分布可以采用 Weibull 分布，也可以使用其他一些概率分布。因此，本章首先对可能用于参数模型的生存数据分布进行简要概述。另一个生存模型系列，称为比例几率模型 (proportional odds model)，在某些情况下可能很有用。该模型在 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-15">5.15</a> 节中描述。</p>
+<div id="sec5-1" class="section level2" number="5.1">
+<h2>
+<span class="header-section-number">5.1</span> 风险函数的模型<a class="anchor" aria-label="anchor" href="#sec5-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>一旦根据概率密度函数指定了生存时间分布的模型，就可以从以下关系式中获得相应的生存函数和风险函数</p>
+<p><span class="math display">\[\begin{aligned}S(t)&amp;=1-\int_0^tf(u)\mathrm{d}u\end{aligned}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\begin{aligned}h(t)=\frac{f(t)}{S(t)}=-\frac{\mathrm{d}}{\mathrm{d}t}\{\log S(t)\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(f(t)\)</span> 是生存时间的概率密度函数。这些关系在 <a href="chap1.html#sec1-4">1.4</a> 节推导过。另一种方法是为风险函数指定一种函数形式，然后可根据以下式子确定生存函数和概率密度函数</p>
+<p><span class="math display" id="eq:5-1">\[\begin{align}
+S(t)=\exp\left\{-H(t)\right\}
+\tag{5.1}
+\end{align}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\begin{aligned}f(t)=h(t)S(t)=-\frac{\mathrm{d}S(t)}{\mathrm{d}t}\end{aligned}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}H(t)&amp;=\int_0^th(u)\mathrm{d}u\end{aligned}\]</span></p>
+<p>为累积风险函数。</p>
+<div id="sec5-1-1" class="section level3" number="5.1.1">
+<h3>
+<span class="header-section-number">5.1.1</span> 指数分布<a class="anchor" aria-label="anchor" href="#sec5-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>风险函数最简单的模型是假设它随着时间的推移保持不变。因此，无论经过多长时间，研究开始后任何时间的死亡风险都是相同的。在该模型下，风险函数可写为</p>
+<p><span class="math display">\[\begin{aligned}h(t)=\lambda\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(0\le t&lt;\infty\)</span>。参数 <span class="math inline">\(\lambda\)</span> 是一个正的常数，可以通过为观测生存数据拟合模型来估计。由式 <a href="chap5.html#eq:5-1">(5.1)</a> 可知，相应的生存函数为</p>
+<p><span class="math display" id="eq:5-2">\[\begin{align}
+S(t)&amp;=\exp\left\{-\int_0^t\lambda\mathrm{d}u\right\}\\
+&amp;=e^{-\lambda t}
+\tag{5.2}
+\end{align}\]</span></p>
+<p>因此生存时间隐含的概率密度函数是</p>
+<p><span class="math display" id="eq:5-3">\[\begin{align}
+f(t)=\lambda e^{-\lambda t}
+\tag{5.3}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(0\le t&lt;\infty\)</span>。这是均值为 <span class="math inline">\(\lambda^{-1}\)</span> 的指数分布随机变量 <span class="math inline">\(T\)</span> 的概率密度函数。有时可以方便地写成 <span class="math inline">\(\mu = \lambda^{-1}\)</span>，从而风险函数为 <span class="math inline">\(\mu^{−1}\)</span>，生存时间分布的均值为 <span class="math inline">\(\mu\)</span>。然而，本书通常会使用前一个风险函数指定。</p>
+<p>指数分布的中位数 <span class="math inline">\(t(50)\)</span> 满足 <span class="math inline">\(S\{t(50)\}＝0.5\)</span>，即</p>
+<p><span class="math display">\[\exp\{-\lambda t(50)\}=0.5\]</span></p>
+<p>从而</p>
+<p><span class="math display">\[\begin{aligned}t(50)=\frac1\lambda\log2\end{aligned}\]</span></p>
+<p>更一般地说，生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数是值 <span class="math inline">\(t(p)\)</span>，满足 <span class="math inline">\(S\{t(p)\}=1−(p/100)\)</span>，使用式 <a href="chap5.html#eq:5-2">(5.2)</a>，这是</p>
+<p><span class="math display">\[\begin{aligned}t(p)&amp;=\frac{1}{\lambda}\log\left(\frac{100}{100-p}\right)\end{aligned}\]</span></p>
+<p>图 5.1 给出了三个 <span class="math inline">\(\lambda\)</span> 值（即 1.0, 0.1 和 0.01）的风险函数图，相应的概率密度函数如图 5.2 所示。对于这些 <span class="math inline">\(\lambda\)</span> 值，相应指数分布的均值分别为 1, 10 和 100，中位生存时间分别为 0.69, 6.93 和69.31.</p>
+<details><summary><font color="#8B2232">图 5.1</font>
+</summary><img src="figure/figure%205.1.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.2</font>
+</summary><img src="figure/figure%205.2.png#center" style="width:80.0%"></details><p><br></p>
+</div>
+<div id="sec5-1-2" class="section level3" number="5.1.2">
+<h3>
+<span class="header-section-number">5.1.2</span> Weibull 分布<a class="anchor" aria-label="anchor" href="#sec5-1-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在实践中，恒定风险函数的假设（或等价的，指数分布生存时间的假设）很少是成立的。风险函数的一种更通用的形式是</p>
+<p><span class="math display" id="eq:5-4">\[\begin{align}
+h(t)=\lambda\gamma t^{\boldsymbol{\gamma}-1}
+\tag{5.4}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(0\le t&lt;\infty\)</span>，这是一个具有双参数 <span class="math inline">\(\lambda,\gamma\)</span> 的函数，参数均大于零。在 <span class="math inline">\(\gamma=1\)</span> 的特殊情况下，风险函数取恒定值 <span class="math inline">\(\lambda\)</span>，生存时间呈指数分布。对于 <span class="math inline">\(\gamma\)</span> 的其他值，风险函数单调增加或减少，即不改变方向。风险函数的形状主要取决于 <span class="math inline">\(\gamma\)</span> 的值，因此 <span class="math inline">\(\gamma\)</span> 被称为形状参数 (shape parameter)，而参数 <span class="math inline">\(\lambda\)</span> 是一个尺度参数 (scale parameter). 图 5.3 展示了不同 <span class="math inline">\(\gamma\)</span> 值的风险函数。</p>
+<details><summary><font color="#8B2232">图 5.3</font>
+</summary><img src="figure/figure%205.3.png#center" style="width:80.0%"></details><p><br>
+对于这种特定的风险函数，生存函数由下式给出</p>
+<p><span class="math display" id="eq:5-5">\[\begin{align}
+S(t)=\exp\left\{-\int_0^t\lambda\gamma u^{\gamma-1}\mathrm{d}u\right\}=\exp(-\lambda t^\gamma)
+\tag{5.5}
+\end{align}\]</span></p>
+<p>相应的概率密度函数为</p>
+<p><span class="math display">\[\begin{aligned}f(t)=\lambda\gamma t^{\gamma-1}\exp(-\lambda t^{\gamma})\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(0\le t&lt;\infty\)</span>，这是尺度参数为 <span class="math inline">\(\lambda\)</span>、形状参数为 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布随机变量的密度。该分布表示为 <span class="math inline">\(W(\lambda, \gamma)\)</span>。该分布的右尾比左尾长，因此该分布呈正偏态。</p>
+<p>服从 <span class="math inline">\(W(\lambda, \gamma)\)</span> 分布的随机变量 <span class="math inline">\(T\)</span> 的均值或期望为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{E}\left(T\right)=\lambda^{-1/\gamma}\Gamma(\gamma^{-1}+1)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\Gamma(c)\)</span> 是由如下积分定义的 gamma 函数</p>
+<p><span class="math display" id="eq:5-6">\[\begin{align}
+\Gamma(x)&amp;=\int_0^\infty u^{x-1}e^{-u}\mathrm{d}u
+\tag{5.6}
+\end{align}\]</span></p>
+<p>该积分的值为 <span class="math inline">\((x-1)!\)</span>，因此对于 <span class="math inline">\(x\)</span> 的整数值，该积分易于计算。该函数也为 <span class="math inline">\(x\)</span> 的非整数值有定义，可在许多软件包中计算。</p>
+<p>由于 Weibull 分布是偏态的，因此对分布位置的更合适且更容易处理的总结是中位生存时间。这是值 <span class="math inline">\(t(50)\)</span>，满足 <span class="math inline">\(S\{t(50)\} = 0.5\)</span>，即</p>
+<p><span class="math display">\[\exp\left\{-\lambda[t(50)]^{\gamma}\right\}=0.5\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[t(50)=\left\{\frac{1}{\lambda}\log2\right\}^{1/\gamma}\]</span></p>
+<p>更一般地，Weibull 分布第 <span class="math inline">\(p\)</span> 个百分位 <span class="math inline">\(t(p)\)</span> 满足</p>
+<p><span class="math display" id="eq:5-7">\[\begin{align}
+t(p)=\left\{\frac{1}{\lambda}\log\left(\frac{100}{100-p}\right)\right\}^{1/\gamma}
+\tag{5.7}
+\end{align}\]</span></p>
+<p>因此，Weibull 分布的中位数和其他百分位数比分布的均值更容易计算。</p>
+<p>中位数为 20、形状参数 <span class="math inline">\(\gamma = 0.5, 1.5\)</span> 和 <span class="math inline">\(3.0\)</span> 的 Weibull 分布的风险函数和相应概率密度函数分别如图 5.4 和 5.5 所示。这三个 Weibull 分布的尺度参数 <span class="math inline">\(\lambda\)</span> 的相应值分别为 0.15, 0.0078 和 0.000087.</p>
+<details><summary><font color="#8B2232">图 5.4</font>
+</summary><img src="figure/figure%205.4.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.5</font>
+</summary><img src="figure/figure%205.5.png#center" style="width:80.0%"></details><p><br>
+由于 Weibull 风险函数可以根据形状参数 <span class="math inline">\(\gamma\)</span> 采取多种形式，并且可以轻松获得适当的总结总统计量，因此该分布广泛应用于生存数据的参数分析。</p>
+</div>
+<div id="sec5-1-3" class="section level3" number="5.1.3">
+<h3>
+<span class="header-section-number">5.1.3</span> log-logistic 分布<a class="anchor" aria-label="anchor" href="#sec5-1-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>Weibull 风险函数的一个局限性为：它是时间的单调函数。但是，可能会出现风险函数改变方向的情况。例如，心脏移植后，患者在移植后的头十天左右，在身体适应新器官的同时，死亡风险越来越大的。随着患者的康复，这种风险会随着时间的推移而减小。在这种情况下，单峰 (unimodal) 风险函数可能是合适的。</p>
+<p>单峰风险的一种特殊形式是函数</p>
+<p><span class="math display" id="eq:5-8">\[\begin{align}
+h(t)=\frac{e^\theta\kappa t^{\kappa-1}}{1+e^\theta t^\kappa}
+\tag{5.8}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(0\leqslant t&lt;\infty,\kappa&gt;0\)</span>。若 <span class="math inline">\(\kappa&gt;1\)</span>，风险函数单调递减，但若 <span class="math inline">\(\kappa\le1\)</span>，风险是单峰的。对应于式 <a href="chap5.html#eq:5-8">(5.8)</a> 风险函数的生存函数由下式给出</p>
+<p><span class="math display" id="eq:5-9">\[\begin{align}
+S(t)=\left\{1+e^\theta t^\kappa\right\}^{-1}
+\tag{5.9}
+\end{align}\]</span></p>
+<p>概率密度函数为</p>
+<p><span class="math display">\[\begin{aligned}f(t)&amp;=\frac{e^\theta\kappa t^{\kappa-1}}{(1+e^\theta t^\kappa)^2}\end{aligned}\]</span></p>
+<p>这是 log-logistic 分布随机变量 <span class="math inline">\(T\)</span> 的密度，参数为 <span class="math inline">\(\theta,\kappa\)</span>。该分布之所以如此称，是因为变量 <span class="math inline">\(\log T\)</span> 服从 logistic 分布，这是一种对称分布，其概率密度函数与正态分布的概率密度函数非常相似。</p>
+<p>log-logistic 分布的第 <span class="math inline">\(p\)</span> 个百分位数为</p>
+<p><span class="math display">\[t(p)=\left(\frac{pe^{-\theta}}{100-p}\right)^{1/\kappa}\]</span></p>
+<p>所以分布的中位数为</p>
+<p><span class="math display">\[\begin{aligned}t(50)=e^{\large-\theta/\kappa}\end{aligned}\]</span></p>
+<p>中位数为 20 且 <span class="math inline">\(\kappa=0.5, 2.0\)</span> 和 <span class="math inline">\(5.0\)</span> 的 log-logistic 分布的风险函数如图 5.6 所示。这些分布对应的 <span class="math inline">\(θ\)</span> 值分别为 −1.5, −6.0 和 −15.0.</p>
+<details><summary><font color="#8B2232">图 5.6</font>
+</summary><img src="figure/figure%205.6.png#center" style="width:80.0%"></details>
+</div>
+<div id="sec5-1-4" class="section level3" number="5.1.4">
+<h3>
+<span class="header-section-number">5.1.4</span> log-normal 分布<a class="anchor" aria-label="anchor" href="#sec5-1-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>log-normal 分布对应的随机变量也取正值，因此可以用作生存数据的模型。如果 <span class="math inline">\(\log T\)</span> 服从均值为 <span class="math inline">\(\mu\)</span>、方差为 <span class="math inline">\(\sigma^2\)</span> 的正态分布，则称随机变量 <span class="math inline">\(T\)</span> 服从参数为 <span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 的 log-normal 分布。<span class="math inline">\(T\)</span> 的概率密度函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}f(t)=\frac{1}{\sigma\surd(2\pi)}t^{-1}\exp\left\{-(\log t-\mu)^2/2\sigma^2\right\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(0\leqslant t&lt;\infty,\sigma&gt;0\)</span>，从中可以得到生存函数和风险函数。log-normal 分布的生存函数为</p>
+<p><span class="math display" id="eq:5-10">\[\begin{align}
+S(t)=1-\Phi\left(\frac{\log t-\mu}\sigma\right)
+\tag{5.10}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\Phi(\cdot)\)</span> 为标准正态分布函数，由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\Phi(z)&amp;=\frac{1}{\surd(2\pi)}\int_{-\infty}^{z}\exp\left(-u^2/2\right)\mathrm{d}u\end{aligned}\]</span></p>
+<p>该分布的第 <span class="math inline">\(p\)</span> 个百分位数为</p>
+<p><span class="math display">\[t(p)=\exp\left\{\sigma\Phi^{-1}(p/100)+\mu\right\}\]</span></p>
+<p>其中 <span class="math inline">\(\Phi^{-1}(p/100)\)</span> 为标准正态分布的第 <span class="math inline">\(p\)</span> 个百分位数，有时也称为 <span class="math inline">\(p/100\)</span> 的 probit. 特别是，在这种分布下的中位生存时间简单地为 <span class="math inline">\(t(50)=e^{\mu}\)</span>。</p>
+<p>风险函数可以根据关系式 <span class="math inline">\(h(t)=f(t)/S(t)\)</span> 得到。当 <span class="math inline">\(t=0\)</span> 时，此函数为 0，在 <span class="math inline">\(t\)</span> 趋于无穷大的过程中，该函数增大到最大值，然后减小为 0. 生存函数和风险函数只能用积分表示，这一事实限制了该模型的实用性。此外，<strong>考虑到正态分布和 logistic 分布的相似性，log-normal 模型往往与 log-logistic 模型非常相似</strong>。</p>
+</div>
+<div id="sec5-1-5" class="section level3" number="5.1.5">
+<h3>
+<span class="header-section-number">5.1.5</span> Gompertz 分布<a class="anchor" aria-label="anchor" href="#sec5-1-5"><i class="fas fa-link"></i></a>
+</h3>
+<p>Gompertz 分布由 Gompertz 作为人类死亡率的模型于 1825 年引入，现在用于人口学和生物科学。该分布的风险函数由下式给出</p>
+<p><span class="math display">\[h(t)=\lambda e^{\theta t}\]</span></p>
+<p>其中 <span class="math inline">\(0\leqslant t&lt;\infty\)</span> 以及 <span class="math inline">\(\lambda&gt;0\)</span>。在 <span class="math inline">\(\theta = 0\)</span> 的特殊情况下，风险函数具有恒定值 <span class="math inline">\(\lambda\)</span>，并且生存时间服从指数分布。参数 <span class="math inline">\(\theta\)</span> 决定了风险函数的形状，正值导致风险函数随时间递增。风险函数也可以表示为 <span class="math inline">\(h(t)=\exp(\alpha+\theta t)\)</span>，这表明其对数风险函数关于 <span class="math inline">\(t\)</span> 是线性的。另一方面，根据式 <a href="chap5.html#eq:5-4">(5.4)</a> ，Weibull 对数风险函数关于 <span class="math inline">\(\log t\)</span> 呈线性。与 Weibull 风险函数类似，Gompertz 风险函数单调增加或减少。</p>
+<p>Gompertz 分布的生存函数由下式给出</p>
+<p><span class="math display">\[S(t)=\exp\left\{\frac{\lambda}{\theta}(1-e^{\theta t})\right\}\]</span></p>
+<p>相应的密度函数为</p>
+<p><span class="math display">\[f(t)=\lambda e^{\theta t}\exp\left\{\frac\lambda\theta(1-e^{\theta t})\right\}\]</span></p>
+<p>第 <span class="math inline">\(p\)</span> 个百分位数满足</p>
+<p><span class="math display">\[\begin{aligned}t(p)=\frac{1}{\theta}\log\left\{1-\frac{\theta}{\lambda}\log\left(\frac{100-p}{100}\right)\right\}\end{aligned}\]</span></p>
+<p>中位生存时间为</p>
+<p><span class="math display">\[\begin{aligned}t(50)=\frac{1}{\theta}\log\left\{1+\frac{\theta}{\lambda}\log2\right\}\end{aligned}\]</span></p>
+<p>图 5.7 显示了中位数为 <span class="math inline">\(20\)</span> 且 <span class="math inline">\(\theta = −0.2, 0.02\)</span> 和 <span class="math inline">\(0.05\)</span> 的分布的 Gompertz 风险函数图。对应的 <span class="math inline">\(\lambda\)</span> 值为 0.141, 0.028 和 0.020.</p>
+<details><summary><font color="#8B2232">图 5.7</font>
+</summary><img src="figure/figure%205.7.png#center" style="width:80.0%"></details>
+</div>
+<div id="sec5-1-6" class="section level3" number="5.1.6">
+<h3>
+<span class="header-section-number">5.1.6</span> gamma 分布<a class="anchor" aria-label="anchor" href="#sec5-1-6"><i class="fas fa-link"></i></a>
+</h3>
+<p>均值为 <span class="math inline">\(\rho/\lambda\)</span> 且方差为 <span class="math inline">\(\rho/\lambda^2\)</span> 的 gamma 分布的概率密度函数为</p>
+<p><span class="math display" id="eq:5-11">\[\begin{align}
+f(t)=\frac{\lambda^\rho t^{\rho-1}e^{-\lambda t}}{\Gamma(\rho)}
+\tag{5.11}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(0\leqslant t&lt;\infty,\lambda&gt;0\)</span> 以及 <span class="math inline">\(\rho&gt;0\)</span>。如同 log-normal 分布，gamma 分布的生存函数只能表示为积分，写作</p>
+<p><span class="math display">\[S(t)=1-\Gamma_{\lambda t}(\rho)\]</span></p>
+<p>其中 <span class="math inline">\(\Gamma_{\lambda t}(\rho)\)</span> 为不完全 gamma 函数，由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\Gamma_{\lambda t}(\rho)&amp;=\frac{1}{\Gamma(\rho)}\int_{0}^{\lambda t}u^{\rho-1}e^{-u}\mathrm{d}u\end{aligned}\]</span></p>
+<p>gamma 分布的风险函数为 <span class="math inline">\(h(t) = f(t)/S(t)\)</span>。如果 <span class="math inline">\(\rho &gt; 1\)</span>，则该风险函数单调增加；如果 <span class="math inline">\(ρ &lt; 1\)</span>，则该风险函数单调减少，并且当 <span class="math inline">\(t\)</span> 趋于 <span class="math inline">\(\infty\)</span> 时趋于 <span class="math inline">\(\lambda\)</span>。</p>
+<p>当 <span class="math inline">\(\rho = 1\)</span> 时，gamma 分布简化为 <a href="chap5.html#sec5-1-1">5.1.1</a> 节中描述的指数分布，因此该分布与 Weibull 分布一样，都以指数分布为特例。事实上，<strong>gamma 分布与 Weibull 分布非常相似，并且基于模型的推断通常非常相似</strong>。</p>
+<p>gamma 分布的推广实际上比 gamma 分布本身更有用，因为它以 Weibull 和 log-normal 分布为特例。因此，这样的模型称为广义 gamma 分布，可用于区分生存数据的替代参数模型。</p>
+<p>广义 gamma 分布的概率密度函数是式 <a href="chap5.html#eq:5-11">(5.11)</a> 中 gamma 密度的扩展，包括一个额外参数 <span class="math inline">\(\theta&gt;0\)</span>，定义为</p>
+<p><span class="math display">\[\begin{aligned}f(t)=\frac{\theta\lambda^{\rho\theta}t^{\rho\theta-1}\exp\{-(\lambda t)^\theta\}}{\Gamma(\rho)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(0\leqslant t&lt;\infty\)</span>。该分布的生存函数也由不完全 gamma 函数定义，并由下式给出</p>
+<p><span class="math display">\[\begin{aligned}S(t)=1-\Gamma_{(\lambda t)^\theta}(\rho)\end{aligned}\]</span></p>
+<p>然后根据 <span class="math inline">\(h(t)=f(t)/S(t)\)</span> 得到风险函数。这种分布导致风险函数的形状范围很广，由形状参数 <span class="math inline">\(\theta\)</span> 决定。当 <span class="math inline">\(\rho=1\)</span> 时，分布变为 Weibull；当 <span class="math inline">\(\theta=1\)</span> 时，为 gamma；当 <span class="math inline">\(\rho\rightarrow\infty\)</span> 时成为 lognormal。</p>
+</div>
+<div id="sec5-1-7" class="section level3" number="5.1.7">
+<h3>
+<span class="header-section-number">5.1.7</span> 逆高斯分布<a class="anchor" aria-label="anchor" href="#sec5-1-7"><i class="fas fa-link"></i></a>
+</h3>
+<p>逆高斯分布 (inverse gaussian distribution) 是一个灵活的模型，具有一些重要的理论性质。具有均值 <span class="math inline">\(\mu\)</span> 和尺度参数 <span class="math inline">\(\lambda\)</span> 的分布的概率密度函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}f(t)=\left(\frac{\lambda}{2\pi t^3}\right)^{\frac{1}{2}}\exp\left\{\frac{\lambda(t-\mu^2)}{2\mu^2t}\right\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(0\leqslant t&lt;\infty\)</span> 以及 <span class="math inline">\(\lambda&gt;0\)</span>。相应的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S(t)=\Phi\left\{\left(1-t\mu^{-1}\right)\surd\left(\lambda t^{-1}\right)\right\}-\exp(2\lambda/\mu)\Phi\left\{-\left(1+t\mu^{-1}\right)\surd\left(\lambda t^{-1}\right)\right\}\end{aligned}\]</span></p>
+<p>然后根据 <span class="math inline">\(h(t)=f(t)/S(t)\)</span> 得到风险函数。然而，如此复杂的生存函数形式使这种分布难以处理。</p>
+</div>
+<div id="sec5-1-8" class="section level3" number="5.1.8">
+<h3>
+<span class="header-section-number">5.1.8</span> 一些其他分布<a class="anchor" aria-label="anchor" href="#sec5-1-8"><i class="fas fa-link"></i></a>
+</h3>
+<p>尽管已详细考虑了生存数据的许多分布，但还有其他分布在特定情况下可能有用。</p>
+<p>当死亡风险预计在短期内随着时间的推移而增加或减少，然后变为常数时，服从一般指数曲线 (general exponential curve) 或 Mitscherlich 曲线的风险函数可能是合适的。那么我们将风险函数设为</p>
+<p><span class="math display">\[\begin{aligned}h(t)=\theta-\beta e^{-\gamma t}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\theta&gt;0,\beta&gt;0\)</span> 以及 <span class="math inline">\(\gamma&gt;0\)</span>。这本质上是 <a href="chap5.html#sec5-1-5">5.1.5</a> 节中定义的 Gompertz 风险函数，但带有一个额外常数。该函数的总体形状如图 5.8 所示。当 <span class="math inline">\(t=0\)</span> 时，该函数的值为 <span class="math inline">\(\theta-\beta\)</span>，并递增至接近 <span class="math inline">\(\theta\)</span> 的水平渐近线。类似地，函数</p>
+<p><span class="math display">\[\begin{aligned}h(t)=\theta+\beta e^{-\gamma t}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\theta&gt;0,\beta&gt;0\)</span> 以及 <span class="math inline">\(\gamma&gt;0\)</span> 可用于为这样的风险进行建模：从 <span class="math inline">\(\theta + \beta\)</span> 递减至接近 <span class="math inline">\(\theta\)</span> 的水平渐近线。</p>
+<details><summary><font color="#8B2232">图 5.8</font>
+</summary><img src="figure/figure%205.8.png#center" style="width:80.0%"></details><p><br>
+使用式 <a href="chap1.html#eq:1-6">(1.6)</a> 可以求出相应的生存函数，由此可以得到概率密度函数。与该风险函数指定相对应的概率分布称为 Gompertz-Makeham 分布。</p>
+<p>为了对关于最小值对称地先减少后增加的风险函数进行建模，二次风险函数可能是合适的。因此，如果对于下式，<span class="math inline">\(\theta,\beta\)</span> 和 <span class="math inline">\(\gamma\)</span> 给出了所需的风险形状</p>
+<p><span class="math display">\[\begin{aligned}h(t)=\theta+\beta t+\gamma t^2\end{aligned}\]</span></p>
+<p>并确保 <span class="math inline">\(h(t)\ge 0\)</span>，可以获得生存函数和概率密度函数的显式表达。</p>
+<p>另一种形式的风险函数是“浴缸” (bathtub) 风险，它会先减小到一个最小值，然后再增加。模型</p>
+<p><span class="math display">\[\begin{aligned}h(t)&amp;=\alpha t+\frac{\beta}{1+\gamma t}\end{aligned}\]</span></p>
+<p>提供了这种形式的风险的直接表达，并且可以找到生存函数和密度函数的相应表达式。</p>
+</div>
+</div>
+<div id="sec5-2" class="section level2" number="5.2">
+<h2>
+<span class="header-section-number">5.2</span> 评估参数模型的适用性<a class="anchor" aria-label="anchor" href="#sec5-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>在根据假设的风险函数参数形式拟合模型之前，应对该假设的有效性进行初步研究。一种方法是使用 <a href="chap2.html#sec2-3">2.3</a> 节中概述的方法来估计风险函数。如果风险函数随着时间的推移是较为恒定的，这将表明指数分布可能是数据的合适模型。另一方面，如果风险函数随着生存时间的增加而单调增加或减少，则表明应使用基于 Weibull 分布的模型。</p>
+<p>评估生存时间的特定分布是否合理的一种富有信息的方法是将数据的生存函数与所选模型的生存函数进行比较。如果假设的模型是合适的，通过转换生存函数将产生一条直线图形。</p>
+<p>假设有单个生存数据样本，并且考虑了生存时间的 Weibull 分布。由于具有尺度参数 <span class="math inline">\(\lambda\)</span> 和形状参数 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S(t)=\exp\left\{-\lambda t^{\gamma}\right\}\end{aligned}\]</span></p>
+<p>取其对数，乘以负一，然后再取对数，得到</p>
+<p><span class="math display" id="eq:5-12">\[\begin{align}
+\log\left\{-\log S(t)\right\}=\log\lambda+\gamma\log t
+\tag{5.12}
+\end{align}\]</span></p>
+<p>现在，我们用生存函数的 Kaplan-Meier 估计 <span class="math inline">\(\hat S(t)\)</span> 代替式 <a href="chap5.html#eq:5-12">(5.12)</a> 中的 <span class="math inline">\(S(t)\)</span>。如果 Weibull 假设成立，则 <span class="math inline">\(\hat S(t)\)</span> 将“接近” <span class="math inline">\(S(t)\)</span>，并且 <span class="math inline">\(\log\{-\log\hat{S}(t)\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 的图形将给出一条近似的直线。根据式 <a href="chap1.html#eq:1-8">(1.8)</a>，累积风险函数 <span class="math inline">\(H(t)=− \log S(t)\)</span>，因此 <span class="math inline">\(\log\{-\log S(t)\}\)</span> 是对数累积风险。<span class="math inline">\(\log\{-\log\hat{S}(t)\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 的图形是对数累积风险图，这在第 4 章 <a href="chap4.html#sec4-4-1">4.4.1</a> 节介绍过。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-1" class="example"><strong>示例 5.1  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在<a href="chap2.html#exm:ex2-3">示例 2.3</a> 中，获得了关于停用宫内节育器时间数据的生存函数的 Kaplan-Meier 估计 <span class="math inline">\(\hat S(t)\)</span>。这些数据的对数累积风险图，即 <span class="math inline">\(\log\{-\log\hat{S}(t)\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 的图，如图 5.9 所示。</p>
+<details><summary><font color="#8B2232">图 5.9</font>
+</summary><img src="figure/figure%205.9.png#center" style="width:80.0%"></details><p><br>
+该图表明对数累积风险与 <span class="math inline">\(\log t\)</span> 之间存在直线关系，证实 Weibull 分布是停用时间的合适模型。从图中可以看出，直线的截距约为 -6.0，斜率约为 1.25. 因此， Weibull 分布参数的近似估计为 <span class="math inline">\(\lambda^* = \exp(−6.0) = 0.002\)</span> 和 <span class="math inline">\(\gamma^* = 1.25\)</span>. Weibull 分布形状参数 <span class="math inline">\(\gamma\)</span> 的估计非常接近于 1，这表明停用时间可以使用指数分布建模。</p>
+</div>
+</div>
+<p>可用类似的程序评估 log-logistic 分布的适用性，使用生存函数的变换来生成直线图。根据式 <a href="chap5.html#eq:5-9">(5.9)</a>，生存超过时间 <span class="math inline">\(t\)</span> 的几率 (odds) 为</p>
+<p><span class="math display">\[\begin{aligned}\frac{S(t)}{1-S(t)}&amp;=e^{-\theta}t^{-\kappa}\end{aligned}\]</span></p>
+<p>因此生存超过 <span class="math inline">\(t\)</span> 的对数几率 (log-odds) 可以表示为</p>
+<p><span class="math display">\[\begin{aligned}\log\left\{\frac{S(t)}{1-S(t)}\right\}&amp;=-\theta-\kappa\log t\end{aligned}\]</span></p>
+<p>如果使用 Kaplan-Meier 估计来估计数据的生存函数，并绘制生存超过 <span class="math inline">\(t\)</span> 的对数几率关于 <span class="math inline">\(\log t\)</span> 的图形，如果生存时间的 log-logistic 模型合适，将获得直线图。log-logistic 分布的参数 <span class="math inline">\(\theta\)</span> 和 <span class="math inline">\(\kappa\)</span> 的估计可以从直线图的截距和斜率获得。</p>
+<p>其他参数模型的适用性可以按照类似的思路进行研究。例如，根据式 <a href="chap5.html#eq:5-10">(5.10)</a> 给出的 log-normal 分布的生存函数，</p>
+<p><span class="math display">\[\begin{aligned}\Phi^{-1}\{1-S(t)\}&amp;=\frac{\log t-\mu}{\sigma}\end{aligned}\]</span></p>
+<p>因此如果 log-normal 模型是合适的，<span class="math inline">\(\Phi^{-1}\{1-S(t)\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 的图形将给出一条直线。该线的斜率和截距分别提供了 <span class="math inline">\(\sigma^{−1}\)</span> 和 <span class="math inline">\(−\mu/\sigma\)</span> 的估计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-2" class="example"><strong>示例 5.2  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在<a href="chap5.html#exm:ex5-1">示例 5.1</a> 中，使用对数累积风险图来评估 Weibull 分布对<a href="chap1.html#exm:ex1-1">示例 1.1</a> 给出的宫内节育器停用时间数据的拟合度。我们现在考虑 log-logistic 分布是否合适。图 5.10 显示了宫内节育器停用时间数据的 <span class="math inline">\(\log\{\hat{S}(t)/[1-\hat{S}(t)]\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 的图形。</p>
+<details><summary><font color="#8B2232">图 5.10</font>
+</summary><img src="figure/figure%205.10.png#center" style="width:80.0%"></details><p><br>
+根据该图，时间 <span class="math inline">\(t\)</span> 后停用宫内节育器的对数几率估计与 <span class="math inline">\(\log t\)</span> 之间有合理的直线关系。这表明可以使用 log-logistic 模型对观测数据进行建模。</p>
+</div>
+</div>
+<p>请注意，图 5.9 和 5.10 图中偏离线性的程度几乎没有差异。这意味着 Weibull 分布和 log-logistic 分布可能都令人满意，即使在这两种分布下风险函数估计可能非常不同。事实上，当只有相对较少数量个体的生存数据时，如本例所示，通常在数据的替代分布模型之间几乎没有选择余地。然后采用最方便的模型。</p>
+<p>使用图形方法获得的生存时间概率分布中未知参数的非正式估计也可以用于估计这些参数的函数，例如分布的中位数。然而，这并不能度量所估量的精度。下一节将开发一种更正式的方法：为生存数据拟合参数模型。</p>
+</div>
+<div id="sec5-3" class="section level2" number="5.3">
+<h2>
+<span class="header-section-number">5.3</span> 为单样本拟合参数模型<a class="anchor" aria-label="anchor" href="#sec5-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>可以使用第 3 章 <a href="chap3.html#sec3-3">3.3</a> 节概述的最大似然方法为观测生存数据集拟合参数模型。首先考虑无删失观测情况，我们有 <span class="math inline">\(n\)</span> 个个体的实际观测生存时间。若与生存时间相关的随机变量的概率密度函数为 <span class="math inline">\(f(t)\)</span>，<span class="math inline">\(n\)</span> 个观测 <span class="math inline">\(t_1,t_2,\ldots,t_n\)</span> 的似然简单地为乘积</p>
+<p><span class="math display">\[\prod_{i=1}^nf(t_i)\]</span></p>
+<p>该似然是概率密度函数中未知参数的函数，这些参数的最大似然估计是使似然函数达到最大值的那些值。在实践中，使用对数似然函数通常更方便。使对数似然达到最大的未知参数值当然与使似然函数本身达到最大的值相同。</p>
+<p>我们现在考虑一种更常见的情况，其中生存数据包包含若干个删失生存时间。具体来说，假设 <span class="math inline">\(r\)</span> 个个体在时间 <span class="math inline">\(t_1, t_2,...,t_r\)</span> 处死亡，剩余 <span class="math inline">\(n − r\)</span> 个个体的生存时间 <span class="math inline">\(t_1^*,t_2^*,\ldots,t_{n-r}^*\)</span> 为右删失的。<span class="math inline">\(r\)</span> 个死亡时间为总体似然函数贡献了以下形式的项</p>
+<p><span class="math display">\[\prod_{j=1}^rf(t_j)\]</span></p>
+<p>当然，我们不能忽视 <span class="math inline">\(n − r\)</span> 个个体的生存经历的信息，这些个体的删失生存时间已被记录。如果在时间 <span class="math inline">\(t^*\)</span> 处生存时间删失，那么我们知道个体的生命至少为 <span class="math inline">\(t^*\)</span>，并且该事件的概率为 <span class="math inline">\(\mathrm{P}(T\geqslant t^*)\)</span>，即 <span class="math inline">\(S(t^*)\)</span>。因此，每个删失观测为似然函数贡献了一个如此形式的项。因此，总似然函数为</p>
+<p><span class="math display" id="eq:5-13">\[\begin{align}
+\prod_{j=1}^rf(t_j)\prod_{l=1}^{n-r}S(t_l^*)
+\tag{5.13}
+\end{align}\]</span></p>
+<p>其中第一个乘积运算关于 <span class="math inline">\(r\)</span> 个死亡时间进行，第二个乘积运算关于 <span class="math inline">\(n−r\)</span> 个删失生存时间进行。</p>
+<p>或者以另一种方式，假设数据被视为 <span class="math inline">\(n\)</span> 对观测值，其中第 <span class="math inline">\(i\)</span> 个个体的观测对是 <span class="math inline">\((t_i, \delta_i),i = 1, 2,...,n\)</span>。在这种表示中，<span class="math inline">\(\delta_i\)</span> 是一个指示变量，当生存时间 <span class="math inline">\(t_i\)</span> 删失时，<span class="math inline">\(δ_i=0\)</span>；当 <span class="math inline">\(t_i\)</span> 是未删失的生存时间时，<span class="math inline">\(δ_i=1\)</span>。似然函数可以写为</p>
+<p><span class="math display" id="eq:5-14">\[\begin{align}
+\prod_{i=1}^n\left\{f(t_i)\right\}^{\delta_i}\left\{S(t_i)\right\}^{1\boldsymbol{-}\delta_i}
+\tag{5.14}
+\end{align}\]</span></p>
+<p>该函数等价于式 <a href="chap5.html#eq:5-13">(5.13)</a> 中的函数，然后可以关于密度函数和生存函数中的未知参数来最大化。</p>
+<p>可以通过将式 <a href="chap5.html#eq:5-14">(5.14)</a> 写为以下形式来获得该似然函数的另一种表达</p>
+<p><span class="math display">\[\prod_{i=1}^n\left\{\frac{f(t_i)}{S(t_i)}\right\}^{\delta_i}S(t_i)\]</span></p>
+<p>因此，根据第 1 章的式 <a href="chap1.html#eq:1-4">(1.4)</a>，这成为</p>
+<p><span class="math display" id="eq:5-15">\[\begin{align}
+\prod_{{i}=1}^{{n}}\left\{h(t_i)\right\}^{{\delta}_i}S(t_i)
+\tag{5.15}
+\end{align}\]</span></p>
+<p>当概率密度函数具有复杂的形式（通常如此）时，如此形式的似然函数特别有用。然后通过最大化对数似然函数的来得到该似然函数中未知参数的估计。</p>
+<div id="sec5-3-1" class="section level3" number="5.3.1">
+<h3>
+<span class="header-section-number">5.3.1</span> 随机删失数据的似然函数<a class="anchor" aria-label="anchor" href="#sec5-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>本节给出了式 <a href="chap5.html#eq:5-14">(5.14)</a> 中似然函数更仔细的推导，它涉及第 1 章 <a href="chap1.html#sec1-2-1">1.2.1</a> 节中提到的独立删失假设。</p>
+<p>假设 <span class="math inline">\(n\)</span> 个个体样本的生存数据是事件时间和右删失观测的混合。用 <span class="math inline">\(t_i\)</span> 表示第 <span class="math inline">\(i\)</span> 个个体的观测时间，<span class="math inline">\(\delta_i\)</span> 为相应的事件指示，<span class="math inline">\(i=1,2,\ldots,n\)</span>。 如果 <span class="math inline">\(t_i\)</span> 是事件时间，则 <span class="math inline">\(\delta_i=1\)</span>，如果时间是删失的，则 <span class="math inline">\(\delta_i=0\)</span>。</p>
+<p>与第 <span class="math inline">\(i\)</span> 个个体的事件时间相关的随机变量将由 <span class="math inline">\(T_i\)</span> 表示。假设删失时间为随机的，用 <span class="math inline">\(C_i\)</span> 表示与删失时间相关的变量。那么，值 <span class="math inline">\(t_i\)</span> 是随机变量 <span class="math inline">\(Y_i=\min(T_i,C_i)\)</span> 的观测值。<span class="math inline">\(T_i\)</span> 的密度函数和生存函数分别用 <span class="math inline">\(f_{T_i}(t)\)</span> 和 <span class="math inline">\(S_{T_i}(t)\)</span> 表示。此外，用 <span class="math inline">\(f_{C_i}(t)\)</span>和 <span class="math inline">\(S_{C_i}(t)\)</span> 表示与删失时间 <span class="math inline">\(C_i\)</span> 相关的随机变量的密度和生存函数。</p>
+<p>现在，我们分别考虑删失和未删失观测对 <span class="math inline">\((Y_i,\delta_i)\)</span> 的概率分布。首先考虑删失观测，因此 <span class="math inline">\(\delta_i=0\)</span>。<span class="math inline">\(Y_i\)</span> 和 <span class="math inline">\(\delta_i\)</span> 的联合分布为</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(Y_i=t,\delta_i=0)=\mathrm{P}(C_i=t,T_i\geqslant t)\end{aligned}\]</span></p>
+<p>该联合概率是连续分量和离散分量的混合，但为了简化表示，例如，将 <span class="math inline">\(P(T_i=t)\)</span> 理解为 <span class="math inline">\(T_i\)</span> 的概率密度函数。现在假设事件时间 <span class="math inline">\(T_i\)</span> 的分布与删失时间 <span class="math inline">\(C_i\)</span> 的分布独立。那么</p>
+<p><span class="math display">\[\begin{aligned}
+\begin{aligned}\mathrm{P}(C_i=t,T_i\geqslant t)\end{aligned}&amp; \begin{aligned}=\text{ P}(C_i=t)\text{ P}(T_i\geqslant t)\end{aligned}  \\
+&amp;=\left.f_{C_i}(t)S_{T_i}(t)\right.
+\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(Y_i=t,\delta_i=0)=f_{C_i}(t)S_{T_i}(t)\end{aligned}\]</span></p>
+<p>类似地，对于未删失观测</p>
+<p><span class="math display">\[\begin{aligned}
+\mathrm{P}(Y_i=t,\delta_i=1)&amp; \begin{aligned}=\text{ P}(T_i=t,C_i\geqslant t)\end{aligned}  \\
+&amp;=\text{ P}(T_i=t)\text{ P}(C_i\geqslant t) \\
+&amp;=\left.f_{T_i}(t)S_{C_i}(t)\right.
+\end{aligned}\]</span></p>
+<p>再次假设 <span class="math inline">\(C_i\)</span> 与 <span class="math inline">\(T_i\)</span> 的分布是独立的。把这两个结果放在一起，<span class="math inline">\(n\)</span> 个观测 <span class="math inline">\(t_1,t_2,\ldots,t_n\)</span> 的联合概率或似然为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^n\{f_{T_i}(t_i)S_{C_i}(t_i)\}^{\delta_i}\{f_{C_i}(t_i)S_{T_i}(t_i)\}^{1{-}\delta_i}\end{aligned}\]</span></p>
+<p>可写为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^nf_{C_i}(t_i)^{1-\delta_i}S_{C_i}(t_i)^{\delta_i}\times\prod_{i=1}^nf_{T_i}(t_i)^{\delta_i}S_{T_i}(t_i)^{1-\delta_i}\end{aligned}\]</span></p>
+<p>在独立删失假设下，该表达式中的第一个乘积项将不涉及任何与生存时间分布相关的参数，因此可以视为常数。观测数据的似然与下式成比例</p>
+<p><span class="math display">\[\prod_{i=1}^nf_{T_i}(t_i)^{\delta_i}S_{T_i}(t_i)^{1\boldsymbol{-}\delta_i}\]</span></p>
+<p>这是式 <a href="chap5.html#eq:5-14">(5.14)</a>。</p>
+<p>还可以证明，当研究具有固定的持续时间时，从而到研究结束时没有经历过事件的个体被删失，可以获得相同的似然函数。此处不给出具体细节，但可参阅 Klein and Moeschberger (2005) 或 Lawless (2002).</p>
+</div>
+</div>
+<div id="sec5-4" class="section level2" number="5.4">
+<h2>
+<span class="header-section-number">5.4</span> 拟合指数和 Weibull 模型<a class="anchor" aria-label="anchor" href="#sec5-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>我们现在考虑为单个生存数据样本拟合指数分布和 Weibull 分布。</p>
+<div id="sec5-4-1" class="section level3" number="5.4.1">
+<h3>
+<span class="header-section-number">5.4.1</span> 拟合指数分布<a class="anchor" aria-label="anchor" href="#sec5-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设 <span class="math inline">\(n\)</span> 个个体的生存时间 <span class="math inline">\(t_1, t_2,...,t_n\)</span> 呈均值为 <span class="math inline">\(\lambda^{-1}\)</span> 的指数分布。进一步假设 <span class="math inline">\(r\)</span> 个个体的生存时间未删失，其余 <span class="math inline">\(n − r\)</span> 个是右删失的。</p>
+<p>对于指数分布</p>
+<p><span class="math display">\[\begin{aligned}f(t)=\lambda e^{-\lambda t},\quad\quad S(t)=e^{-\lambda t}\end{aligned}\]</span></p>
+<p>代入式 <a href="chap5.html#eq:5-14">(5.14)</a>，<span class="math inline">\(n\)</span> 个观测的似然函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}L(\lambda)&amp;=\prod_{i=1}^n\left(\lambda e^{-\lambda t_i}\right)^{\delta_i}\left(e^{-\lambda t_i}\right)^{1-\delta_i}\end{aligned}\]</span></p>
+<p>其中，如果第 <span class="math inline">\(i\)</span> 个个体的生存时间删失，则 <span class="math inline">\(\delta_i=0\)</span>，否则为 1. 经过一些简化后，</p>
+<p><span class="math display" id="eq:5-16">\[\begin{align}
+L(\lambda)&amp;=\prod_{i=1}^n\lambda^{\delta_i}e^{-\lambda t_i}
+\tag{5.16}
+\end{align}\]</span></p>
+<p>相应的对数似然函数为</p>
+<p><span class="math display">\[\begin{aligned}\log L(\lambda)=\sum_{i=1}^n\delta_i\log\lambda-\lambda\sum_{i=1}^nt_i\end{aligned}\]</span></p>
+<p>由于数据包含 <span class="math inline">\(r\)</span> 次死亡，则 <span class="math inline">\(\sum_{i=1}^n\delta_i=r\)</span>，对数似然函数成为</p>
+<p><span class="math display">\[\begin{aligned}\log L(\lambda)&amp;=r\log\lambda-\lambda\sum_{i=1}^nt_i\end{aligned}\]</span></p>
+<p>现在我们需要确定使对数似然函数达到最大值的 <span class="math inline">\(\hat\lambda\)</span>。将其关于 <span class="math inline">\(\lambda\)</span> 微分，得到</p>
+<p><span class="math display">\[\begin{aligned}\frac{\mathrm{d}\log L(\lambda)}{\mathrm{d}\lambda}&amp;=\frac{r}{\lambda}-\sum_{i=1}^{n}t_i\end{aligned}\]</span></p>
+<p>并令导数等于零，得到 <span class="math inline">\(\lambda\)</span> 的最大似然估计</p>
+<p><span class="math display" id="eq:5-17">\[\begin{align}
+\hat{\lambda}=r/\sum_{i=1}^nt_i
+\tag{5.17}
+\end{align}\]</span></p>
+<p>指数分布的均值为 <span class="math inline">\(\mu = \lambda^{−1}\)</span>，因此 <span class="math inline">\(\mu\)</span> 的最大似然估计为</p>
+<p><span class="math display">\[\hat{\mu}=\hat{\lambda}^{-1}=\frac1r\sum_{i=1}^nt_i\]</span></p>
+<p><span class="math inline">\(\mu\)</span> 的估计是数据集中 <span class="math inline">\(n\)</span> 个个体的总生存时间除以观测死亡人数。因此，该估计具有直观的吸引力，可以作为删失生存数据中平均寿命的估计。</p>
+<p>使用附录 <a href="A.html#A">A</a> 给出的最大似然估计理论的结果，可以从对数似然函数的二阶导数中获得标准误。<span class="math inline">\(\log L(\lambda)\)</span> 的二阶导数给出</p>
+<p><span class="math display">\[\begin{aligned}\frac{\mathrm{d}^2\log L(\lambda)}{\mathrm{d}\lambda^2}&amp;=-\frac r{\lambda^2}\end{aligned}\]</span></p>
+<p>因此，<span class="math inline">\(\hat \lambda\)</span> 的渐近方差为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(\hat{\lambda}\right)=\left\{-\operatorname{E}\left(\frac{\mathrm{d}^2\log L(\lambda)}{\mathrm{d}\lambda^2}\right)\right\}^{-1}=\frac{\lambda^2}r\end{aligned}\]</span></p>
+<p>因此，<span class="math inline">\(\hat \lambda\)</span> 的标准误为：</p>
+<p><span class="math display" id="eq:5-18">\[\begin{align}
+\text{se }(\hat{\lambda})=\hat{\lambda}/√r
+\tag{5.18}
+\end{align}\]</span></p>
+<p>该结果可用于获得平均生存时间的置信区间。具体来说，<span class="math inline">\(\lambda\)</span> 的 <span class="math inline">\(100(1−\alpha)\%\)</span> 置信区间的上下限为：<span class="math inline">\(\hat{\lambda}\pm z_{\alpha/2}\text{se}(\hat{\lambda})\)</span>，其中 <span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点。</p>
+<p>在呈现生存分析的结果时，生存函数和风险函数的估计，以及生存时间分布的中位数和其他百分位数是有用的。一旦得到 <span class="math inline">\(\lambda\)</span> 的估计，就可以使用 <a href="chap5.html#sec5-1-1">5.1.1</a> 节中给出的结果来估计所有这些函数。具体来说是，在假设的指数分布下，风险函数估计为 <span class="math inline">\(\hat{h}(t)=\hat{\lambda}\)</span>，而生存函数估计为 <span class="math inline">\(\hat{S}(t)=\exp(-\hat{\lambda}t)\)</span>。此外，第 <span class="math inline">\(p\)</span> 个百分位数估计为</p>
+<p><span class="math display" id="eq:5-19">\[\begin{align}
+\hat{t}(p)&amp;=\frac{1}{\hat{\lambda}}\log\left(\frac{100}{100-p}\right)
+\tag{5.19}
+\end{align}\]</span></p>
+<p>中位生存时间估计为</p>
+<p><span class="math display" id="eq:5-20">\[\begin{align}
+\hat{t}(50)=\hat{\lambda}^{-1}\log2
+\tag{5.20}
+\end{align}\]</span></p>
+<p>使用第 2 章式 <a href="chap2.html#eq:2-8">(2.8)</a> 给出的随机变量函数近似方差的结果，可以得到生存时间分布第 <span class="math inline">\(p\)</span> 个百分位数估计的标准误。根据该结果，对 <span class="math inline">\(\hat \lambda\)</span> 的函数 <span class="math inline">\(g(\hat{\lambda})\)</span> 的方差的近似为</p>
+<p><span class="math display" id="eq:5-21">\[\begin{align}
+\text{var}\left\{g(\hat{\lambda})\right\}\approx\left\{\frac{\text{d}g(\hat{\lambda})}{\text{d}\hat{\lambda}}\right\}^2\text{ var}\left(\hat{\lambda}\right)
+\tag{5.21}
+\end{align}\]</span></p>
+<p>使用该结果，第 <span class="math inline">\(p\)</span> 个百分位数估计的近似方差为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left\{\hat{t}(p)\right\}&amp;\approx\left\{-\frac{1}{\hat{\lambda}^2}\log\left(\frac{100}{100-p}\right)\right\}^2\operatorname{var}\left(\hat{\lambda}\right)\end{aligned}\]</span></p>
+<p>开平方得到</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\hat{t}(p)\right\}&amp;=\frac{1}{\hat{\lambda}^{2}}\log\left(\frac{100}{100-p}\right)\text{ se}\left(\hat{\lambda}\right)\end{aligned}\]</span></p>
+<p>代入式 <a href="chap5.html#eq:5-18">(5.18)</a> 中的 <span class="math inline">\(\text{se}\left(\hat{\lambda}\right)\)</span> 和式 <a href="chap5.html#eq:5-19">(5.19)</a> 中的 <span class="math inline">\(\widehat{t}(p)\)</span>，得到</p>
+<p><span class="math display" id="eq:5-22">\[\begin{align}
+\text{se }\{\hat{t}(p)\}=\hat{t}(p)/√r
+\tag{5.22}
+\end{align}\]</span></p>
+<p>特别地，中位生存时间估计的标准误为</p>
+<p><span class="math display" id="eq:5-23">\[\begin{align}
+\text{se}\left\{\hat{t}(50)\right\}=\hat{t}(50)/√r
+\tag{5.23}
+\end{align}\]</span></p>
+<p>真实百分位数的置信区间最好通过对对数百分位数的置信限进行指数运算来获得。该程序确保百分位数的置信限非负。再次利用式 <a href="chap5.html#eq:5-21">(5.21)</a> 的结果，<span class="math inline">\(\log\hat{t}(p)\)</span> 的标准误由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\log\hat{t}(p)\right\}=\hat{t}(p)^{-1}\text{ se}\left\{\hat{t}(p)\right\}\end{aligned}\]</span></p>
+<p>然后带入式 <a href="chap5.html#eq:5-22">(5.22)</a> 中的 <span class="math inline">\(\mathrm{se}\left\{\hat{t}(p)\right\}\)</span>，该标准误成为</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\log\hat{t}(p)\right\}=1/√r\end{aligned}\]</span></p>
+<p>使用此结果，第 <span class="math inline">\(p\)</span> 个百分位数的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信限为 <span class="math inline">\(\exp\{\log\hat{t}(p)\pm z_{\alpha/2}/√r\}\)</span>，即 <span class="math inline">\(\hat{t}(p)\exp\{\pm z_{\alpha/2}/√r\}\)</span>，其中 <span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-3" class="example"><strong>示例 5.3  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在此示例中，假设停用风险恒定，对<a href="chap1.html#exm:ex1-1">示例 1.1</a> 中关于 18 名女性宫内节育器停用时间数据进行了分析。使用指数分布拟合停用时间。对于这些数据，观测的和右删失的停用时间总和为 1046 天，未删失时间数为 9. 因此，使用式 <a href="chap5.html#eq:5-17">(5.17)</a>，<span class="math inline">\(\hat{\lambda}=9/1046=0.0086\)</span>，根据式 <a href="chap5.html#eq:5-18">(5.18)</a>，标准误为 <span class="math inline">\(\text{se}\left(\hat{\lambda}\right)=0.0086/\sqrt{9}=0.0029\)</span>。因此，风险函数估计为 <span class="math inline">\(\hat{h}(t)=0.0086,t&gt;0\)</span>，生存函数估计为 <span class="math inline">\(\hat{S}(t)=\exp(-0.0086t)\)</span>。风险函数估计和生存函数估计分别如图 5.11 和 5.12 所示。</p>
+<details><summary><font color="#8B2232">图 5.11</font>
+</summary><img src="figure/figure%205.11.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.12</font>
+</summary><img src="figure/figure%205.12.png#center" style="width:80.0%"></details><p><br>
+停用时间分布的中位数和其他百分位数的估计可以从图 5.12 中找到，但更准确的估计可以从式 <a href="chap5.html#eq:5-20">(5.20)</a> 中获得。具体来说，使用式 <a href="chap5.html#eq:5-17">(5.17)</a>，中位停用时间为 81 天，根据式 <a href="chap5.html#eq:5-19">(5.19)</a>，停用时间分布的第 90 个百分位的估计值为 <span class="math inline">\(\hat t(90) = \log 10/0.0086 = 267.61\)</span> 。这意味着，假设停用宫内节育器的风险与时间无关，则 90% 的女性停用宫内节育器的时间将小于 268 天。</p>
+<p>根据式 <a href="chap5.html#eq:5-23">(5.23)</a>，停用时间估计的标准误为 <span class="math inline">\(80.56/√9\)</span>，即 26.85 天。真实中位停用时间的 95% 置信区间的上下限为</p>
+<p><span class="math display">\[80.56\exp\{\pm1.96/√9\}\]</span></p>
+<p>所以区间是 42 天到 155 天。其他百分位数的置信区间可以以类似的方式计算。</p>
+</div>
+</div>
+</div>
+<div id="sec5-4-2" class="section level3" number="5.4.2">
+<h3>
+<span class="header-section-number">5.4.2</span> 拟合 Weibull 分布<a class="anchor" aria-label="anchor" href="#sec5-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>现在将 <span class="math inline">\(n\)</span> 个个体的生存时间视为来自具有尺度参数 <span class="math inline">\(\lambda\)</span> 和形状参数 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布的删失样本。假设 <span class="math inline">\(n\)</span> 个个体中有 <span class="math inline">\(r\)</span> 次死亡，<span class="math inline">\(n−r\)</span> 个右删失生存时间。我们可以再次使用式 <a href="chap5.html#eq:5-14">(5.14)</a> 来获得样本数据的似然。 <span class="math inline">\(W(\lambda,\gamma)\)</span> 分布的概率密度、生存和风险函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}f(t)=\lambda\gamma t^{\gamma-1}\exp(-\lambda t^\gamma),\quad S(t)=\exp(-\lambda t^\gamma),\quad h(t)=\lambda\gamma t^{\gamma-1}\end{aligned}\]</span></p>
+<p>因此，根据式 <a href="chap5.html#eq:5-14">(5.14)</a>，<span class="math inline">\(n\)</span> 个生存时间的似然为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^n\left\{\lambda\gamma t_i^{\gamma-1}\exp(-\lambda t_i^\gamma)\right\}^{\delta_i}\left\{\exp(-\lambda t_i^\gamma)\right\}^{1-\delta_i}\end{aligned}\]</span></p>
+<p>其中，若第 <span class="math inline">\(i\)</span> 个生存时间删失，则 <span class="math inline">\(\delta_i\)</span> 为 0，否则为 1。等价地，根据式 <a href="chap5.html#eq:5-15">(5.15)</a>，似然函数为</p>
+<p><span class="math display">\[\prod_{i=1}^n\left\{\lambda\gamma t_i^{\gamma-1}\right\}^{\delta_i}\exp(-\lambda t_i^\gamma)\]</span></p>
+<p>这被视为 Weibull 分布中未知参数 <span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的函数，因此可以写为 <span class="math inline">\(L(\lambda,\gamma)\)</span>。相应的对数似然函数为</p>
+<p><span class="math display">\[\begin{aligned}\log L(\lambda,\gamma)=\sum_{i=1}^n\delta_i\log(\lambda\gamma)+(\gamma-1)\sum_{i=1}^n\delta_i\log t_i-\lambda\sum_{i=1}^nt_i^\gamma\end{aligned}\]</span></p>
+<p>注意到 <span class="math inline">\(\sum_{i=1}^n\delta_i=r\)</span>，对数似然函数成为</p>
+<p><span class="math display">\[\begin{aligned}\log L(\lambda,\gamma)=r\log(\lambda\gamma)+(\gamma-1)\sum_{i=1}^n\delta_i\log t_i-\lambda\sum_{i=1}^nt_i^\gamma\end{aligned}\]</span></p>
+<p><span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的最大似然估计是通过将该函数关于 <span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 微分，将导数设为零得出的。所得方程为</p>
+<p><span class="math display" id="eq:5-24">\[\begin{align}
+\frac r{\hat{\lambda}}-\sum_{i=1}^nt_i^{\hat{\gamma}}=0
+\tag{5.24}
+\end{align}\]</span></p>
+<p>以及</p>
+<p><span class="math display" id="eq:5-25">\[\begin{align}
+\frac{r}{\hat{\gamma}}+\sum_{i=1}^n\delta_i\log t_i-\hat{\lambda}\sum_{i=1}^nt_i^{\hat{\gamma}}\log t_i&amp;=0
+\tag{5.25}
+\end{align}\]</span></p>
+<p>根据式 <a href="chap5.html#eq:5-24">(5.24)</a>，</p>
+<p><span class="math display" id="eq:5-26">\[\begin{align}
+\hat{\lambda}=r/\sum_{i=1}^nt_i^{\hat{\gamma}}
+\tag{5.26}
+\end{align}\]</span></p>
+<p>代入式 <a href="chap5.html#eq:5-25">(5.25)</a> 中的 <span class="math inline">\(\hat\lambda\)</span>，我们得到方程</p>
+<p><span class="math display" id="eq:5-27">\[\begin{align}
+\frac{r}{\hat{\gamma}}+\sum_{i=1}^n\delta_i\log t_i-\frac{r}{\sum_it_i^{\hat{\gamma}}}\sum_{i=1}^nt_i^{\hat{\gamma}}\log t_i=0
+\tag{5.27}
+\end{align}\]</span></p>
+<p>这是 <span class="math inline">\(\hat\gamma\)</span> 的非线性方程，只能使用迭代程序进行数值求解。一旦找到满足式 <a href="chap5.html#eq:5-27">(5.27)</a> 的估计 <span class="math inline">\(\hat\gamma\)</span>，就可以使用式 <a href="chap5.html#eq:5-26">(5.26)</a> 来获得 <span class="math inline">\(\hat\lambda\)</span>。</p>
+<p>在实践中，使用数值方法（例如 Newton-Raphson 程序）来同时得到最大化似然函数的 <span class="math inline">\(\hat\gamma\)</span> 和 <span class="math inline">\(\hat\gamma\)</span> 的值。该过程在第 3 章 <a href="chap3.html#sec3-3-3">3.3.3</a> 节中描述，与 Cox 回归模型的拟合有关。在该节中，注意到 Newton-Raphson 程序的一个重要副产品是参数估计的方差-协方差阵的近似，从中可以获得它们的标准误。</p>
+<p>一旦从 Weibull 分布对观测数据的拟合中找到了参数 <span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的估计，就可以使用式 <a href="chap5.html#eq:5-7">(5.7)</a> 来估计生存时间分布的百分位数。该分布的第 <span class="math inline">\(p\)</span> 个百分位数估计为</p>
+<p><span class="math display" id="eq:5-28">\[\begin{align}
+\hat{t}(p)=\left\{\frac{1}{\hat{\lambda}}\log\left(\frac{100}{100-p}\right)\right\}^{1/\hat{\gamma}}
+\tag{5.28}
+\end{align}\]</span></p>
+<p>中位生存时间估计为</p>
+<p><span class="math display" id="eq:5-29">\[\begin{align}
+\hat{t}(50)=\left\{\frac{1}{\hat{\lambda}}\log2\right\}^{1/\hat{\gamma}}
+\tag{5.29}
+\end{align}\]</span></p>
+<p><a href="chap5.html#sec5-4-3">5.4.3</a> 节导出了 Weibull 分布百分位数标准误的表达式以及相应的置信区间。</p>
+</div>
+<div id="sec5-4-3" class="section level3" number="5.4.3">
+<h3>
+<span class="header-section-number">5.4.3</span> Weibull 分布百分位数的标准误<a class="anchor" aria-label="anchor" href="#sec5-4-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>具有尺度参数 <span class="math inline">\(\lambda\)</span> 和形状参数 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布的第 <span class="math inline">\(p\)</span> 个百分位数估计的标准误 <span class="math inline">\(\hat{t}(p)\)</span> 最容易从 <span class="math inline">\(\log\hat t(p)\)</span> 的方差中得到。现在，根据式 <a href="chap5.html#eq:5-28">(5.28)</a></p>
+<p><span class="math display">\[\begin{aligned}\log\hat{t}(p)=\frac1{\hat{\gamma}}\log\left\{\hat{\lambda}^{-1}\log\left(\frac{100}{100-p}\right)\right\}\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\log\hat{t}(p)=\frac{1}{\hat{\gamma}}\left\{c_p-\log\hat{\lambda}\right\}\end{aligned}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}c_p=\log\log\left(\frac{100}{100-p}\right)\end{aligned}\]</span></p>
+<p>这是两个参数估计 <span class="math inline">\(\hat\lambda,\hat\gamma\)</span> 的函数。</p>
+<p>为获取 <span class="math inline">\(\log\hat{t}(p)\)</span> 的方差，我们利用两个参数估计函数 <span class="math inline">\(g(\hat{\theta}_1,\hat{\theta}_2)\)</span> 的近似方差的一般结果</p>
+<p><span class="math display" id="eq:5-30">\[\begin{align}
+\left(\frac{\partial g}{\partial\hat{\theta}_1}\right)^2\operatorname{var}\left(\hat{\theta}_1\right)+\left(\frac{\partial g}{\partial\hat{\theta}_2}\right)^2\operatorname{var}(\hat{\theta}_2)+2\left(\frac{\partial g}{\partial\hat{\theta}_1}\frac{\partial g}{\partial\hat{\theta}_2}\right)\operatorname{cov}\left(\hat{\theta}_1,\hat{\theta}_2\right)
+\tag{5.30}
+\end{align}\]</span></p>
+<p>这是第 2 章式 <a href="chap2.html#sec2-8">2.8</a> 中关于单个随机变量函数的近似方差结果的推广。使用式 <a href="chap5.html#eq:5-30">(5.30)</a></p>
+<p><span class="math display">\[\begin{aligned}\text{var }\left\{\log\hat{t}(p)\right\}\approx&amp;\,\left(\frac{\partial\log\hat{t}(p)}{\partial\hat{\lambda}}\right)^2\text{var}\left(\hat{\lambda}\right)+\left(\frac{\partial\log\hat{t}(p)}{\partial\hat{\gamma}}\right)^2\text{var}\left(\hat{\gamma}\right)\\&amp;+2\frac{\partial\log\hat{t}(p)}{\partial\hat{\lambda}}\frac{\partial\log\hat{t}(p)}{\partial\hat{\gamma}}\text{cov}\left(\hat{\lambda},\hat{\gamma}\right)\end{aligned}\]</span></p>
+<p>现在，<span class="math inline">\(\log\hat{t}(p)\)</span> 关于 <span class="math inline">\(\hat\lambda,\hat\gamma\)</span> 的导数为</p>
+<p><span class="math display">\[\begin{aligned}\frac{\partial\log\hat t(p)}{\partial\hat\lambda}&amp;=-\frac{1}{\hat\lambda\hat\gamma}\\\frac{\partial\log\hat t(p)}{\partial\hat\gamma}&amp;=-\frac{c_p-\log\hat\lambda}{\hat\gamma^2}\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(\log\hat{t}(p)\)</span> 的近似方差为</p>
+<p><span class="math display" id="eq:5-31">\[\begin{align}
+\frac1{\hat{\lambda}^2\hat{\gamma}^2}\operatorname{var}\left(\hat{\lambda}\right)+\frac{\left(c_p-\log\hat{\lambda}\right)^2}{\hat{\gamma}^4}\operatorname{var}\left(\hat{\gamma}\right)+\frac{2\left(c_p-\log\hat{\lambda}\right)}{\hat{\lambda}\hat{\gamma}^3}\operatorname{cov}\left(\hat{\lambda},\hat{\gamma}\right)
+\tag{5.31}
+\end{align}\]</span></p>
+<p><span class="math inline">\(\hat{t}(p)\)</span> 本身的方差根据第 2 章式 <a href="chap2.html#sec2-8">2.8</a> 的结果中得到，即</p>
+<p><span class="math display" id="eq:5-32">\[\begin{align}
+\text{var}\left\{\hat{t}(p)\right\}&amp;\approx\hat{t}(p)^2\text{var}\left\{\log\hat{t}(p)\right\}
+\tag{5.32}
+\end{align}\]</span></p>
+<p>使用式 <a href="chap5.html#eq:5-31">(5.31)</a></p>
+<p><span class="math display">\[\begin{aligned}\mathrm{var}\left\{\hat{t}(p)\right\}\approx&amp;\,\frac{\hat{t}(p)^2}{\hat{\lambda}^2\hat{\gamma}^4}\left\{\hat{\gamma}^2\operatorname{var}(\hat{\lambda})+\hat{\lambda}^2\left(c_p-\log\hat{\lambda}\right)^2\operatorname{var}(\hat{\gamma})\right.\\&amp;+\left.2\hat{\lambda}\hat{\gamma}\left(c_p-\log\hat{\lambda}\right)\text{ cov}\left(\hat{\lambda},\hat{\gamma}\right)\right\}
+\end{aligned}\]</span></p>
+<p><span class="math inline">\(\hat{t}(p)\)</span> 的标准误是该式的平方根，由下式给出</p>
+<p><span class="math display" id="eq:5-33">\[\begin{align}
+\mathrm{se}\left\{\hat{t}(p)\right\}\approx&amp;\,\frac{\hat{t}(p)}{\hat{\lambda}\hat{\gamma}^2}\left\{\hat{\gamma}^2\operatorname{var}(\hat{\lambda})+\hat{\lambda}^2\left(c_p-\log\hat{\lambda}\right)^2\operatorname{var}(\hat{\gamma})\right.\\&amp;+\left.2\hat{\lambda}\hat{\gamma}\left(c_p-\log\hat{\lambda}\right)\text{ cov}\left(\hat{\lambda},\hat{\gamma}\right)\right\}^{\frac12}
+\tag{5.33}
+\end{align}\]</span></p>
+<p>注意，对于指数分布的特殊情况，其中形状参数 <span class="math inline">\(\gamma=1\)</span>，根据式 <a href="chap5.html#eq:5-33">(5.33)</a> ，第 <span class="math inline">\(p\)</span>个百分位数估计的标准误为</p>
+<p><span class="math display">\[\frac{\widehat{t}(p)}{\widehat{\lambda}}\text{ se }(\hat{\lambda})\]</span></p>
+<p>现在使用式 <a href="chap5.html#eq:5-18">(5.18)</a></p>
+<p><span class="math display">\[\begin{aligned}\text{se }(\hat{\lambda})=\hat{\lambda}/\sqrt{r}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(r\)</span> 是数据集中的死亡数，因此</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\hat{t}(p)\right\}=\hat{t}(p)/√r\end{aligned}\]</span></p>
+<p>如式 <a href="chap5.html#eq:5-22">(5.22)</a> 中所示。</p>
+<p>根据 <span class="math inline">\(\operatorname{log}t(p)\)</span> 的相应置信限，可以找到 Weibull 分布第 <span class="math inline">\(p\)</span> 个百分位的 <span class="math inline">\(100(1−\alpha)\%\)</span> 置信区间。上下限为</p>
+<p><span class="math display">\[\begin{aligned}\log\hat{t}(p)\pm z_{\alpha/2}\text{se}\{\log\hat{t}(p)\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\text{se}\left\{\log\hat{t}(p)\right\}\)</span> 根据式 <a href="chap5.html#eq:5-32">(5.32)</a>，为</p>
+<p><span class="math display" id="eq:5-34">\[\begin{align}
+\text{se}\left\{\log\hat{t}(p)\right\}&amp;=\frac{1}{\hat{t}(p)}\text{ se}\left\{\hat{t}(p)\right\}
+\tag{5.34}
+\end{align}\]</span></p>
+<p><span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点。第 <span class="math inline">\(p\)</span> 个百分位数 <span class="math inline">\(t(p)\)</span> 对应的 <span class="math inline">\(100(1−\alpha)\%\)</span> 置信区间为 <span class="math inline">\(\hat{t}(p)\exp\left[\pm z_{\alpha/2}\text{ se}\{\log\hat{t}(p)\}\right]\)</span>。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-4" class="example"><strong>示例 5.4  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在<a href="chap5.html#exm:ex5-1">示例 5.1</a> 中，发现指数分布为 18 名宫内节育器使用者的停用时间数据提供了令人满意的模型。为了进行比较，为该数据拟合 Weibull 分布。使用计算机软件对该分布进行拟合，从结果输出中，发现分布的尺度参数估计为 <span class="math inline">\(\hat{\lambda}=0.000454\)</span> ，而形状参数估计为 <span class="math inline">\(\hat{\gamma}=1.676\)</span>。这些估计的标准误分别为 <span class="math inline">\(\text{se}(\hat{\lambda})=0.000965\)</span> 和 <span class="math inline">\(\text{se}\left(\hat{\gamma}\right)=0.460\)</span>。值得注意的是，形状参数 <span class="math inline">\(\gamma\)</span> 的近似置信限 <span class="math inline">\(\hat{\gamma}\pm1.96\text{se}\left(\hat{\gamma}\right)\)</span> 包括 1，这表明指数分布将为停用时间提供一个满意的模型。</p>
+<p>通过将这些估计代入式 <a href="chap5.html#eq:5-4">(5.4)</a> 和 <a href="chap5.html#eq:5-5">(5.5)</a>，可以获得风险函数和生存函数的估计，其中</p>
+<p><span class="math display">\[\hat{h}(t)=\hat{\lambda}\hat{\gamma}t^{\hat{\gamma}\boldsymbol{-}1}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\hat{S}(t)=\exp\left(-\hat{\lambda}t^{\boldsymbol{\hat{\gamma}}}\right)\]</span></p>
+<p>这两个函数如图 5.13 和 5.14 所示。</p>
+<details><summary><font color="#8B2232">图 5.13</font>
+</summary><img src="figure/figure%205.13.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.14</font>
+</summary><img src="figure/figure%205.14.png#center" style="width:80.0%"></details><p><br>
+尽管停用时间的百分位数可以从图 5.14 中的生存函数估计中读取，但使用式 <a href="chap5.html#eq:5-28">(5.28)</a> 可以更好地估计它们。在 Weibull 分布下，可以使用式 <a href="chap5.html#eq:5-29">(5.29)</a> 估计中位停用时间，并由下式给出</p>
+<p><span class="math display">\[\hat{t}(50)=\left\{\frac{1}{0.000454}\log2\right\}^{1/1.676}=79.27\]</span></p>
+<p>作为检查，请注意这与图 5.14 中 <span class="math inline">\(\hat{S}(t)=0.5\)</span> 对应的停用时间值完全一致。经过大量算术后，根据式 <a href="chap5.html#eq:5-33">(5.33)</a> 中得到该估计的标准误为</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\hat{t}(50)\right\}=15.795\end{aligned}\]</span></p>
+<p>为了获得中位停用时间的 95% 置信区间，需要 <span class="math inline">\(\log \widehat{t}(50)\)</span> 的标准误。根据式 <a href="chap5.html#eq:5-34">(5.34)</a>，</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\log\hat{t}(50)\right\}=\frac{15.795}{79.272}=0.199\end{aligned}\]</span></p>
+<p>因此，所需的对数中位停用时间置信限为 <span class="math inline">\(\log 79.272\pm 1.96\times 0.199\)</span>，即 <span class="math inline">\((3.982, 4.763)\)</span>。通过对这些限值求指数得出的真实中位停用时间的相应区间估计为 <span class="math inline">\((53.64, 117.15)\)</span>。这意味着 54 天到 117 天的区间有 95% 的可能性包含中位停用时间的真实值。由于数据集中实际停用次数较少，因此该区间相当宽。</p>
+<p>将这些结果与<a href="chap5.html#exm:ex5-3">示例 5.3</a> 中发现的结果进行比较十分有趣，后者使用指数分布对停用时间进行建模。两模型的中位生存时间估计非常相似，指数模型为 80.6 天，Weibull 模型为 79.3 天。然而，当生存时间假设为指数分布时，中位生存时间估计的标准误为 26.8 天，在 Weibull 模型下仅为 15.8 天。因此，当假设停用时间具有 Weibull 分布时，可以更精确地估计中位数。</p>
+<p>停用时间分布的其他百分位数及其标准误和置信区间，可以以类似的方式得到。例如，第 90 个百分位（即研究中 10% 的受试者继续使用宫内节育器的时间）为 162.23 天，真实百分位数的 95% 置信限为 95.41 至 275.84 天。请注意，此置信区间的宽度大于中位停用时间的宽度，这反映出中位数的估计比其他百分位更精确。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec5-5" class="section level2" number="5.5">
+<h2>
+<span class="header-section-number">5.5</span> 用于两组比较的 Weibull 模型<a class="anchor" aria-label="anchor" href="#sec5-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>我们在 <a href="chap3.html#sec3-1">3.1</a> 节中看到，比较两组生存时间的一个方便的通用模型是比例风险模型。在这里，这两组记为 Group I 和 Group II，<span class="math inline">\(X\)</span> 是一个指示变量，如果一个个体在 Group I 则取值为 0，如果一个个体在 Group II 则取值为 1. 在比例风险模型下，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险由下式给出</p>
+<p><span class="math display" id="eq:5-35">\[\begin{align}
+h_i(t)=e^{\boldsymbol{\beta}x_i}h_0(t)
+\tag{5.35}
+\end{align}\]</span></p>
+<p>因此，Group I 个体在时间 <span class="math inline">\(t\)</span> 的风险为 <span class="math inline">\(h_0(t)\)</span>，Group II 个体的风险为 <span class="math inline">\(\psi h_{0}(t)\)</span>，其中 <span class="math inline">\(\psi=\exp(\beta)\)</span>。量 <span class="math inline">\(\beta\)</span> 是 Group II 个体的风险与 Group I 个体风险之比的对数。</p>
+<p>我们现在将做出额外的假设，即 Group I 个体的生存时间具有尺度参数 <span class="math inline">\(\lambda\)</span> 和形状参数 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布。使用式 <a href="chap5.html#eq:5-35">(5.35)</a>，该组个体的风险函数为 <span class="math inline">\(h_0(t)\)</span>，其中 <span class="math inline">\(h_0(t)=\lambda\gamma t^{\gamma-1}\)</span>。现在，同样根据式 <a href="chap5.html#eq:5-35">(5.35)</a>，Group II 的风险函数为 <span class="math inline">\(\psi h_0(t)\)</span>，即 <span class="math inline">\(\psi\lambda\gamma t^{\boldsymbol{\gamma}-1}\)</span>。这是具有尺度参数 <span class="math inline">\(\psi\lambda\)</span> 和形状参数 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布的风险函数。因此，我们得出的结果是，如果 Group I 个体的生存时间具有形状参数为 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布，并且 Group II 个体的死亡风险与 Group I 个体的死亡风险在时间 <span class="math inline">\(t\)</span> 成比例，Group II 的生存时间也将服从形状参数为 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布。<strong>称 Weibull 分布具有比例风险性</strong> (proportional hazards property). 这一性质是 Weibull 分布在生存数据分析中如此重要的另一个原因。</p>
+<div id="sec5-5-1" class="section level3" number="5.5.1">
+<h3>
+<span class="header-section-number">5.5.1</span> 探索性分析<a class="anchor" aria-label="anchor" href="#sec5-5-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>当生存时间的单个样本具有 Weibull 分布 <span class="math inline">\(W(\lambda, \gamma)\)</span> 时，<a href="chap5.html#sec5-2">5.2</a> 节中描述的对数累积风险图将给出一条截距为 <span class="math inline">\(\log\lambda\)</span> 以及斜率为 <span class="math inline">\(\gamma\)</span> 的直线。因此，如果 Group II 的生存时间具有 <span class="math inline">\(W(\psi\lambda, \gamma)\)</span> 分布，正如在式 <a href="chap5.html#eq:5-35">(5.35)</a> 中的比例风险模型下一样，对数累积风险图将给出一条直线，斜率也为 <span class="math inline">\(\gamma\)</span>，但截距为 <span class="math inline">\(\log \psi + \log \lambda\)</span>。 如果在两组中绘制对数累积风险函数估计关于对数生存时间的图形，若得到平行直线，则意味着比例风险模型以及 Weibull 生存时间的假设是成立的。两条线的垂直间隔提供了相对风险的对数 <span class="math inline">\(\beta=\log \psi\)</span> 的估计。</p>
+<p>如果对数累积风险图中的两条线基本上是直的，但不平行，则意味着两组中的形状参数 <span class="math inline">\(\gamma\)</span> 不同，并且风险不再成比例。如果线不是特别直，则 Weibull 模型可能不合适。然而，如果曲线可认为是平行的，这将意味着比例风险模型是有效的，那么第 3 章中讨论的 Cox 回归模型可能更令人满意。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-5" class="example"><strong>示例 5.5  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在本例中，我们研究 Weibull 比例风险模型是否适用于<a href="chap1.html#exm:ex1-2">示例 1.2</a> 中乳腺癌症患者生存时间的数据。这些数据根据肿瘤是阳性染色还是阴性染色进行了分类。各组女性生存函数的 Kaplan-Meier 估计如图 2.9 所示。根据这些估计，可以估计对数累积风险，并绘制关于 <span class="math inline">\(\log t\)</span> 的图形。由此产生的对数累积风险图如图 5.15 所示。</p>
+<details><summary><font color="#8B2232">图 2.9</font>
+</summary><img src="figure/figure%202.9.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.15</font>
+</summary><img src="figure/figure%205.15.png#center" style="width:80.0%"></details><p><br>
+在该图中，对应于两个染色组的线相当直。这意味着每组女性生存时间的 Weibull 分布假设是非常合理的。而且，两条线的斜率非常相似，这意味着比例风险模型是有效的。两条线的垂直间隔提供了对数相对风险的估计。根据图 5.15，两条直线之间的垂直距离约为 1.0，因此粗略地估计风险比为 <span class="math inline">\(e^{1.0} = 2.72\)</span>。与阴性染色组相比，阳性染色组中的女性在任何时候的死亡风险似乎是阴性组的近三倍。在后续的<a href="chap4.html#exm:ex4-10">示例 5.6</a> 和<a href="chap5.html#exm:ex5-7">示例 5.7</a> 中，为该数据拟合指数模型和 Weibull 模型，可以获得更准确的相对风险估计。</p>
+</div>
+</div>
+</div>
+<div id="sec5-5-2" class="section level3" number="5.5.2">
+<h3>
+<span class="header-section-number">5.5.2</span> 拟合模型<a class="anchor" aria-label="anchor" href="#sec5-5-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>式 <a href="chap5.html#eq:5-35">(5.35)</a> 中的比例风险模型可以使用最大似然法进行拟合。为了说明这一程序，我们考虑每组生存时间呈指数分布的情况。</p>
+<p>假设 Group I 中的 <span class="math inline">\(n_1\)</span> 个个体的观测结果可以表示为 <span class="math inline">\((t_{i1},\delta_{i1}),i=1,2,\ldots,n_1\)</span>，如果该组中第 <span class="math inline">\(i\)</span> 个个体的生存时间删失，则 <span class="math inline">\(\delta_{i1}=0\)</span>，如果该时间是死亡时间，则 <span class="math inline">\(\delta_{i'1}=1\)</span>。类似地，设 <span class="math inline">\((t_{i'2},\delta_{i'2}),i'=1,2,\ldots,n_2\)</span> 是来自 Group II 中的 <span class="math inline">\(n_2\)</span> 个个体的观测结果。对于 Group I 中的个体，风险函数取为 <span class="math inline">\(\lambda\)</span>，概率密度函数和生存函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}f(t_{i1})=\lambda e^{-\lambda t_{i1}},\quad\quad S(t_{i1})=e^{-\lambda t_{i1}}\end{aligned}\]</span></p>
+<p>而对于 Group II，风险函数为 <span class="math inline">\(\psi\lambda\)</span>，概率密度函数和生存函数为</p>
+<p><span class="math display">\[\begin{aligned}f(t_{i'2})=\psi\lambda e^{-\psi\lambda t_{i'2}},\quad\quad S(t_{i'2})=e^{-\psi\lambda t_{i'2}}\end{aligned}\]</span></p>
+<p>使用式 <a href="chap5.html#eq:5-14">(5.14)</a>，<span class="math inline">\(n_1+n_2\)</span> 个观测的似然 <span class="math inline">\(L(\psi,\lambda)\)</span> 为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^{n_1}\left\{\lambda e^{-\lambda t_{i1}}\right\}^{\delta_{i1}}\left\{e^{-\lambda t_{i1}}\right\}^{1-\delta_{i1}}\prod_{i'=1}^{n_2}\left\{\psi\lambda e^{-\psi\lambda t_{i'2}}\right\}^{\delta_{i'2}}\left\{e^{-\psi\lambda t_{i'2}}\right\}^{1-\delta_{i'2}}\end{aligned}\]</span></p>
+<p>可简化为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^{n_1}\lambda^{\delta_{i1}}e^{-\lambda t_{i1}}\prod_{i'=1}^{n_2}(\psi\lambda)^{\delta_{i'2}}e^{-\psi\lambda t_{i'2}}\end{aligned}\]</span></p>
+<p>如果两组的实际死亡数分别为 <span class="math inline">\(r_1\)</span> 和 <span class="math inline">\(r_2\)</span>，那么 <span class="math inline">\(r_1=\sum_i\delta_{{i}1}\)</span> 以及 <span class="math inline">\(r_2=\sum_i\delta_{{i}2}\)</span>，对数似然函数为</p>
+<p><span class="math display">\[\begin{aligned}
+\operatorname{log} L(\psi,\lambda)=r_{1}\operatorname{log}\lambda-\lambda\sum_{i=1}^{n_1} t_{i1}+r_{2}\operatorname{log}(\psi\lambda)-\psi\lambda\sum_{i'=1}^{n_2} t_{i^{\prime}2}  \\
+\end{aligned}\]</span></p>
+<p>现在将 Group I 和 Group II 中个体的总的已知生存时间分别记作 <span class="math inline">\(T_1,T_2\)</span>。那么，<span class="math inline">\(T_1,T_2\)</span> 是每组中未删失和删失生存时间的总和，因此对数似然函数变为</p>
+<p><span class="math display">\[\begin{aligned}\log L(\psi,\lambda)=(r_1+r_2)\log\lambda+r_2\log\psi-\lambda(T_1+\psi T_2)\end{aligned}\]</span></p>
+<p>为了获得该函数为最大值的参数估计，关于 <span class="math inline">\(\psi\)</span> 和 <span class="math inline">\(\lambda\)</span> 微分，并将导数设为零。由此得到的方程组为</p>
+<p><span class="math display" id="eq:5-36">\[\begin{align}
+\frac{r_2}{\hat\psi}-\hat\lambda T_2&amp;=0\tag{5.36}\\\frac{r_1+r_2}{\hat\lambda}-(T_1+\hat\psi T_2)&amp;=0\tag{5.37}
+\end{align}\]</span></p>
+<p>根据式 <a href="chap5.html#eq:5-36">(5.36)</a></p>
+<p><span class="math display">\[\hat{\lambda}=\frac{r_2}{\hat{\psi}T_2}\]</span></p>
+<p>并代入式 <a href="#eq:5-37">(5.37)</a> 中的 <span class="math inline">\(\hat\lambda\)</span>，我们得到</p>
+<p><span class="math display" id="eq:5-38">\[\begin{align}
+\hat{\psi}=\frac{r_2T_1}{r_1T_2}
+\tag{5.38}
+\end{align}\]</span></p>
+<p>那么，根据式 <a href="chap5.html#eq:5-36">(5.36)</a></p>
+<p><span class="math display">\[\begin{aligned}\hat{\lambda}&amp;=r_1/T_1\end{aligned}\]</span></p>
+<p>这两个估计都有直观的理由。<span class="math inline">\(\hat \lambda\)</span> 的估计是 Group I 个体平均生存时间的倒数，而相对风险估计 <span class="math inline">\(\hat \psi\)</span> 为两组个体的平均生存时间之比。</p>
+<p>参数估计的渐近方差-协方差阵是信息矩阵的逆矩阵，其元素是从对数似然函数的二阶导数中得到的；见附录 <a href="A.html#A">A</a>。我们有</p>
+<p><span class="math display">\[\begin{aligned}\frac{\mathrm{d}^2\log L(\psi,\lambda)}{\mathrm{d}\psi^2}&amp;=-\frac{r_2}{\psi^2},\quad\frac{\mathrm{d}^2\log L(\psi,\lambda)}{\mathrm{d}\lambda^2}=-\frac{r_1+r_2}{\lambda^2},\quad\frac{\mathrm{d}^2\log L(\psi,\lambda)}{\mathrm{d}\lambda\mathrm{d}\psi}=-T_2\end{aligned}\]</span></p>
+<p>并且信息矩阵是由这些偏导数期望值的负数组成的矩阵。唯一需要得到期望的二阶导数是关于 <span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\psi\)</span> 的导数，这需要 <span class="math inline">\(\text{E}(T_2)\)</span>。当生存时间具有指数分布时，这很简单，但具有 Weibull 分布生存时间的预期值较难计算，如 <a href="chap5.html#sec5-1-2">5.1.2</a> 节所示。由于这个原因，通常通过使用负二阶偏导数的观测作为信息矩阵的近似。因此，观测信息矩阵为</p>
+<p><span class="math display">\[\left.\boldsymbol{I}(\psi,\lambda)=\left(\begin{array}{cc}r_2/\psi^2&amp;T_2\\T_2&amp;(r_1+r_2)/\lambda^2\end{array}\right.\right)\]</span></p>
+<p>该矩阵的逆为</p>
+<p><span class="math display">\[\left.\frac1{(r_1+r_2)r_2-T_2^2\psi^2\lambda^2}\left(\begin{array}{cc}(r_1+r_2)\psi^2&amp;-T_2\psi^2\lambda^2\\-T_2\psi^2\lambda^2&amp;r_2\lambda^2\end{array}\right.\right)\]</span></p>
+<p><span class="math inline">\(\hat\psi\)</span> 和 <span class="math inline">\(\hat \lambda\)</span> 的标准误是通过将该矩阵中的 <span class="math inline">\(\psi\)</span> 和 <span class="math inline">\(\lambda\)</span> 替换为 <span class="math inline">\(\hat\psi\)</span> 和 <span class="math inline">\(\hat \lambda\)</span> 并取平方根来求出的。因此，<span class="math inline">\(\hat\psi\)</span> 的标准误由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left(\hat{\psi}\right)&amp;=\sqrt{\frac{(r_1+r_2)\hat{\psi}^2}{(r_1+r_2)r_2-T_2^2\hat{\psi}^2\hat{\lambda}^2}}\end{aligned}\]</span></p>
+<p>带入表达式分母中的 <span class="math inline">\(\hat\psi\)</span> 和 <span class="math inline">\(\hat \lambda\)</span> 后，该标准误简化为</p>
+<p><span class="math display" id="eq:5-39">\[\begin{align}
+\hat{\psi}\sqrt{\frac{r_1+r_2}{r_1r_2}}
+\tag{5.39}
+\end{align}\]</span></p>
+<p>类似地，<span class="math inline">\(\hat \lambda\)</span> 的标准误为</p>
+<p><span class="math display">\[\text{se }(\hat{\lambda})=\hat{\lambda}/√r_1\]</span></p>
+<p>这些标准误估计不能直接用于 <span class="math inline">\(\psi\)</span> 和 <span class="math inline">\(\lambda\)</span> 的置信区间的构建。原因是这两个参数的值都必须是正的，它们的估计往往具有偏态分布。这意味着，在构建置信区间时使用的正态性假设是不合理的。<span class="math inline">\(\psi\)</span> 和 <span class="math inline">\(\lambda\)</span> 估计的对数分布更有可能是对称的，因此使用参数估计的对数的标准误可以找到参数对数的置信限。然后对所得的置信限进行指数运算，以给出参数本身的区间估计。</p>
+<p>参数估计的对数的标准误可以使用式 <a href="chap5.html#eq:5-21">(5.21)</a> 中给出的一般结果来找到。因此，<span class="math inline">\(\log \hat \psi\)</span> 的近似方差为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(\log\hat{\psi}\right)&amp;\approx\hat{\psi}^{-2}\operatorname{var}\left(\hat{\psi}\right)\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(\log \hat \psi\)</span> 的标准误为</p>
+<p><span class="math display" id="eq:5-40">\[\begin{align}
+\text{se}(\log\hat{\psi})\approx\hat{\psi}^{-1}\text{se}(\hat{\psi})=\sqrt{\frac{r_1+r_2}{r_1r_2}}
+\tag{5.40}
+\end{align}\]</span></p>
+<p>相对风险对数的 <span class="math inline">\(100(1−\alpha)\%\)</span> 置信区间的上下限为 <span class="math inline">\(\operatorname{log}\hat{\psi}\pm z_{\alpha/2}\operatorname{se}\left(\operatorname{log}\hat{\psi}\right)\)</span>，通过对 <span class="math inline">\(\log \psi\)</span> 的这些限进行指数运算，可以得到风险比 <span class="math inline">\(\psi\)</span> 的置信限。如果需要，可以以类似的方式得到 <span class="math inline">\(\lambda\)</span> 的置信区间。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-6" class="example"><strong>示例 5.6  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>现在使用癌症患者生存时间数据说明本节的理论结果。假设每组女性的生存时间呈指数分布，因此，在任何时候，阴性染色组女性的死亡风险为恒定值 <span class="math inline">\(\lambda\)</span>，而阳性染色组女性为 <span class="math inline">\(\psi\lambda\)</span>，其中 <span class="math inline">\(\psi\)</span> 为风险比。</p>
+<p>根据第 1 章表 1.2 给出的数据，阴性染色组和阳性染色组的死亡数分别为 <span class="math inline">\(r_1=5\)</span> 和 <span class="math inline">\(r_2=21\)</span>。此外，各组的总生存时间分别为 <span class="math inline">\(T_1=1652\)</span>和 <span class="math inline">\(T_2=2679\)</span> 个月。使用式 <a href="chap5.html#eq:5-38">(5.38)</a>，相对于阴性染色组，阳性染色组女性的死亡风险估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{\psi}=\frac{21\times1652}{5\times2679}=2.59\end{aligned}\]</span></p>
+<p>因此，阳性染色组的女性在任何特定时间的死亡风险约为阴性染色组的 2.5 倍。这与<a href="chap5.html#exm:ex5-5">示例 5.5</a> 中使用的图形程序中 <span class="math inline">\(\psi\)</span> 的估计 2.72 一致。</p>
+<p>接下来，使用式 <a href="chap5.html#eq:5-39">(5.39)</a>，风险比估计的标准误由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left(\hat{\psi}\right)=2.59\sqrt{\frac{5+21}{5\times21}}=1.289\end{aligned}\]</span></p>
+<p>为了获得真实相对风险的 95% 置信区间，需要 <span class="math inline">\(\log \hat\psi\)</span> 的标准误。使用式 <a href="chap5.html#eq:5-40">(5.40)</a>，得到 <span class="math inline">\(\text{se }(\log\hat{\psi})=0.498\)</span>，因此 <span class="math inline">\(\log{\psi}\)</span> 的 95% 置信限为 <span class="math inline">\(\log(2.59)\pm1.96\text{se}(\log\hat{\psi})\)</span>，即 <span class="math inline">\((0.98,6.87)\)</span>。对数相对风险的置信区间为 <span class="math inline">\((−0.024,1.927)\)</span> ，相对风险本身的区间估计为 <span class="math inline">\(\log(2.59)\pm1.96\text{se}(\log\hat{\psi})\)</span>，即 <span class="math inline">\((0.98,6.87)\)</span>。该区间仅刚刚包括 1，表明肿瘤阳性染色的女性预后比肿瘤阴性染色的女性差。该结果与<a href="chap2.html#exm:ex2-12">示例 2.12</a> 中的 log-rank 检验的结果一致，其中在检验无组间差异的假设时获得的 <span class="math inline">\(P\)</span> 值为 0.061.</p>
+</div>
+</div>
+<p>在实践中，我们使用计算机软件来拟合两组生存数据的参数模型，并假设比例风险。当拟合式 <a href="chap5.html#eq:5-35">(5.35)</a> 中的模型时，可以从输出结果中获得 <span class="math inline">\(\beta,\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的估计及其标准误。然后可能需要进行进一步的计算，以获得相对风险的估计以及该估计值的标准误。具体来说，风险比估计可以通过 <span class="math inline">\(\hat{\psi}=\exp(\hat{\beta})\)</span> 获得，并且可以根据下式得到 <span class="math inline">\(\mathrm{se}\left(\hat{\psi}\right)\)</span></p>
+<p><span class="math display">\[\operatorname{se}\left(\hat{\psi}\right)=\exp(\hat{\beta})\operatorname{se}\left(\hat{\beta}\right)\]</span></p>
+<p>这是式 <a href="chap5.html#eq:5-21">(5.21)</a> 得出的结果。</p>
+<p>两组生存时间分布的中位数和其他百分位数可以根据 <span class="math inline">\(\hat\psi\)</span> 和 <span class="math inline">\(\hat\lambda\)</span> 的值来估计。例如，根据式 <a href="chap5.html#eq:5-28">(5.28)</a>，Group I 第 <span class="math inline">\(p\)</span> 个百分位数估计为</p>
+<p><span class="math display">\[\hat{t}(p)=\left\{\frac{1}{\hat{\lambda}}\log\left(\frac{100}{100-p}\right)\right\}^{1/\hat{\gamma}}\]</span></p>
+<p>对于 Group II 则为</p>
+<p><span class="math display">\[\hat{t}(p)=\left\{\frac{1}{\hat{\psi}\hat{\lambda}}\log\left(\frac{100}{100-p}\right)\right\}^{1/\hat{\gamma}}\]</span></p>
+<p>一旦得出模型中参数估计的方差和协变量，就可以使用类似于式 <a href="chap5.html#eq:5-33">(5.33)</a> 中的表达式来获得每组百分位数估计的标准误。将不会给出每组生存时间分布百分位数标准误的具体结果。相反，可以使用式 <a href="chap5.html#eq:5-33">(5.33)</a> 中给出的拟合 Weibull 模型后第 <span class="math inline">\(p\)</span> 个百分位数的标准误的一般表达式。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-7" class="example"><strong>示例 5.7  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在<a href="chap5.html#exm:ex5-5">示例 5.5</a> 中，发现 Weibull 比例风险模型适用于两组乳腺癌患者的生存时间数据。在此模型下，在时间 <span class="math inline">\(t\)</span> 时，对于肿瘤染色呈阴性的患者，死亡风险为 <span class="math inline">\(\lambda\gamma t^{\boldsymbol{\gamma}-1}\)</span>，对于肿瘤染色呈阳性的患者，死亡风险为 <span class="math inline">\(\psi\lambda\gamma t^{\boldsymbol{\gamma}-1}\)</span>。</p>
+<p>拟合的 Weibull 分布的形状参数估计为 <span class="math inline">\(\hat\gamma = 0.937\)</span>。Group I 女性的尺度参数估计为 <span class="math inline">\(\hat\lambda = 0.00414\)</span>，Group II 女性的尺度参数估计为 <span class="math inline">\(\hat\lambda\hat\psi = 0.0105\)</span>。该 Weibull 模型下的风险比估计为 <span class="math inline">\(\hat \psi = 2.55\)</span>，这与例 5.6 中假设生存时间呈指数分布获得的值相差不大。</p>
+<p>将 <span class="math inline">\(\hat\gamma = 0.937\)</span> 和 <span class="math inline">\(\hat\lambda = 0.00414\)</span> 代入式 <a href="chap5.html#eq:5-29">(5.29)</a>，得出 Group I 女性的中位生存时间为 235.89. Group II 女性的中位生存时间估计可通过将 <span class="math inline">\(\hat\gamma = 0.937\)</span> 和 <span class="math inline">\(\hat\lambda = 0.0105\)</span> 代入该方程得出，并给出中位生存时间估计为 87.0. 肿瘤呈阳性染色的女性中位生存时间约为肿瘤呈阴性染色的女性的三分之一。</p>
+<p>使用式 <a href="chap5.html#eq:5-33">(5.33)</a> 中给出的中位生存时间标准误的一般结果，通过取 <span class="math inline">\(p = 50,\hat\gamma = 0.937\)</span> 并依次取 <span class="math inline">\(\hat\lambda = 0.00414\)</span> 和 <span class="math inline">\(0.0105\)</span> 来找到两个中位的标准误。结果分别为 114.126 和 20.550.</p>
+<p>如 <a href="chap5.html#sec5-4-3">5.4.3</a> 节中所述，每组女性的真实中位生存时间的 95% 置信限最好通过使用中位对数来获得。<span class="math inline">\(\log\hat{t}(50)\)</span> 的标准误可使用式 <a href="chap5.html#eq:5-34">(5.34)</a> 求得，其中</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{\log\hat{t}(50)\right\}=\frac{1}{\hat{t}(50)}\text{se}\left\{\hat{t}(50)\right\}\end{aligned}\]</span></p>
+<p>然后对 <span class="math inline">\(\log t(50)\)</span> 的置信限进行指数运算以给出 <span class="math inline">\(t(50)\)</span> 本身的相应置信限。</p>
+<p>在本示例中，两组女性的真实中位生存时间的 95% 置信区间分别为 <span class="math inline">\((91.4, 608.9)\)</span> 和 <span class="math inline">\((54.8, 138.3)\)</span>。请注意，阳性染色患者的中位生存时间的置信区间比阴性染色女性的中位生存时间的置信区间窄得多。这是因为肿瘤呈阴性染色的女性未删失生存时间相对较少。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec5-6" class="section level2" number="5.6">
+<h2>
+<span class="header-section-number">5.6</span> Weibull 比例风险模型<a class="anchor" aria-label="anchor" href="#sec5-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>式 <a href="chap5.html#eq:5-35">(5.35)</a> 中用于比较两组生存数据的模型可以很容易地推广为形似 <a href="chap3.html#sec3-1-2">3.1.2</a> 节中描述的 Cox 回归模型的模型。假设为 <span class="math inline">\(n\)</span> 个个体记录了 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1, X_2,...,X_p\)</span> 的值 <span class="math inline">\(x_1, x_2,...,x_p\)</span>。在比例风险模型下，第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体在 <span class="math inline">\(t\)</span> 时刻的死亡风险为</p>
+<p><span class="math display" id="eq:5-41">\[\begin{align}
+h_i(t)=\exp(\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi})h_0(t)
+\tag{5.41}
+\end{align}\]</span></p>
+<p>尽管该模型形似式 <a href="chap3.html#eq:3-3">(3.3)</a> 中给出的模型，但有一个根本的区别：基线风险函数 <span class="math inline">\(h_0(t)\)</span> 的指定。在 Cox 回归模型中，<span class="math inline">\(h_0(t)\)</span> 的形式是未指定的，函数的形状本质上由实际数据决定。在本节考虑的模型中，假设生存时间具有 Weibull 分布，这对 <span class="math inline">\(h_0(t)\)</span> 施加了特定的参数形式。</p>
+<p>考虑一个个体，其在式 <a href="chap5.html#eq:5-41">(5.41)</a> 模型中的 <span class="math inline">\(p\)</span> 个解释变量的值均为零。该个体的风险函数是 <span class="math inline">\(h_0(t)\)</span>。如果该个体的生存时间服从尺度参数为 <span class="math inline">\(\lambda\)</span> 和形状参数为 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布，那么风险函数为</p>
+<p><span class="math display">\[h_0(t)=\lambda\gamma t^{\boldsymbol{\gamma-}1}\]</span></p>
+<p>使用式 <a href="chap5.html#eq:5-41">(5.41)</a>，研究中第 <span class="math inline">\(i\)</span> 个个体的风险函数由下式给出</p>
+<p><span class="math display" id="eq:5-42">\[\begin{align}
+h_{\boldsymbol{i}}(t)=\exp(\boldsymbol{\beta'x}_{{i}})\lambda\gamma t^{\gamma-1}
+\tag{5.42}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{\beta'x}_{{i}}\)</span> 代表 <span class="math inline">\(\beta_{1}x_{1i}+\beta_{2}x_{2i}+\cdots+\beta_{p}x_{pi}\)</span>。从该风险函数的形式可以看出，研究中第 <span class="math inline">\(i\)</span> 个个体的生存时间服从尺度参数为 <span class="math inline">\(\lambda\exp(\boldsymbol{\beta'x_i})\)</span> 和形状参数为 <span class="math inline">\(\gamma\)</span> 的 Weibull 分布。这也是 Weibull 分布比例风险性的体现。该结果表明，<strong>模型中解释变量的作用是改变分布的尺度参数，而形状参数保持不变</strong>。</p>
+<p>使用式 <a href="chap1.html#eq:1-6">(1.6)</a> 得到与式 <a href="chap5.html#eq:5-42">(5.42)</a> 中给出的风险函数相对应的生存函数，结果是</p>
+<p><span class="math display" id="eq:5-43">\[\begin{align}
+S_i(t)=\exp\left\{-\exp(\boldsymbol{\beta'x}_i)\lambda t^\gamma\right\}
+\tag{5.43}
+\end{align}\]</span></p>
+<div id="sec5-6-1" class="section level3" number="5.6.1">
+<h3>
+<span class="header-section-number">5.6.1</span> 拟合模型<a class="anchor" aria-label="anchor" href="#sec5-6-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>Weibull 比例风险模型是通过构建 <span class="math inline">\(n\)</span> 个观测的似然函数来拟合的，并使该函数关于未知参数 <span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p,\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 最大化。由于每个个体的风险函数和生存函数不同，因此式 <a href="chap5.html#eq:5-15">(5.15)</a> 中的似然函数现在写为</p>
+<p><span class="math display" id="eq:5-44">\[\begin{align}
+\prod_{i=1}^n\left\{h_i(t_i)\right\}^{\delta_i}S_i(t_i)
+\tag{5.44}
+\end{align}\]</span></p>
+<p>将对数似然函数（而不是似然本身）关于未知参数最大化。根据式 <a href="chap5.html#eq:5-44">(5.44)</a>，对数似然为</p>
+<p><span class="math display">\[\begin{aligned}\sum_{i=1}^n[\delta_i\log h_i(t_i)+\log S_i(t_i)]\end{aligned}\]</span></p>
+<p>将式 <a href="chap5.html#eq:5-42">(5.42)</a> 和 <a href="chap5.html#eq:5-43">(5.43)</a> 中的 <span class="math inline">\(h_i(t_i)\)</span> 和 <span class="math inline">\(S_i(t_i)\)</span> 代入后，对数似然变为</p>
+<p><span class="math display">\[\begin{aligned}\sum_{i=1}^n\left[\delta_i\{\boldsymbol{\beta'x}_i+\log(\lambda\gamma)+(\gamma-1)\log t_i\}-\lambda\exp(\boldsymbol{\beta'x}_i)t^\gamma\right]\end{aligned}\]</span></p>
+<p>可以写成</p>
+<p><span class="math display" id="eq:5-45">\[\begin{align}
+\sum_{i=1}^n\left[\delta_i\{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i+\log(\lambda\gamma)+\gamma\log t_i\}-\lambda\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)t^\gamma\right]-\sum_{i=1}^n\delta_i\log t_i
+\tag{5.45}
+\end{align}\]</span></p>
+<p>该表达式中的最后一项 <span class="math inline">\(-\sum_{i=1}^n\delta_i\log t_i\)</span> 不涉及任何未知参数，并且可以从似然中省略。所得对数似然函数为</p>
+<p><span class="math display" id="eq:5-46">\[\begin{align}
+\sum_{i=1}^n\left[\delta_i\{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i+\log(\lambda\gamma)+\gamma\log t_i\}-\lambda\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)t^\gamma\right]
+\tag{5.46}
+\end{align}\]</span></p>
+<p>它与根据式 <a href="chap5.html#eq:5-45">(5.45)</a> 中给出的完全对数似然获得的值相差 <span class="math inline">\(\sum_{i=1}^n\delta_i\log t_i\)</span>。当使用计算机软件拟合 Weibull 比例风险模型时，对数似然通常根据式 <a href="chap5.html#eq:5-46">(5.46)</a> 计算。该表达式也将用于本书给出的示例中。</p>
+<p>拟合参数比例风险模型的计算机输出通常包括参数估计的标准误，从中可以得到相对风险的置信区间以及生存时间分布的中位数和其他参数。
+具体而言，假设式 <a href="chap5.html#eq:5-42">(5.42)</a> 模型中参数估计为 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p,\hat{\lambda}\)</span> 和 <span class="math inline">\(\hat\gamma\)</span>，则研究中第 <span class="math inline">\(i\)</span> 个个体（其在模型中解释变量的值为 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span>）的生存函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{S}_i(t)=\exp\left\{-\exp(\hat{\beta}_1x_{1i}+\hat{\beta}_2x_{2i}+\cdots+\hat{\beta}_px_{pi})\hat{\lambda}t^{\hat{\gamma}}\right\}\end{aligned}\]</span></p>
+<p>相应的风险函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)&amp;=\exp(\hat{\beta}_1x_{1i}+\hat{\beta}_2x_{2i}+\cdots+\hat{\beta}_px_{pi})\hat{\lambda}\hat{\gamma}t^{\boldsymbol{\gamma}-1}\end{aligned}\]</span></p>
+<p>这两个函数都是时间 <span class="math inline">\(t\)</span> 的连续函数，对于模型中解释变量具有特定值的个体，该函数可以估计，并关于 <span class="math inline">\(t\)</span> 绘制图形。</p>
+<p>将式 <a href="chap5.html#eq:5-28">(5.28)</a> 中的结果推广到尺度参数为 <span class="math inline">\(\lambda\exp(\boldsymbol{\beta'x_i})\)</span> 的 Weibull 分布的情况，解释变量向量为 <span class="math inline">\(\boldsymbol x_i\)</span> 的个体生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数估计为</p>
+<p><span class="math display" id="eq:5-47">\[\begin{align}
+\hat{t}(p)=\left\{\frac{1}{\hat{\lambda}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol x_i)}\log\left(\frac{100}{100-p}\right)\right\}^{1/\hat{\gamma}}
+\tag{5.47}
+\end{align}\]</span></p>
+<p>因此，该个体中位生存时间估计为</p>
+<p><span class="math display" id="eq:5-48">\[\begin{align}
+\hat{t}(50)=\left\{\frac{\log2}{\hat{\lambda}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i)}\right\}^{1/\hat{\gamma}}
+\tag{5.48}
+\end{align}\]</span></p>
+<p><span class="math inline">\(\hat t(p)\)</span> 的标准误和 <span class="math inline">\(t(p)\)</span> 的相应区间估计在 <a href="chap5.html#sec5-6-2">5.6.2</a> 节中推导。</p>
+</div>
+<div id="sec5-6-2" class="section level3" number="5.6.2">
+<h3>
+<span class="header-section-number">5.6.2</span> Weibull 模型百分位数的标准误<a class="anchor" aria-label="anchor" href="#sec5-6-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>如 <a href="chap5.html#sec5-4-3">5.4.3</a> 节所述，Weibull 比例风险模型生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数估计的标准误 <span class="math inline">\(\hat{t}(p)\)</span>，如式 <a href="chap5.html#eq:5-47">(5.47)</a> 所示，是根据 <span class="math inline">\(\log \hat t(p)\)</span> 的方差中得出的。记</p>
+<p><span class="math display">\[\begin{aligned}c_p=\log\log\left(\frac{100}{100-p}\right)\end{aligned}\]</span></p>
+<p>我们根据式 <a href="chap5.html#eq:5-47">(5.47)</a> 得到</p>
+<p><span class="math display" id="eq:5-49">\[\begin{align}
+\log\hat{t}(p)=\frac1{\hat{\gamma}}\left(c_p-\log\hat{\lambda}-\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i\right)
+\tag{5.49}
+\end{align}\]</span></p>
+<p>这是 <span class="math inline">\(p + 2\)</span> 个参数估计 <span class="math inline">\(\hat{\lambda},\hat{\gamma}\)</span> 和 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span> 的函数，该函数的近似方差可以通过式 <a href="chap5.html#eq:5-30">(5.30)</a> 中结果的进一步推广来求出，这种推广最好用矩阵形式表示。</p>
+<p>假设 <span class="math inline">\(\hat{\boldsymbol \theta}\)</span> 是由 <span class="math inline">\(k\)</span> 个参数估计 <span class="math inline">\(\hat{\theta}_1,\hat{\theta}_2,\ldots,\hat{\theta}_k\)</span> 构成的向量，<span class="math inline">\(g(\hat{\boldsymbol \theta})\)</span> 是这 <span class="math inline">\(k\)</span> 个估计的函数，则 <span class="math inline">\(g(\hat{\boldsymbol \theta})\)</span> 的近似方差由下式给出：</p>
+<p><span class="math display" id="eq:5-50">\[\begin{align}
+\operatorname{var}\left\{g(\hat{\boldsymbol{\theta}})\right\}\approx\boldsymbol{d}(\hat{\boldsymbol{\theta}})'\operatorname{var}\left(\hat{\boldsymbol{\theta}}\right)\boldsymbol{d}(\hat{\boldsymbol{\theta}})
+\tag{5.50}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\operatorname{var}(\hat{\boldsymbol{\theta}})\)</span> 为 <span class="math inline">\(\hat{\boldsymbol \theta}\)</span> 中的估计的 <span class="math inline">\(k\times k\)</span> 方差-协方差阵，<span class="math inline">\(\boldsymbol{d}(\hat{\boldsymbol{\theta}})\)</span> 为具有 <span class="math inline">\(k\)</span> 个分量的向量，其中第 <span class="math inline">\(i\)</span> 个元素为</p>
+<p><span class="math display">\[\left.\frac{\partial g(\hat{\boldsymbol{\theta}})}{\partial\hat{\theta}_i}\right|_{\hat{\boldsymbol{\theta}}}\]</span></p>
+<p>其中 <span class="math inline">\(i=1,2,\ldots,k\)</span>。</p>
+<p>我们现在将 <span class="math inline">\(\boldsymbol V\)</span> 记作 <span class="math inline">\(\hat{\lambda},\hat{\gamma}\)</span> 和 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span> 的 <span class="math inline">\((p +2) \times (p + 2)\)</span> 的方差-协方差矩阵。接下来，根据式 <a href="chap5.html#eq:5-49">(5.49)</a>，<span class="math inline">\(\log \hat t(p)\)</span> 关于这些参数估计的导数为：</p>
+<p><span class="math display">\[\begin{aligned}
+&amp;\begin{aligned}\frac{\partial\log\widehat{t}(p)}{\partial\hat{\lambda}}\end{aligned} =-\frac1{\hat{\lambda}\hat{\gamma}}  \\
+&amp;\begin{aligned}\frac{\partial\log\hat{t}(p)}{\partial\hat{\gamma}}\end{aligned} =-\frac{c_p-\log\hat{\lambda}-\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i}{\hat{\gamma}^2}  \\
+&amp;\begin{aligned}\frac{\partial\log\hat{t}(p)}{\partial\hat{\beta}_j}\end{aligned} =-\frac{x_{ji}}{\hat{\gamma}}
+\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,p\)</span>，<span class="math inline">\(x_{ji}\)</span> 为 <span class="math inline">\(\boldsymbol x_i\)</span> 的第 <span class="math inline">\(j\)</span> 个分量。式 <a href="chap5.html#eq:5-50">(5.50)</a> 中的向量 <span class="math inline">\(\boldsymbol{d}(\hat{\boldsymbol{\theta}})\)</span> 可表示为 <span class="math inline">\(-\hat{\gamma}^{-1}\boldsymbol{d}_0\)</span>，其中 <span class="math inline">\(\boldsymbol{d}_0\)</span> 的分量为 <span class="math inline">\(\hat{\lambda}^{-1},\hat{\gamma}^{-1}\{c_p-\log\hat{\lambda}-\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i\}\)</span> 以及 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span>。那么 <span class="math inline">\(\log \hat t(p)\)</span> 的标准误为</p>
+<p><span class="math display" id="eq:5-51">\[\begin{align}
+\text{se }\left\{\log\hat{t}(p)\right\}=\hat{\gamma}^{-1}√\left(\boldsymbol{d'}_0\boldsymbol{Vd}_0\right)
+\tag{5.51}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat t(p)\)</span> 本身的标准误由下式获得：</p>
+<p><span class="math display" id="eq:5-52">\[\begin{align}
+\text{se}\left\{\hat{t}(p)\right\}=\hat{t}(p)\text{ se }\left\{\log\hat{t}(p)\right\}
+\tag{5.52}
+\end{align}\]</span></p>
+<p>请注意，对于不包含解释变量的零模型，式 <a href="chap5.html#eq:5-52">(5.52)</a> 中的标准误 <span class="math inline">\(\hat t(p)\)</span> 简化为式 <a href="chap5.html#eq:5-53">(5.53)</a> 中的结果。</p>
+<p><span class="math inline">\(\log t(p)\)</span> 的置信限可根据 <span class="math inline">\(\log \hat t(p)\)</span> 的标准误求出，如式 <a href="chap5.html#eq:5-51">(5.51)</a> 所示，<span class="math inline">\(t(p)\)</span> 的置信区间可通过对这些置信限进行指数运算得到。</p>
+</div>
+<div id="sec5-6-3" class="section level3" number="5.6.3">
+<h3>
+<span class="header-section-number">5.6.3</span> 模型的对数线性形式<a class="anchor" aria-label="anchor" href="#sec5-6-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>大多数用于拟合 Weibull 比例风险模型的计算机软件使用的模型形式与 <a href="chap5.html#sec5-6">5.6</a> 节中所述的不同。其原因将在 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-11">5.11</a> 节中给出，但目前我们观察到式 <a href="chap5.html#eq:5-52">(5.52)</a> 中的风险函数可表示为</p>
+<p><span class="math display">\[\begin{align}
+h_i(t)&amp;=\frac{1}{\sigma t}\exp\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)
+\end{align}\]</span></p>
+<p>式 <a href="chap5.html#eq:5-43">(5.43)</a> 相应的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_i(t)=\exp\left\{-\exp\left(\frac{\log t-\mu-\alpha_1x_{1i}-\alpha_2x_{2i}-\cdots-\alpha_px_{pi}}{\sigma}\right)\right\}\end{aligned}\]</span></p>
+<p>在这些式子中，<span class="math inline">\(\alpha_1,\alpha_2,\ldots,\alpha_p\)</span> 是模型中 <span class="math inline">\(p\)</span> 个解释变量的系数，其中对于第 <span class="math inline">\(i\)</span> 个个体，解释变量的值为 <span class="math inline">\(x_{1{i}},x_{2{i}},\ldots,x_{{pi}}\)</span>，且 <span class="math inline">\(\mu,\sigma\)</span> 为未知参数。模型这两种表示之间的对应关系满足</p>
+<p><span class="math display" id="eq:5-53">\[\begin{align}
+\lambda=\exp(-\mu/\sigma),\quad\gamma=\sigma^{-1},\quad\beta_j=-\alpha_j/\sigma
+\tag{5.53}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,p\)</span>，<span class="math inline">\(\mu,\sigma\)</span> 分别称为截距和尺度参数。</p>
+<p>一般来说，使用模型的对数线性形式 (log-linear form) 来估计风险函数、生存函数、生存时间分布的百分位数以及它们的标准误会更直接，相关的表达式将在后面 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12">5.12</a> 节中的式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-66">(5.66)</a>, <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-67">(5.67)</a> 和 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-69">(5.69)</a> 给出。</p>
+<p>这种模型的表示使得在比例风险模型中很难获得对数风险比 <span class="math inline">\(\beta\)</span> 的置信区间，因为输出中只给出了 <span class="math inline">\(\alpha\)</span> 的估计的标准误。具体来说，在拟合 Weibull 比例风险模型时，输出通常提供 <span class="math inline">\(\alpha=-\sigma\beta\)</span> 的估计 <span class="math inline">\(\hat{\alpha}\)</span> 和 <span class="math inline">\(\hat\alpha\)</span> 的标准误。<span class="math inline">\(\beta\)</span> 的相应估计很容易根据 <span class="math inline">\(\hat{\beta}=-\hat{\alpha}/\hat{\sigma}\)</span> 得到，但 <span class="math inline">\(\hat\beta\)</span> 的标准误计算起来比较复杂。</p>
+<p>为获得 <span class="math inline">\(\hat\beta\)</span> 的标准误，我们可以使用 <a href="chap5.html#sec5-4-3">5.4.3</a> 节式 <a href="chap5.html#eq:5-30">(5.30)</a> 给出的结果。使用这个结果，函数</p>
+<p><span class="math display">\[g(\hat{\alpha},\hat{\sigma})=-\frac{\hat{\alpha}}{\hat{\sigma}}\]</span></p>
+<p>的方差的近似为</p>
+<p><span class="math display" id="eq:5-54">\[\begin{align}
+\left(\frac{\partial g}{\partial\hat{\alpha}}\right)^2\operatorname{var}\left(\hat{\alpha}\right)+\left(\frac{\partial g}{\partial\hat{\sigma}}\right)^2\operatorname{var}\left(\hat{\sigma}\right)+2\left(\frac{\partial g}{\partial\hat{\alpha}}\frac{\partial g}{\partial\hat{\sigma}}\right)\operatorname{cov}\left(\hat{\alpha},\hat{\sigma}\right)
+\tag{5.54}
+\end{align}\]</span></p>
+<p><span class="math inline">\(g\big(\hat{\alpha},\hat{\sigma}\big)\)</span> 关于 <span class="math inline">\(\hat\alpha\)</span> 和 <span class="math inline">\(\hat\sigma\)</span> 的导数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\frac{\partial g}{\partial\hat{\alpha}}=-\frac{1}{\hat{\sigma}},\quad\frac{\partial g}{\partial\hat{\sigma}}=\frac{\hat{\alpha}}{\hat{\sigma}^2}\end{aligned}\]</span></p>
+<p>因此使用式 <a href="chap5.html#eq:5-54">(5.54)</a></p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(-\frac{\hat{\alpha}}{\hat{\sigma}}\right)&amp;\approx\left(-\frac{1}{\hat{\sigma}}\right)^2\operatorname{var}\left(\hat{\alpha}\right)+\left(\frac{\hat{\alpha}}{\hat{\sigma}^2}\right)^2\operatorname{var}\left(\hat{\sigma}\right)+2\left(-\frac{1}{\hat{\sigma}}\right)\left(\frac{\hat{\alpha}}{\hat{\sigma}^2}\right)\operatorname{cov}\left(\hat{\alpha},\hat{\sigma}\right)\end{aligned}\]</span></p>
+<p>经代数计算后，近似方差变为</p>
+<p><span class="math display" id="eq:5-55">\[\begin{align}
+\frac1{\hat{\sigma}^4}\left\{\hat{\sigma}^2\operatorname{var}\left(\hat{\alpha}\right)+\hat{\alpha}^2\operatorname{var}\left(\hat{\sigma}\right)-2\hat{\alpha}\hat{\sigma}\operatorname{cov}\left(\hat{\alpha},\hat{\sigma}\right)\right\}
+\tag{5.55}
+\end{align}\]</span></p>
+<p>该函数的平方根就是 <span class="math inline">\(\hat \beta\)</span> 的标准误。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-8" class="example"><strong>示例 5.8  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>现在使用两组乳腺癌患者的生存时间数据来说明对数风险比标准误的计算。在此示例中，使用 Weibull 比例风险模型的对数线性形式拟合的计算机输出来说明风险比的估计以及估计的标准误的计算。</p>
+<p>在拟合包含治疗效应（用变量 <span class="math inline">\(X\)</span> 表示，对于阴性染色的女性，<span class="math inline">\(X = 0\)</span>，对于阳性染色，<span class="math inline">\(X = 1\)</span>）的模型时，我们发现 <span class="math inline">\(X\)</span> 的系数估计为 <span class="math inline">\(\hat \alpha = -0.9967\)</span>。此外，<span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 的估计分别为 <span class="math inline">\(\hat\mu = 5.8544\)</span> 和 <span class="math inline">\(\hat\sigma = 1.0668\)</span>。阳性染色女性 (<span class="math inline">\(X = 1\)</span>) 相对于阴性染色女性 (<span class="math inline">\(X = 0\)</span>) 的对数风险比估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{\beta}&amp;=-\frac{-0.9967}{1.0668}=0.9343\end{aligned}\]</span></p>
+<p>相应的风险比 <span class="math inline">\(\operatorname{exp}(\hat{\beta})=2.55\)</span>，如<a href="chap5.html#exm:ex5-7">示例 5.7</a> 所示。</p>
+<p><span class="math inline">\(\hat\alpha\)</span> 和 <span class="math inline">\(\hat\sigma\)</span> 的标准误通常包含在标准计算机输出中，分别为 0.5441 和 0.1786. 因此，<span class="math inline">\(\hat\alpha\)</span> 和 <span class="math inline">\(\hat\sigma\)</span> 的方差估计分别为 0.2960 和 0.0319. <span class="math inline">\(\hat\alpha\)</span> 和 <span class="math inline">\(\hat\sigma\)</span> 之间的协方差通常也可以从计算机软件中找到，尽管它通常不是默认输出的一部分。发现其值为 -0.0213.</p>
+<p>将 <span class="math inline">\(\hat\alpha\)</span> 和 <span class="math inline">\(\hat\sigma\)</span> 及其方差和协方差代入表达式 <a href="chap5.html#eq:5-55">(5.55)</a>，我们得到</p>
+<p><span class="math display">\[\begin{aligned}\text{var }(\hat{\beta})\approx0.2498\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(\hat\beta\)</span> 的标准误为 <span class="math inline">\(\text{se}\left(\hat{\beta}\right)=0.4998\)</span>。这可以用于构建相应真实风险比的置信区间。</p>
+</div>
+</div>
+</div>
+<div id="sec5-6-4" class="section level3" number="5.6.4">
+<h3>
+<span class="header-section-number">5.6.4</span> 探索性分析<a class="anchor" aria-label="anchor" href="#sec5-6-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>当我们面对单个生存数据样本时，或者当组别数量较少且每组中有相当多的个体时，用于评估数据是否可以通过 Weibull 分布建模，以及比例风险假设是否有效的图形程序（如 <a href="chap5.html#sec5-2">5.2</a> 节和 <a href="chap5.html#sec5-5-1">5.5.1</a> 节所述）非常有效。但是，在死亡数较少且组数相对较多时，可能无法估计每组的生存函数，从而估计对数累积风险函数。</p>
+<p>例如，考虑表 3.6 给出的肾癌患者的生存时间数据。在这里，根据年龄组和是否进行了肾切除术对个体进行分类，可得到年龄组和肾切除术状态的六种组合。为检验各组生存时间的 Weibull 分布假设，以及各组之间的比例风险假设，需要为每组绘制对数累积风险图。每个年龄组中未进行肾切除术的患者数量都很小，因此无法准确估计这些组的生存函数。如果研究中有更多的人死亡且未进行肾切除术，就有可能可以绘制对数累积风险图。如果该图具有六条平行直线，Weibull 比例风险模型可能是令人满意的。</p>
+<p>当模型包含连续变量时，首先需要对它们的值进行分组，然后才能获得对数累积风险图。这也可能导致某些组中的个体数量不足，无法估计对数累积风险函数。</p>
+<p>构建对数累积风险图时，除了使用每种因素水平的组合外，唯一的替代方案就是忽略一些因素。然而，由此产生的图形可能非常具有误导性。例如，若按照 <span class="math inline">\(A\)</span> 的水平分组（忽略 <span class="math inline">\(B\)</span>），或者按照 <span class="math inline">\(B\)</span> 的水平分组（忽略 <span class="math inline">\(A\)</span>），所得对数累积风险图可能并不会让人怀疑 Weibull 假设或比例风险假设。然而，如果在 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 水平的每个组合下绘制对数累积风险图，该图可能不会显示四条平行线。同理，当忽略 <span class="math inline">\(A\)</span> 或 <span class="math inline">\(B\)</span> 时，得到的对数累积风险图可能并不会显示一系列平行的直线，但为 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 的所有组合绘图时，可能会出现平行线。通过以下示例说明这一特性。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-9" class="example"><strong>示例 5.9  (数值说明) </strong></span><br></p>
+<p>假设将若干个体按照 <span class="math inline">\(A\)</span>，<span class="math inline">\(B\)</span> 两因素的水平进行分类，各有两个水平，其生存时间如表 5.1 所示。</p>
+<details><summary><font color="#8B2232">表 5.1</font>
+</summary><img src="figure/table%205.1.png#center" style="width:80.0%"></details><p><br>
+图 5.16 所示的对数累积风险图是根据 <span class="math inline">\(A\)</span> 的两个水平分类绘制的，忽略了因素 <span class="math inline">\(B\)</span> 的水平。而图 5.17 则是根据 <span class="math inline">\(B\)</span> 的水平绘制，忽略 <span class="math inline">\(A\)</span> 的水平。</p>
+<details><summary><font color="#8B2232">图 5.16</font>
+</summary><img src="figure/figure%205.16.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 5.17</font>
+</summary><img src="figure/figure%205.17.png#center" style="width:80.0%"></details><p><br>
+根据图 5.16，没有理由怀疑 <span class="math inline">\(A\)</span> 的两个水平上的生存时间的 Weibull 分布假设，并且比例风险的假设显然是站得住脚的。然而，图 5.17 显示的交叉线却强烈表明，当个体根据 <span class="math inline">\(B\)</span> 的水平进行分类时，风险不成比例。当根据 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 的水平对 37 个生存时间进行分类时，出现了不同的情况。基于这四组的对数累积风险图如图 5.18 所示。这四条平行线表明，各组之间比例风险假设的有效性是毋庸置疑的。</p>
+<details><summary><font color="#8B2232">图 5.18</font>
+</summary><img src="figure/figure%205.18.png#center" style="width:80.0%"></details><p><br>
+在这个例子中，<span class="math inline">\(B\)</span> （忽略 <span class="math inline">\(A\)</span>）的对数累积风险图之所以具有误导性，是因为 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(B\)</span> 之间存在交互作用。查看数据后可发现，平均而言，对于 <span class="math inline">\(B=1\)</span> 和 <span class="math inline">\(B=2\)</span> 患者之间生存时间的差异，<span class="math inline">\(A=2\)</span> 时的差异大于 <span class="math inline">\(A=1\)</span> 的差异。</p>
+</div>
+</div>
+<p>即使对数累积风险图没有理由怀疑 Weibull 比例风险模型的假设，也需要使用 <a href="chap7.html#chap7">7</a> 章描述的方法来检查拟合模型的有效性。当无法使用对数累积风险图来探索 Weibull 分布是否为生存时间提供了合理的模型时，第 3 章描述的基于 Cox 回归模型的程序可能会有所帮助，即，使用 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节中描述的程序拟合包含所有有意义的解释变量的 Cox 回归模型，并估计基线风险函数。该函数的图形可以表明 Weibull 分布的假设是否成立。具体来说，如果 Cox 模型中估计的基线风险函数递增或递减，则 Weibull 模型可以提供比 Cox 回归模型更简明的基线风险函数的总结。</p>
+<p>由于拟合的 Cox 模型的基线风险函数估计可能有些不规则，因此将拟合的 Cox 回归模型所得的基线累积风险函数估计或基线生存函数与 Weibull 模型所得的相应函数估计进行比较可能会更有成效。</p>
+</div>
+</div>
+<div id="sec5-7" class="section level2" number="5.7">
+<h2>
+<span class="header-section-number">5.7</span> 比较替代的 Weibull 比例风险模型<a class="anchor" aria-label="anchor" href="#sec5-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>为了确定 Weibull 比例风险模型中应包括哪些解释变量，需要对替代模型进行比较。不同 Weibull 模型之间的比较可以使用类似于 <a href="chap3.html#sec3-5">3.5</a> 节中描述的针对 Cox 回归模型的方法。</p>
+<p>假设一个模型包含另一个模型的解释变量的子集，因此这两个模型是嵌套的。那么可以根据统计量 <span class="math inline">\(-2 \log \hat{L}\)</span> 来比较两个模型，其中 <span class="math inline">\(\hat L\)</span> 是拟合模型下似然函数的最大值。对于包含 <span class="math inline">\(p\)</span> 个解释变量的模型，样本似然是 <span class="math inline">\(p + 2\)</span> 个未知参数 <span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p,\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的函数。似然函数的最大值就是似然函数取这些参数的估计 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p,\hat{\lambda}\)</span> 和 <span class="math inline">\(\hat \gamma\)</span> 时的函数值。</p>
+<p>更具体地说，假设模型 (1) 包含 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span>，另一个模型 (2) 包含额外 <span class="math inline">\(q\)</span> 个解释变量 <span class="math inline">\(X_{p+1},X_{p+2},\ldots,X_{p+q}\)</span>。在这两个模型下第 <span class="math inline">\(i\)</span> 个个体的风险函数估计为：</p>
+<ul>
+<li>模型 (1)：<span class="math inline">\(h_i(t)=\exp\{\hat{\beta}_1x_{1i}+\hat{\beta}_2x_{2i}+\cdots+\hat{\beta}_px_{pi}\}\hat{\lambda}\hat{\gamma}t^{\hat{\gamma}-1}\)</span>
+</li>
+<li>模型 (2)：<span class="math inline">\(h_i(t)=\exp\{\hat{\beta}_1x_{1i}+\hat{\beta}_2x_{2i}+\cdots+\hat{\beta}_{p+q}x_{p+q,i}\}\hat{\lambda}\hat{\gamma}t^{\hat{\gamma}-1}\)</span>
+</li>
+</ul>
+<p>其中 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{p+q,i}\)</span> 为第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(p+q\)</span> 个解释变量的值。模型 (1) 和模型 (2) 下的最大似然值分别用 <span class="math inline">\(\hat L_1\)</span> 和 <span class="math inline">\(\hat L_2\)</span> 表示。<span class="math inline">\(-2\log\hat{L}_1\)</span> 与 <span class="math inline">\(-2\log\hat{L}\)</span> 值之差，<span class="math inline">\(-2\{\log\hat{L}_1-\log\hat{L}_2\}\)</span>，在声称额外 <span class="math inline">\(q\)</span> 个变量的系数均为零的原假设下，服从自由度为 <span class="math inline">\(q\)</span> 的近似卡方分布。如果与卡方分布的百分位点相比，该差非常大，我们将推断模型中除了已包含的 <span class="math inline">\(p\)</span> 个项之外还需要额外的 <span class="math inline">\(q\)</span> 个项。由于在比较模型时使用了 <span class="math inline">\(-2\log\hat{L}\)</span> 的值之差，因此在具体计算 <span class="math inline">\(-2\log\hat{L}_2\)</span> 的值时使用的最大对数似然是基于式 <a href="chap5.html#eq:5-45">(5.45)</a> 还是 <a href="chap5.html#eq:5-46">(5.46)</a> 并不重要。</p>
+<p>第 <a href="chap3.html#sec3-5">3.5</a> - <a href="chap3.html#sec3-8">3.8</a> 节中描述的建模过程同样适用于基于 Weibull 比例风险模型的模型，此处不再重复。然而，将使用两个示例说明变量选择策略。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-10" class="example"><strong>示例 5.10  (肾癌的治疗) </strong></span><br></p>
+<p>第 3 章<a href="chap3.html#exm:ex3-4">示例 3.4</a> 介绍了 36 名患者的生存时间数据，这些患者根据年龄组和是否接受肾切除术进行了分类。在该示例中，使用 Cox 比例风险模型对数据进行了分析。在这里，使用 Weibull 比例风险模型进行分析。与<a href="chap3.html#exm:ex3-4">示例 3.4</a> 一样，第 <span class="math inline">\(j\)</span> 个年龄组的效应表示为 <span class="math inline">\(\alpha_j\)</span>，与是否进行肾切除术相关的效应表示为 <span class="math inline">\(\nu_k\)</span>。第 <span class="math inline">\(i\)</span> 个个体的风险函数 <span class="math inline">\(h_i(t)\)</span> 有五个可能的模型，如下所示：</p>
+<ul>
+<li>模型 (1)：<span class="math inline">\(h_{{i}}(t) =h_0(t)\)</span>
+</li>
+<li>模型 (2)：<span class="math inline">\(h_{{i}}(t) =\exp\{\alpha_j\}h_0(t)\)</span>
+</li>
+<li>模型 (3)：<span class="math inline">\(h_{{i}}(t) =\exp\{\nu_k\}h_0(t)\)</span>
+</li>
+<li>模型 (4)：<span class="math inline">\(h_{{i}}(t) =\exp\{\alpha_j+\nu_k\}h_0(t)\)</span>
+</li>
+<li>模型 (5)：<span class="math inline">\(h_{i}(t)=\exp\{\alpha_j+\nu_k+(\alpha\nu)_{jk}\}h_0(t)\)</span>
+</li>
+</ul>
+<p>在这些模型中，<span class="math inline">\(h_0(t)=\lambda\gamma t^{{\gamma}-1}\)</span> 为基线风险函数，<span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 必须与模型的线性部分一起估计。这五个模型的解释在<a href="chap3.html#exm:ex3-4">示例 3.4</a> 中给出，可以通过构建与年龄组和肾切除状态对应的指示变量来拟合，如<a href="chap3.html#exm:ex3-4">示例 3.4</a> 所示，或使用允许直接拟合因素的软件。</p>
+<p>为数据拟合 Weibull 比例风险模型后，可得到 <span class="math inline">\(-2\log\hat{L}\)</span> 的值。表 5.2 给出了五个感兴趣的模型。</p>
+<details><summary><font color="#8B2232">表 5.2</font>
+</summary><img src="figure/table%205.2.png#center" style="width:80.0%"></details><p><br>
+表 5.2 和本书其他示例中的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量的值是使用式 <a href="chap5.html#eq:5-46">(5.46)</a> 中的对数似然计算的。因此，这些值可能与某些计算机软件包给出的值相差 <span class="math inline">\(2\sum_{i=1}^n\delta_i\log t_i\)</span>，在本例中其值为 136.3733.</p>
+<p>为模型 (4) 添加交互作用项后，<span class="math inline">\(-2\log\hat{L}\)</span> 的值在两个自由度上减小了 4.69. 这种检查下在 10% 的水平上是显著的 (<span class="math inline">\(P = 0.096\)</span>)，因此存在一些证明表明年龄组和肾切除状态之间存在交互作用。作为比较，请注意，在<a href="chap3.html#exm:ex3-4">示例 3.4</a> 中拟合 Cox 回归模型时，交互作用并不显著 (<span class="math inline">\(P = 0.220\)</span>)。</p>
+<p>通过检查模型下的风险比，可以更详细地研究交互作用。在模型 (5) 下，第 <span class="math inline">\(i\)</span> 个个体的风险函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\exp\{\hat{\alpha}_j+\hat{\nu}_k+\widehat{(\alpha\nu)}_{jk}\}\hat{h}_0(t)\end{aligned}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_0(t)=\hat{\lambda}\hat{\gamma}t^{\boldsymbol{\gamma}-1}\end{aligned}\]</span></p>
+<p>为基线风险函数估计。由于基线风险函数相互抵消，第 <span class="math inline">\(j(j = 1, 2, 3)\)</span> 个年龄组以及第 <span class="math inline">\(k(k=1,2)\)</span> 个肾切除状态水平中的个体，相对于最年轻年龄组以及没有接受过肾切除术的个体，风险比的对数为</p>
+<p><span class="math display" id="eq:5-56">\[\begin{align}
+\hat{\alpha}_j+\hat{\nu}_k+\widehat{(\alpha\nu)}_{jk}-\hat{\alpha}_1-\hat{\nu}_1-\widehat{(\alpha\nu)}_{11}
+\tag{5.56}
+\end{align}\]</span></p>
+<p>如<a href="chap3.html#exm:ex3-4">示例 3.4</a> 所示，可以通过定义年龄组的指示变量 <span class="math inline">\(A_2\)</span> 和 <span class="math inline">\(A_3\)</span> 以及肾切除状态的指示变量 <span class="math inline">\(N\)</span> 来拟合数据。在该示例中，<span class="math inline">\(A_2\)</span> 对于第二年龄组中的个体来说是 1，否则为 0；<span class="math inline">\(A_3\)</span> 对于第三年龄组中的个体来说是 1，否则为 0；如果已经进行了肾切除术，则 <span class="math inline">\(N\)</span> 是 1，否则为 0. 因此，拟合项 <span class="math inline">\(\alpha_j\)</span> 对应于拟合变量 <span class="math inline">\(A_2\)</span> 和 <span class="math inline">\(A_3\)</span>，拟合项 <span class="math inline">\(\nu_k\)</span> 对应于拟合 <span class="math inline">\(N\)</span>，拟合交互项 <span class="math inline">\((\alpha\nu)_{jk}\)</span> 对应于拟合乘积 <span class="math inline">\(A_2N = A_2 × N\)</span> 和 <span class="math inline">\(A_3N = A_3 × N\)</span>。为了拟合模型 (5)，需在模型中包含五个变量 <span class="math inline">\(A_2,A_3,N,A_2N,A_3N\)</span>。通过这种指示变量的选择，当 <span class="math inline">\(j\)</span> 或 <span class="math inline">\(k\)</span> 为 1 时，<span class="math inline">\(\hat{\alpha}_1=0,\hat{\nu}_1=0\)</span> 以及 <span class="math inline">\(\widehat{\left(\alpha\nu\right)}_{{j}k}=0\)</span>。其他的 <span class="math inline">\(\hat{\alpha}_j,\hat{\nu}_k\)</span> 和 <span class="math inline">\(\widehat{\left(\alpha\nu\right)}_{jk}\)</span> 的值是 <span class="math inline">\(A_2,A_3,N,A_2N,A_3N\)</span> 的系数，如表 5.3 所示。</p>
+<details><summary><font color="#8B2232">表 5.3</font>
+</summary><img src="figure/table%205.3.png#center" style="width:80.0%"></details><p><br>
+许多计算机软件包隐式地 (internally) 设置指示变量，因此可以直接从输出中获得表 5.3 中的估计。然而，<strong>此处重复先前给出的警告，当使用软件包来拟合因素时，如果要正确解释输出结果，则必须知道用于定义指示变量的编码</strong>。</p>
+<p>当使用上面指定的指示变量时，式 <a href="chap5.html#eq:5-56">(5.56)</a> 中给出的风险比对数简化为</p>
+<p><span class="math display">\[\hat{\alpha}_j+\hat{\nu}_k+\widehat{(\alpha\nu)}_{jk}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,3,k=1,2\)</span>。表 5.4 给出了相对于基线风险的个体风险。基线风险对应于未接受肾切除术的最年轻年龄组中的个体，因此这些个体的风险比为 1.</p>
+<details><summary><font color="#8B2232">表 5.4</font>
+</summary><img src="figure/table%205.4.png#center" style="width:80.0%"></details><p><br>
+该表有助于解释年龄组和肾切除状态之间的交互作用，因为肾切除术的效应对于三个年龄组中的每个个体是不同的。对于两个最小年龄组的患者，肾切除术大大降低了任何特定时间的死亡风险。但对 70 岁以上的患者，进行肾切除术对死亡风险没有太大影响。我们还发现，对于那些未进行肾切除术的患者，年龄对死亡风险影响不大。</p>
+<p>可以通过类似的方式得到中位生存时间估计。使用式 <a href="chap5.html#eq:5-48">(5.48)</a>，第 <span class="math inline">\(j(j=1,2,3)\)</span> 个年龄组和第 <span class="math inline">\(k(k=1,2)\)</span> 个肾切除状态的患者的中位生存时间估计为</p>
+<p><span class="math display">\[\hat t(50)=\left\{\frac{\log2}{\hat\lambda\exp\{\hat\alpha_j+\hat\nu_k+\widehat{(\alpha\nu)}_{jk}\}}\right\}^{1/\hat\gamma}\]</span></p>
+<p>当对数据拟合包含交互项的模型时，基线风险函数的参数估计为 <span class="math inline">\(\hat\lambda=0.0188\)</span> 和 <span class="math inline">\(\hat\gamma=1.5538\)</span>。表 5.5 给出了每个年龄组和肾切除状态组合的个体的中位生存时间估计（以月为单位）。</p>
+<details><summary><font color="#8B2232">表 5.5</font>
+</summary><img src="figure/table%205.5.png#center" style="width:80.0%"></details><p><br>
+该表显示，肾切除术可使 70 岁以下患者的中位生存时间延长四倍以上。 70 岁以上患者的中位生存时间受肾切除术影响不大。</p>
+<p>我们以一个警告来结束这个例子。对于年龄组和肾切除状态的某些组合，特别是未进行肾切除术的个体，风险比和中位生存时间是基于少量的生存时间进行估计的。因此，这类量的标准误估计将会很大（此处未给出）。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-11" class="example"><strong>示例 5.11  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>卵巢癌患者术后可能会接受一个疗程的化疗。在一项关于两种不同形式化疗的研究中，Edmunson et al. (1979) 比较了单独使用环磷酰胺和环磷酰胺联用阿霉素的抗肿瘤作用。该试验涉及 26 名女性，她们体内仅残留少量肿瘤，且所有直径大于 2 厘米的肿瘤均已经手术切除。术后，根据残留病灶是否完全切除或部分切除，对患者进行分类。在试验开始时还记录了患者的年龄及其表现状态。反应变量为随机接受两种化疗方案之一后的生存天数。数据集中的变量如下：</p>
+<ul>
+<li>
+<span class="math inline">\(Time\)</span>：生存时间天数</li>
+<li>
+<span class="math inline">\(Status\)</span>：事件指示（0 = 删失，1 = 非删失）</li>
+<li>
+<span class="math inline">\(Treat\)</span>：治疗（1 = 单独，2 = 联合）</li>
+<li>
+<span class="math inline">\(Age\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Rdisease\)</span>：残留病灶的程度（1 = 不完全，2 = 完全）</li>
+<li>
+<span class="math inline">\(Perf\)</span>：表现状态（1 = 良好，2 = 糟糕）</li>
+</ul>
+<p>表 5.6 列出了从 Therneau (1986) 获取的数据。</p>
+<details><summary><font color="#8B2232">表 5.6</font>
+</summary><img src="figure/table%205.6.png#center" style="width:80.0%"></details><p><br>
+在对这些数据进行建模时，因素 Treat, RDisease 和 Perf 各有两个水平，并将作为变量进行拟合，这些变量采用表 5.6 中给出的值。当然，这意味着基线风险函数不能直接解释，因为不可能存在这些变量的值都为零的个体。</p>
+<p>从计算和解释的角度来看，重新定义 (relocate) 变量 Age, Rdisease, Perf 和 Treat 的值更方便。如果使用变量 Age − 50 来代替 Age，并将 Rdisease, Perf 和 Treat 减去 1，则基线风险对应于 50 岁、有不完全残留病灶、表现良好且分配到环磷酰胺组的个体的风险。但是，在本例中将使用原始变量。</p>
+<p>我们首先确定哪些预后因素与患者的生存时间相关。表 5.7 给出了为该数据拟合一系列模型的统计量 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值。</p>
+<details><summary><font color="#8B2232">表 5.7</font>
+</summary><img src="figure/table%205.7.png#center" style="width:80.0%"></details><p><br>
+当拟合仅包含 Age, Rdisease 和 Perf 之一的 Weibull 模型时，我们发现 Age 和 Rdisease 都会导致 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值减小，且在 5% 的水平上显著。在拟合 Age 后，变量 Rdisease 和 Perf 分别进一步将 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 减小了 1.903 和 0.048，这两个变量在 10% 的水平上都不显著。此外，当将 Age 添加到已包含 Rdisease 的模型中时，在 1 个自由度上，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的减小量为 13.719，这是非常显著的（<span class="math inline">\(P&lt;0.001\)</span>）。这使我们得出结论：Age 是唯一需要纳入模型的预后变量。</p>
+<p>现在为模型添加与治疗效应相关的项。在 1 个自由度上，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值减小了 2.440，不足以使其在 10% 的水平上显著（<span class="math inline">\(P=0.118\)</span>）。因此，只有非常微弱的证据表明两种化疗对死亡风险的效应存在差异。相比之下，当单独的 Treat 被添加到零模型中时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值从 59.534 减小为 58.355。与 1 个自由度的卡方分布的百分点相比，1.179 的减小当然并不显著。因此，忽略 Age 会低估治疗效应的大小。</p>
+<p>为了探讨治疗差异是否随着年龄的增长而一致，为模型添加以 Age 和 Treat 的乘积形成的交互作用项。此时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 仅减小 1.419. 这种减小远未达到显著性，因此没有必要在模型中包括交互作用项。</p>
+<p>变量 Treat 将保留在模型中，因为兴趣集中在治疗效应的大小上。那么第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 时死亡风险的拟合模型为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)&amp;=\exp\{0.144\,Age_i-1.023\,Treat_i\}\hat{\lambda}\hat{\gamma}t^{\hat{\gamma}-1}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{\lambda}=5.645\times10^{-9}\)</span> 以及 <span class="math inline">\(\hat{\gamma}=1.822\)</span>。在该模型中，<span class="math inline">\(Treat=1\)</span> 表示单独治疗，<span class="math inline">\(Treat=2\)</span> 表示联合治疗。因此，相对于联合治疗的患者，接受单独治疗的患者的风险的估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{\psi}&amp;=\exp\{(-1.023\times1)-(-1.023\times2)\}=2.78\end{aligned}\]</span></p>
+<p>这意味着接受单独治疗的患者在任何特定时间死亡的可能性是接受联合治疗的患者的近三倍。以这种方式表达，联合化疗治疗的益处似乎是巨大的。从这一表述来看，联合治疗的好处似乎相当大。然而，考虑到这些数据本身固有的变异，这种相对风险仅在 12% 的水平上显著大于 1（<span class="math inline">\(P=0.118\)</span>）。</p>
+<p>可以根据下式估计给定年龄的患者接受给定治疗的中位生存时间</p>
+<p><span class="math display">\[\hat t(50)=\left\{\frac{\log2}{\hat\lambda\exp(0.144\,Age-1.023\,Treat)}\right\}^{1/\hat\gamma}\]</span></p>
+<p>例如，一名 60 岁（Age = 60）的女性单独服用环磷酰胺（Treat = 1），中位生存时间估计为 423 天。然而，同龄但接受联合治疗的患者的中位生存时间估计为 741 天，几乎是接受单一治疗患者的两倍。这些估计的置信区间可以使用<a href="chap5.html#exm:ex5-7">示例 5.7</a> 中说明的方法得到。</p>
+</div>
+</div>
+</div>
+<div id="sec5-8" class="section level2" number="5.8">
+<h2>
+<span class="header-section-number">5.8</span> Gompertz 比例风险模型<a class="anchor" aria-label="anchor" href="#sec5-8"><i class="fas fa-link"></i></a>
+</h2>
+<p>尽管 Weibull 模型是使用最广泛的参数比例风险模型，但 Gompertz 模型已在人口学和生物科学中得到应用。</p>
+<p>很容易看出 Gompertz 分布具有 <a href="chap5.html#sec5-5-1">5.5.1</a> 节中描述的比例风险性，因为如果我们取 <span class="math inline">\(h_0(t)=\lambda e^{\theta t}\)</span>，则 <span class="math inline">\(\psi h_0(t)\)</span> 也是一个 Gompertz 风险函数，参数为 <span class="math inline">\(\psi\lambda\)</span> 和 <span class="math inline">\(\theta\)</span>。</p>
+<p>第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险用一般 Gompertz 比例风险模型可表示为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi})\lambda e^{\theta t}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span> 为第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 的值，<span class="math inline">\(i=1,2,\ldots,n\)</span>，以及 <span class="math inline">\(\beta,\lambda\)</span> 和 <span class="math inline">\(\theta\)</span> 是未知参数。该模型可以通过最大化式 <a href="chap5.html#eq:5-14">(5.14)</a> 或 <a href="chap5.html#eq:5-15">(5.15)</a> 中给出的似然函数来拟合。<span class="math inline">\(\beta\)</span> 系数可解释为对数风险比，使用 <a href="chap5.html#sec5-7">5.7</a> 节中描述的方法来比较替代模型。不涉及新的原则。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex5-12" class="example"><strong>示例 5.12  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>在关于卵巢癌患者生存时间的<a href="chap5.html#exm:ex5-11">示例 5.11</a> 中，拟合了包含变量 Age 和 Treat 的 Weibull 比例风险模型。为进行比较，现在拟合包含这两个变量的 Gompertz 比例风险模型。在此模型下，第 <span class="math inline">\(i\)</span> 个患者的拟合风险函数为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\exp\{0.122Age_i-0.848Treat_i\}\hat{\lambda}\exp(\hat{\theta}t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{\lambda}=1.706\times10^{-6}\)</span> 以及 <span class="math inline">\(\hat{\theta}=0.00138\)</span>。将 Treat 添加到仅包含 Age 的 Gompertz 比例风险模型后，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化现在为 1.686 (<span class="math inline">\(P = 0.184\)</span>)。因此，与 Weibull 模型相比，该模型下治疗效应的风险比现在为 <span class="math inline">\(\exp(0.848) = 2.34\)</span>，更小且不那么显著。</p>
+</div>
+</div>
+</div>
+<div id="sec5-9" class="section level2" number="5.9">
+<h2>
+<span class="header-section-number">5.9</span> 模型选择<a class="anchor" aria-label="anchor" href="#sec5-9"><i class="fas fa-link"></i></a>
+</h2>
+<p>生存数据比例风险模型的一大吸引力在于，不必对生存时间采用特定的概率分布。然而，当 Weibull 分布适用于的观测生存数据时，比例风险模型的参数版本为数据建模提供了更合适的基础。</p>
+<p><a href="chap5.html#sec5-5-1">5.5.1</a> 节中描述的基于对数累积风险函数的诊断图可能会揭示 Weibull 生存时间的假设是否合理，但正如已经指出的那样，在存在影响生存时间的解释变量的情况下，这种技术往往提供很少的信息。在这种情况下，为了帮助在 Cox 和 Weibull 比例风险模型之间进行选择，拟合 Cox 回归模型并检查基线风险函数的形状是有用的。拟合的 Weibull 基线累积风险函数或拟合的基线生存函数也可以与 Cox 回归模型的相应估计进行比较，如 <a href="chap5.html#sec5-6-4">5.6.4</a> 节所述。</p>
+<p>第 <a href="chap7.html#chap7">7</a> 章将讨论的残差分析可用于研究一个模型是否比另一个模型拟合得更好。然而只有在特殊情况下，模型检查诊断才能提供令人信服的证据，以证明其中一个或另一个更容易被接受。</p>
+<p>一般来说，除非样本数据包含大量死亡时间，否则很难区分 Cox 和 Weibull 比例风险模型。当两模型拟合优度相差无几时，可以比较两模型线性部分的 <span class="math inline">\(\beta\)</span> 参数估计的标准误。如果 Weibull 模型的标准误明显小于 Cox 模型的标准误，那么基于效能 (efficiency) 的考虑，应优先选择 Weibull 模型。另一方面，如果这些标准误相似，鉴于 Cox 模型的假设限制性较少，Cox 模型可能是首选模型。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></div>
+<div class="next"><a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap5"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li>
+<a class="nav-link" href="#sec5-1"><span class="header-section-number">5.1</span> 风险函数的模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec5-1-1"><span class="header-section-number">5.1.1</span> 指数分布</a></li>
+<li><a class="nav-link" href="#sec5-1-2"><span class="header-section-number">5.1.2</span> Weibull 分布</a></li>
+<li><a class="nav-link" href="#sec5-1-3"><span class="header-section-number">5.1.3</span> log-logistic 分布</a></li>
+<li><a class="nav-link" href="#sec5-1-4"><span class="header-section-number">5.1.4</span> log-normal 分布</a></li>
+<li><a class="nav-link" href="#sec5-1-5"><span class="header-section-number">5.1.5</span> Gompertz 分布</a></li>
+<li><a class="nav-link" href="#sec5-1-6"><span class="header-section-number">5.1.6</span> gamma 分布</a></li>
+<li><a class="nav-link" href="#sec5-1-7"><span class="header-section-number">5.1.7</span> 逆高斯分布</a></li>
+<li><a class="nav-link" href="#sec5-1-8"><span class="header-section-number">5.1.8</span> 一些其他分布</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec5-2"><span class="header-section-number">5.2</span> 评估参数模型的适用性</a></li>
+<li>
+<a class="nav-link" href="#sec5-3"><span class="header-section-number">5.3</span> 为单样本拟合参数模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec5-3-1"><span class="header-section-number">5.3.1</span> 随机删失数据的似然函数</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec5-4"><span class="header-section-number">5.4</span> 拟合指数和 Weibull 模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec5-4-1"><span class="header-section-number">5.4.1</span> 拟合指数分布</a></li>
+<li><a class="nav-link" href="#sec5-4-2"><span class="header-section-number">5.4.2</span> 拟合 Weibull 分布</a></li>
+<li><a class="nav-link" href="#sec5-4-3"><span class="header-section-number">5.4.3</span> Weibull 分布百分位数的标准误</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec5-5"><span class="header-section-number">5.5</span> 用于两组比较的 Weibull 模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec5-5-1"><span class="header-section-number">5.5.1</span> 探索性分析</a></li>
+<li><a class="nav-link" href="#sec5-5-2"><span class="header-section-number">5.5.2</span> 拟合模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec5-6"><span class="header-section-number">5.6</span> Weibull 比例风险模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec5-6-1"><span class="header-section-number">5.6.1</span> 拟合模型</a></li>
+<li><a class="nav-link" href="#sec5-6-2"><span class="header-section-number">5.6.2</span> Weibull 模型百分位数的标准误</a></li>
+<li><a class="nav-link" href="#sec5-6-3"><span class="header-section-number">5.6.3</span> 模型的对数线性形式</a></li>
+<li><a class="nav-link" href="#sec5-6-4"><span class="header-section-number">5.6.4</span> 探索性分析</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec5-7"><span class="header-section-number">5.7</span> 比较替代的 Weibull 比例风险模型</a></li>
+<li><a class="nav-link" href="#sec5-8"><span class="header-section-number">5.8</span> Gompertz 比例风险模型</a></li>
+<li><a class="nav-link" href="#sec5-9"><span class="header-section-number">5.9</span> 模型选择</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

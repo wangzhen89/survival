@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 13 章 多次事件和事件史分析 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="随着时间的推移，观测个体可能会经历多个相同类型的事件，或多个不同类型的事件。经常会遇到重复发生相同类型事件的研究，称为多次事件，如头痛或哮喘发作，并且需要对此类事件发生率关于个体特征或暴露因素的依赖性进行建模的技术。当一个个体可能经历多种不同类型的结局时，也会出现多种事件 (multiple event)...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 13 章 多次事件和事件史分析 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="随着时间的推移，观测个体可能会经历多个相同类型的事件，或多个不同类型的事件。经常会遇到重复发生相同类型事件的研究，称为多次事件，如头痛或哮喘发作，并且需要对此类事件发生率关于个体特征或暴露因素的依赖性进行建模的技术。当一个个体可能经历多种不同类型的结局时，也会出现多种事件 (multiple event)...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 13 章 多次事件和事件史分析 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="随着时间的推移，观测个体可能会经历多个相同类型的事件，或多个不同类型的事件。经常会遇到重复发生相同类型事件的研究，称为多次事件，如头痛或哮喘发作，并且需要对此类事件发生率关于个体特征或暴露因素的依赖性进行建模的技术。当一个个体可能经历多种不同类型的结局时，也会出现多种事件 (multiple event)...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="active" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap13" class="section level1" number="13">
+<h1>
+<span class="header-section-number">第 13 章</span> 多次事件和事件史分析<a class="anchor" aria-label="anchor" href="#chap13"><i class="fas fa-link"></i></a>
+</h1>
+<p>随着时间的推移，观测个体可能会经历多个相同类型的事件，或多个不同类型的事件。经常会遇到重复发生相同类型事件的研究，称为<strong>多次事件</strong>，如头痛或哮喘发作，并且需要对此类事件发生率关于个体特征或暴露因素的依赖性进行建模的技术。当一个个体可能经历多种不同类型的结局时，也会出现<strong>多种事件</strong> (multiple event) 数据，我们关注影响每个结局的时间的因素。如果一个事件的发生排除了所有其他事件的发生，这是我们在第 <a href="chap12.html#chap12">12</a> 章中考虑的竞争风险的情况，但在本章中，我们考虑的情况不一定是这种情况。</p>
+<div class="rmdnote">
+<details><summary><font color="#8B2232">翻译说明</font>
+</summary><p><br>
+对于 “multiple event” 的翻译，当单一事件反复发生时，译者将其译作“多次事件”，而对于可能有多种事件发生的情况，则译作“多种事件”。这一区别在后文的复发事件模型 (AG, PWP) 与多种事件模型 (WLW) 可以看到。译者不将其译作“多重事件”的原因在于，“多重”有“同时”之意，例如“多重比较”=同时进行多种比较。但很显然，复发事件不可能同时发生。</p>
+此外，对于第 <span class="math inline">\(j\)</span> 次/个事件的发生，在“多次事件”中，量词统一为“次”，而在“多种事件”中，量词统一为“个”。
+</details>
+</div>
+<p>在对疾病过程进行建模时，个体可能会经历与疾病特定阶段 (stages) 相对应的多个阶段 (phases) 或<strong>状态</strong> (states). 例如，被诊断为慢性肾病的患者在接受肾移植之前可能会进行透析，移植后可能会出现慢性排异反应或移植物衰竭的阶段。患者可能在确诊后的随访期间经历部分或全部这些事件，并且事件的顺序称为<strong>事件史</strong> (event history). <strong>多状态模型</strong> (multistate models) 可用于描述患者在各种状态之间的转移，并研究解释变量对患者从一种状态转移到另一种状态的速率的效应。</p>
+<p>多次事件和事件史数据可以使用扩展的 Cox 回归模型进行分析，该模型适用于可能发生多次事件的情况，该扩展涉及到为随时间推移而发生的事件开发概率模型，称为<strong>计数过程</strong> (counting process)，因此本章首先介绍计数过程。</p>
+<div id="sec13-1" class="section level2" number="13.1">
+<h2>
+<span class="header-section-number">13.1</span> 计数过程的介绍<a class="anchor" aria-label="anchor" href="#sec13-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>第 <span class="math inline">\(i\)</span> 个个体的计数过程定义为随机变量 <span class="math inline">\(N_i(t),t\geqslant0\)</span> 的值序列，其中 <span class="math inline">\(i=1,2,\ldots,n\)</span>，其对时间段 <span class="math inline">\((0,t]\)</span> 内某事件的发生次数进行计数。那么，计数过程 <span class="math inline">\(N_i(t)\)</span> 的一个实现 (realisation) 是从 0 开始并以一个单位的步长递增的阶跃函数。</p>
+<p>接下来，我们将 <span class="math inline">\(Y_i(t), t \geqslant 0\)</span> 定义为一个过程，其中，当第 <span class="math inline">\(i\)</span> 个个体面临在时间 <span class="math inline">\(t\)</span> 发生事件的风险时，<span class="math inline">\(Y_i(t) = 1\)</span>，否则为 0，因此 <span class="math inline">\(Y_i(t)\)</span> 有时称为<strong>风险过程</strong> (at-risk process). <span class="math inline">\(Y_i(t)\)</span> 的值必须在时间 <span class="math inline">\(t−\)</span>（紧接在 <span class="math inline">\(t\)</span> 之前的时间）处已知，在这种情况下，<span class="math inline">\(Y_i(t)\)</span> 称为<strong>可预测过程</strong> (predictable process).</p>
+<p>与计数过程 <span class="math inline">\(N_i(t)\)</span> 相关的概念为<strong>强度</strong> (intensity)，即事件发生的速率。正式地说，计数过程 <span class="math inline">\(N_i(t)\)</span> 的强度是在单位时间内增加一步的概率，以直到时间 <span class="math inline">\(t\)</span> 的过程历史为条件。直到但不包括时间 <span class="math inline">\(t\)</span> 的过程的历史或<strong>滤子</strong> (filtration) 记作 <span class="math inline">\(\mathcal H(t−)\)</span>，并由直到时间 <span class="math inline">\(t\)</span> 所有 <span class="math inline">\(s\)</span> 值的值集 <span class="math inline">\(\{N_i(s),Y_i(s)\}\)</span> 确定。强度过程用 <span class="math inline">\(\lambda_i(t),t\geqslant0\)</span> 表示。那么，以无穷小量来表示</p>
+<p><span class="math display">\[\begin{aligned}
+\lambda_i(t)&amp; \begin{aligned}=\frac1{\text{d}t}\text{P}\{N_i(t)\text{在长度为 d}t\text{ 的区间中增加一步}\mid\mathcal{H}(t-)\},\end{aligned}  \\
+&amp;=\left.\frac1{\mathrm{d}t}\mathrm{P}\{N_i(t+\mathrm{d}t)-N_i(t)=1\mid\mathcal{H}(t-)\}.\right.
+\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\text{d}t\)</span> 是无穷小的时间区间。如果我们令 <span class="math inline">\(\text dN_i(t) = N_i(t +\text dt) − N_i(t)\)</span> 表示 <span class="math inline">\(N_i(t)\)</span> 在长度为 <span class="math inline">\(\text dt\)</span> 的无穷小的时间区间内的变化，则 <span class="math inline">\(\lambda_i(t)\)</span> 可表示为</p>
+<p><span class="math display" id="eq:13-1">\[\begin{align}
+\lambda_i(t)=\frac{1}{\mathrm{d}t}\text{P}\{\text{d}N_i(t)=1\mid\mathcal{H}(t-)\}
+\tag{13.1}
+\end{align}\]</span></p>
+<p>由于 <span class="math inline">\(\text dN_i(t)\)</span> 为 0 或 1，因此得出</p>
+<p><span class="math display">\[\begin{aligned}\lambda_i(t)&amp;=\frac{1}{\text{d}t}\operatorname{E}\left\{\text{d}N_i(t)\mid\mathcal{H}(t-)\right\}\end{aligned}\]</span></p>
+<p>因此，计数过程的强度是单位时间内的预期事件数，以过程的历史为条件。</p>
+<p>我们还可定义累积强度或积分强度 (cumulative intensity or integrated intensity)</p>
+<p><span class="math display">\[\begin{aligned}\Lambda_i(t)&amp;=\int_0^t\lambda_i(u)\mathrm{d}u\end{aligned}\]</span></p>
+<p>表示时间区间 <span class="math inline">\((0, t]\)</span> 内事件的累积预期数，即 <span class="math inline">\(\Lambda_i(t) =\mathrm{E}\left\{N_i(t)\right\}\)</span>。</p>
+<div id="sec13-1-1" class="section level3" number="13.1.1">
+<h3>
+<span class="header-section-number">13.1.1</span> 强度函数建模<a class="anchor" aria-label="anchor" href="#sec13-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>第 <span class="math inline">\(i\)</span> 个个体强度函数的一个简易且通用模型是，它取决于可观测、可预测的随机过程 <span class="math inline">\(Y_i(t)\)</span>、时间以及 <span class="math inline">\(p\)</span> 个可能为时依的解释变量 <span class="math inline">\(X_1(t),X_2(t),\ldots,X_p(t)\)</span> 的时间和已知值的未知函数。那么，计数过程 <span class="math inline">\(N_i(t)\)</span> 的强度为</p>
+<p><span class="math display">\[\begin{aligned}\lambda_i(t)=Y_i(t)g\{t,\boldsymbol{x}_i(t)\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i(t)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 处 <span class="math inline">\(p\)</span> 个解释变量的值向量。令 <span class="math inline">\(g\{t,\boldsymbol{x}_i(t)\}=\exp\{\boldsymbol{\beta'x}_i(t)\}\lambda_0(t)\)</span>，我们有</p>
+<p><span class="math display">\[\lambda_i(t)=Y_i(t)\exp\{\boldsymbol{\beta'x}_i(t)\}\lambda_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(\lambda_0(t)\)</span> 是仅取决于 <span class="math inline">\(t\)</span> 的基线强度函数。</p>
+<p>第 3 章 <a href="chap3.html#sec3-3-1">3.3.1</a> 节用于推导生存时间样本的偏似然的方法，可以改写，以获取计数过程的实现的数据的似然。此处省略了具体细节，但在计数过程表示法中，偏似然的形式为</p>
+<p><span class="math display" id="eq:13-2">\[\begin{align}
+\prod_{i=1}^n\prod_{\begin{array}{c}t\geqslant0\\\end{array}}\left\{\frac{Y_i(t)\exp\{\boldsymbol{\beta'x}_i(t)\}}{\sum_{l=1}^nY_l(t)\exp\{\boldsymbol{\beta'x}_l(t)\}}\right\}^{\text{d}N_i(t)}
+\tag{13.2}
+\end{align}\]</span></p>
+<p>其中，若 <span class="math inline">\(N_i(t)\)</span> 在时间 <span class="math inline">\(t\)</span> 增加一个单位，则 <span class="math inline">\({\text{d}N_i(t)}=1\)</span>，否则为 0. 那么，将该函数关于强度函数中的未知参数最大化，从而得出 <span class="math inline">\(\beta\)</span> 的估计。</p>
+<p>在计数过程研究中已发展出了大量的理论，这使得可以确定参数估计的渐近性质。该理论基于一种称为<strong>鞅</strong> (martingale) 的零均值随机过程的性质。事实上，该过程定义为</p>
+<p><span class="math display" id="eq:13-3">\[\begin{align}
+M_i(t)=N_i(t)-\Lambda_i(t)
+\tag{13.3}
+\end{align}\]</span></p>
+<p>使得对于所有的 <span class="math inline">\(t\)</span> 有 <span class="math inline">\(\operatorname{E}\left\{M_i(t)\right\}=0\)</span>，并且是一个鞅。这里不会给出理论细节，但请注意，式 <a href="chap13.html#eq:13-3">(13.3)</a> 是第 4 章式 <a href="chap4.html#eq:4-6">(4.6)</a> 中定义的鞅残差的基础。</p>
+</div>
+<div id="sec13-1-2" class="section level3" number="13.1.2">
+<h3>
+<span class="header-section-number">13.1.2</span> 作为计数过程的生存数据<a class="anchor" aria-label="anchor" href="#sec13-1-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>具有右删失生存时间的生存数据由时间 <span class="math inline">\(t_i(i=1,2,\ldots,n)\)</span> 和事件指示符 <span class="math inline">\(\delta_i\)</span> 形成的对组成，是计数过程的一个特例。为了证明这一点，请考虑一个计数过程，其中当第 <span class="math inline">\(i\)</span> 个个体面临事件发生的风险时 <span class="math inline">\(N_i(t) = 0\)</span>，并且当事件发生时 <span class="math inline">\(N_i(t)\)</span> 阶跃为 1. 由于个体在时间起点处于风险中，则 <span class="math inline">\(N_i(0) = 0\)</span>，因此过程 <span class="math inline">\(N_i(t)\)</span> 从 0 开始，并在第 <span class="math inline">\(i\)</span> 个个体的事件时间增加到 1，但对于那些具有删失生存时间的个体保持为 0. 风险过程的值 <span class="math inline">\(Y_i(t)\)</span> 在事件发生或时间删失之前保持 1，此后为 0.</p>
+<p>根据式 <a href="chap13.html#eq:13-1">(13.1)</a>，计数过程的强度满足</p>
+<p><span class="math display">\[\begin{aligned}
+\lambda_i(t)\mathrm{d}t&amp; \begin{aligned}=\text{ P}\{\text{d}N_i(t)=1\mid\mathcal{H}(t-)\}\end{aligned}  \\
+&amp;=\text{P}\{t\leqslant T_i\leqslant t+\text{d}t\mid\mathcal{H}(t-)\}
+\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(T_i\)</span> 是与第 <span class="math inline">\(i\)</span> 个个体的事件发生时间相关的随机变量。强度函数可以表示为</p>
+<p><span class="math display" id="eq:13-4">\[\begin{align}
+\lambda_i(t)\mathrm{d}t=Y_i(t)h_i(t)\mathrm{d}t
+\tag{13.4}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[h_i(t)\mathrm{d}t=\mathrm{P}(t\leqslant T_i\leqslant t+\mathrm{d}t\mid T\geqslant t)\]</span></p>
+<p>是第 1 章式 <a href="chap1.html#eq:1-3">(1.3)</a> 中首次定义的风险函数 <span class="math inline">\(h_i(t)\)</span>。式 <a href="chap13.html#eq:13-4">(13.4)</a> 中的结果来源于这样一个事实，即在生存数据中，在 <span class="math inline">\(t\)</span> 到 <span class="math inline">\(t+\text{d}t\)</span> 的时间区间内发生事件的风险仅取决于在时间 <span class="math inline">\(t−\)</span> 处于风险的个体，因此那时的相关历史 (relevant history) <span class="math inline">\(\mathcal{H}(t\boldsymbol{-})\)</span> 为 <span class="math inline">\(T_i\geqslant t\)</span>。在式 <a href="chap13.html#eq:13-4">(13.4)</a> 中包含 <span class="math inline">\(Y_i(t)\)</span> 可确保当第 <span class="math inline">\(i\)</span> 个个体不处于风险中时，<span class="math inline">\(\lambda_i(t)=0\)</span>。</p>
+<p>根据式 <a href="chap13.html#eq:13-4">(13.4)</a>，计数过程的强度由 <span class="math inline">\(\lambda_i(t)=Y_i(t)h_i(t)\)</span> 给出，因此强度函数是当第 <span class="math inline">\(i\)</span> 个人处于事件风险时，在时间 <span class="math inline">\(t\)</span> 发生事件的风险。此外，标准 Cox 回归模型的强度函数可表示为</p>
+<p><span class="math display">\[Y_i(t)\exp(\boldsymbol{\beta'x}_i)h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(h_0(t)\)</span> 是基线风险函数。在后文中，这将像往常一样简记为 <span class="math inline">\(h_i(t)\)</span>。</p>
+<p>为了根据式 <a href="chap13.html#eq:13-2">(13.2)</a> 中的一般结果获得该模型的似然函数，我们注意到 <span class="math inline">\(\operatorname{d}N_i(t)\)</span> 在事件时间之前为 0，在事件时间处为 1. 对式 <a href="chap13.html#eq:13-2">(13.2)</a> 中偏似然函数的唯一贡献来自处于风险的个体，因此式 <a href="chap13.html#eq:13-2">(13.2)</a> 变为</p>
+<p><span class="math display">\[\prod_{i=1}^n\left\{\frac{\exp\{\boldsymbol{\beta'x}_i(t)\}}{\sum_{l\in R(t_i)}\exp\{\boldsymbol{\beta'x}_l(t)\}}\right\}^{\delta_i}\]</span></p>
+<p>正如第 3 章式 <a href="chap3.html#eq:3-5">(3.5)</a>。当解释变量非时依时，对于 <span class="math inline">\(t\)</span> 的所有值，有 <span class="math inline">\(x_j\equiv x_j(t)\)</span>，这就是第 3 章 <a href="chap3.html#sec3-3">3.3</a> 节中的式 <a href="chap3.html#eq:3-5">(3.5)</a>。</p>
+<p>这些结果意味着计数过程理论可用于证明生存分析中的许多标准结果，并导出检验统计量的渐近性质。然而，计数过程表示法的巨大优势在于它可用于在多个方向上扩展 Cox 模型。这些包括时变解释变量、相依删失、复发事件、每个个体的多次事件以及相关数据的模型。它还允许处理具有更复杂删失模式的问题。其中包括左截尾（其中个体的随访过程仅在时间起点之后的某个已知时间开始）以及多状态模型。本章将考虑其中一些情况。</p>
+</div>
+<div id="sec13-1-3" class="section level3" number="13.1.3">
+<h3>
+<span class="header-section-number">13.1.3</span> 计数过程格式的生存数据<a class="anchor" aria-label="anchor" href="#sec13-1-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>计数过程数据由时间区间序列 <span class="math inline">\((t_{j-1},t_j],~j=1,2,\ldots\)</span> 组成，其中 <span class="math inline">\(t_0=0\)</span>，在该时间区间内，计数过程 <span class="math inline">\(N_i(t)\)</span>、风险过程 <span class="math inline">\(Y_i(t)\)</span> 和任意时变解释变量 <span class="math inline">\(x_i(t)\)</span> 的值对于第 <span class="math inline">\(i\)</span> 个个体（共 <span class="math inline">\(n\)</span> 个）是恒定的。与每个区间相关的是区间结束时 <span class="math inline">\(N_i(t)\)</span> 的值 <span class="math inline">\(N_i(t_j)\)</span>，其标记了 <span class="math inline">\(N_i(t)\)</span> 增加一个单位的时间，或 <span class="math inline">\(Y_i(t)\)</span> 或解释变量的值变化的时间。这的得到了另一种更灵活的格式化生存数据的方式，如第 8 章 <a href="chap8.html#sec8-3">8.3</a> 节所述。</p>
+<p>为了以计数过程格式表达生存数据，假设 <span class="math inline">\(t\)</span> 是事件时间，<span class="math inline">\(\delta\)</span> 是特定个体的事件指示符。将时间区间 <span class="math inline">\((0, t]\)</span> 划分为一系列 <span class="math inline">\(r\)</span> 个区间，分割点 <span class="math inline">\(t_1,t_2,\ldots,t_{r-1}\)</span> 满足 <span class="math inline">\(0&lt;t_1&lt;t_2&lt;\cdots&lt;t_{r-1}&lt;t\)</span>。相应的区间为 <span class="math inline">\((0,t_1],(t_1,t_2],\ldots,(t_{r-1},t]\)</span>。所有时变解释变量的值、风险过程和计数过程在每个时间区间内都是恒定的。<span class="math inline">\(t_j\)</span> 处的事件状态为 <span class="math inline">\(N(t_j)\)</span>，因此，如果个体在 <span class="math inline">\(t_j\)</span> 时仍处于风险中，则 <span class="math inline">\(N(t_j) = 0\)</span>，如果该个体在 <span class="math inline">\(t_j\)</span> —— 第 <span class="math inline">\(j(j=1,2,\ldots,r)\)</span> 个区间 <span class="math inline">\((t_{j−1}, t_j ]\)</span> 的终点 —— 经历事件，则 <span class="math inline">\(N(t_j) = 1\)</span>，其中 <span class="math inline">\(t_r \equiv t\)</span>。那么，对于第 <span class="math inline">\(i\)</span> 个个体，可用序列 <span class="math inline">\(\{t_{i,j-1},t_{ij},N_i(t_{ij})\}\)</span> 替换对生存时间和事件指示符 <span class="math inline">\(\left(t_i,\delta_i\right)\)</span> 的观测，其中 <span class="math inline">\(j=1,2,\ldots,r,t_{i0}\equiv 0\)</span> 且 <span class="math inline">\(t_{ir}\equiv t_i\)</span>。生存数据现在采用<strong>计数过程格式</strong>。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex13-1" class="example"><strong>示例 13.1  (计数过程格式说明) </strong></span><br></p>
+<p>计数过程格式的使用见第 8 章的<a href="chap8.html#exm:ex8-1">示例 8.1</a> 中，其中在基线和 88, 172, 245 和 357 天对生存 379 天的个体进行了时依变量的测量。表 13.1 显示了以计数过程表示法展示的同一患者的数据。</p>
+<details><summary><font color="#8B2232">表 13.1</font>
+</summary><img src="figure/table%2013.1.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec13-1-4" class="section level3" number="13.1.4">
+<h3>
+<span class="header-section-number">13.1.4</span> 方差-协方差阵的稳健估计<a class="anchor" aria-label="anchor" href="#sec13-1-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>当使用 Cox 回归模型的计数过程表示来分析多次事件数据时，个体内的事件时间将不是独立的。这又意味着以通常方式获得的拟合模型中参数估计的标准误可能小于实际值。为避免高估基于模型的估计的精度，可以通过使用一个不那么依赖于潜在模型的方差-协方差阵的<strong>稳健估计</strong> (robust estimate)。本节将描述一种广泛使用的稳健估计，即<strong>三明治估计</strong> (sandwich estimate)，许多研究表明该估计在错误指定的 Cox 回归模型中表现良好。</p>
+<p>Cox 回归模型中参数估计的方差-协方差阵的基于标准模型的估计 <span class="math inline">\(\operatorname{var}(\hat{\boldsymbol{\beta}})\)</span> 是观测信息矩阵的逆。这是在第 3 章 <a href="chap3.html#sec3-3-3">3.3.3</a> 节中介绍的，是一个 <span class="math inline">\(p × p\)</span> 矩阵，表示为 <span class="math inline">\(\boldsymbol{I}^{-1}(\hat{\boldsymbol{\beta}})\)</span>，其中 <span class="math inline">\(p\)</span> 是未知 <span class="math inline">\(\beta\)</span> 参数的数量。 Lin and Wei (1989) 提出的方差协方差矩阵的稳健估计可以根据 <span class="math inline">\(\boldsymbol{I^{-1}}(\hat{\boldsymbol{\beta}})\boldsymbol{A}(\hat{\boldsymbol{\beta}})\boldsymbol{I^{-1}}(\hat{\boldsymbol{\beta}})\)</span> 计算得出，其中矩阵 <span class="math inline">\(\boldsymbol{A}(\hat{\boldsymbol{\beta}})\)</span> 可视为允许潜在模型错误指定的修正项。该修正项夹在两个信息矩阵的逆矩阵之间，由此得三明治估计之名。修正矩阵为 <span class="math inline">\(\boldsymbol{A}(\hat{\boldsymbol{\beta}})=\boldsymbol{U'}(\hat{\boldsymbol{\beta}})\boldsymbol{U}(\hat{\boldsymbol{\beta}})\)</span>。其中 <span class="math inline">\(\boldsymbol{U}(\hat{\boldsymbol{\beta}})\)</span> 是有效得分的 <span class="math inline">\(n × p\)</span> 矩阵，对 <span class="math inline">\(n\)</span> 个观测的每个观测在估计 <span class="math inline">\(\hat{\boldsymbol{\beta}}\)</span> 处计算。</p>
+<p>在第 4 章 <a href="chap4.html#sec4-3-1">4.3.1</a> 节中，第 <span class="math inline">\(i\)</span> 个观测的有效得分的 <span class="math inline">\(p × 1\)</span> 向量记作 <span class="math inline">\(\boldsymbol{r}_{U{i}}\)</span>，称为第 <span class="math inline">\(i\)</span> 个观测的得分残差向量，因此 <span class="math inline">\(\boldsymbol{U}(\hat{\boldsymbol{\beta}})\)</span> 是一个 <span class="math inline">\(n × p\)</span> 矩阵，其行为 <span class="math inline">\(\boldsymbol{r}_{U1}^{\prime},\boldsymbol{r}_{U2}^{\prime},\ldots,\boldsymbol{r}_{Un}^{\prime}\)</span>。现在，在省略第 i 个观测值后，<span class="math inline">\(\beta\)</span> 参数向量的变化近似为 <span class="math inline">\(\boldsymbol{r}_{U{i}}^{\prime}\operatorname{var}\left(\hat{\boldsymbol{\beta}}\right)\)</span>，如第 4 章 <a href="chap4.html#sec4-3-1">4.3.1</a> 节所示。以本节的表示法，这些值的矩阵为 <span class="math inline">\(\boldsymbol{D}(\hat{\boldsymbol{\beta}})=\boldsymbol{U}(\hat{\boldsymbol{\beta}})\boldsymbol{I}^{-1}(\hat{\boldsymbol{\beta}})\)</span>，该矩阵第 <span class="math inline">\(i\)</span> 行的分量为 delta-beta 统计量，用于评估第 <span class="math inline">\(i\)</span> 个观测对每个参数估计（共 <span class="math inline">\(p\)</span> 个）的影响。因此，三明治估计可写为 <span class="math inline">\(\boldsymbol{D'}(\hat{\boldsymbol{\beta}})\boldsymbol{D}(\hat{\boldsymbol{\beta}})\)</span>，这显示了如何根据 delta-beta 获得三明治估计。</p>
+<p>在本章设想的应用中，数据由每个个体内相对较少的事件时间组成。在这种情况下，最好将三明治估计建立在个体内事件时间的聚合 (aggregate) 上。这可以通过将有效得分，即矩阵 <span class="math inline">\(\boldsymbol{U}\left(\hat{\boldsymbol{\beta}}\right)\)</span> 的元素，在每个个体（共 <span class="math inline">\(n\)</span> 个）内的事件时间上求和来实现，所以该矩阵仍是 <span class="math inline">\(n × p\)</span> 的。</p>
+<p>当使用方差-协方差阵的稳健估计时，比较稳健标准误与通常的基于模型的标准误的比值可能会有所帮助。这样就可以确定使用稳健估计对风险比区间估计等量的影响。</p>
+</div>
+</div>
+<div id="sec13-2" class="section level2" number="13.2">
+<h2>
+<span class="header-section-number">13.2</span> 复发事件建模<a class="anchor" aria-label="anchor" href="#sec13-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>在医学研究中，一个个体经历多个相同类型的事件（称为<strong>复发事件</strong>, recurrent event）的情况很常见，例如肿瘤复发、感染发作、药物不良反应、癫痫发作、出血事件、偏头痛和心胸事件。因此需要相应技术来估计复发 (recurrences) 发生的速率或强度 (rate or intensity)，以及复发率对个体特征或暴露因素的依赖性。</p>
+<p>在对复发事件数据的初始分析中，可以使用生存分析的标准方法对第一次事件的时间进行建模。虽然简单，但这种方法忽略了后续事件，因此没有充分利用所有数据。然而，更细致的分析因两个特征而变得复杂。首先，个体之间对复发事件的易感性会有所不同，个体内的复发时间可能不是独立的。其次，在发生大出血等事件后，采取的治疗可能意味着个体在短时间内不会有再出血的风险。因此，有必要修改面临复发事件风险的集合，以考虑到这一点。</p>
+<p>Cox 回归模型的变体为分析复发事件数据的建模方法提供了方便的框架。特别是，<a href="chap13.html#sec13-1">13.1</a> 节描述的计数过程方法可以纳入风险状态随时间变化等特征。</p>
+<p>常用三种模型分析复发事件。其中最简单的是 Anderson and Gill (1982)，但更灵活的模型是 Prentice, Williams and Peterson (1981)。第三个由 Wei, Lin and Weissfeld (1989) 提出的模型也会描述，但该模型在存在不同类型的事件时更有用，而不是相同类型事件的复发，因此将在后面的 <a href="chap13.html#sec13-3-1">13.3.1</a> 节介绍。我们效仿其他人将这些模型分别称为 AG, PWP 和 WLW 模型。</p>
+<div id="sec13-2-1" class="section level3" number="13.2.1">
+<h3>
+<span class="header-section-number">13.2.1</span> Anderson and Gill 模型<a class="anchor" aria-label="anchor" href="#sec13-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在该模型中，基线强度函数对于所有复发都是共同的，不受先前事件发生的影响，并且个体内的单个复发时间是独立的。因此，当主要关注总复发率时，该模型特别有用。</p>
+<p>刻画第 <span class="math inline">\(i\)</span> 个个体（共 <span class="math inline">\(n\)</span> 个）在时间 <span class="math inline">\(t\)</span> 发生事件的强度或风险的 AG 模型由下式给出</p>
+<p><span class="math display" id="eq:13-5">\[\begin{align}
+h_i(t)=Y_i(t)\exp\{\boldsymbol{\beta'x}_i(t)\}h_0(t)
+\tag{13.5}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(Y_i(t)\)</span> 表示第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 是否有发生事件的风险，<span class="math inline">\(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i(t)\)</span> 是 <span class="math inline">\(p\)</span> 个可能时依的解释变量的线性组合，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。可能经历多次事件的患者仍然处于风险中，因此 <span class="math inline">\(Y_i(t)\)</span> 将保持为 1，除非个体在某个时间段内暂时不处于风险中，或者直到随访时间删失。时间 <span class="math inline">\(t\)</span> 处的风险集是在时间 <span class="math inline">\(t\)</span> 仍在随访的所有个体的集合，就像标准 Cox 模型一样。</p>
+<p>为了拟合该模型，复发事件数据以计数过程格式表示，其中第 <span class="math inline">\(j\)</span> 个时间区间 <span class="math inline">\((t_j−1, t_j ]\)</span> 是第 <span class="math inline">\(j −1\)</span> 次和第 <span class="math inline">\(j\)</span> 次复发之间的时间，<span class="math inline">\(j = 1, 2,\ldots\)</span>，其中 <span class="math inline">\(t_0 = 0\)</span>。状态变量表示事件是否发生在区间终点（即第 <span class="math inline">\(j\)</span> 次复发的时间），如果 <span class="math inline">\(t_j\)</span> 是事件时间，则状态变量为 1，否则为 0. 未经历任何事件的个体只贡献一个时间区间，其终点为删失的，因此其状态变量为 0. 类似地，状态变量在随访期终点将为 0，除非在该时间观测到事件。拟合 AG 模型所需的数据格式稍后在<a href="chap13.html#exm:ex13-2">示例 13.2</a> 中说明。</p>
+<p>通过在模型中纳入对应于先前事件数量或从起点开始的时间的项，可以在一定程度上放宽独立复发时间的假设。由于复发时间之间的任何关联通常会导致 的基于模型的标准误过小，因此可以使用 <a href="chap13.html#sec13-1-4">13.1.4</a> 节描述的 <span class="math inline">\(\beta\)</span> 参数估计的方差-协方差阵的稳健形式。</p>
+<p>这种方法可能无法正确解释个体内相关 (within-subject dependence)，因此，如第 <a href="chap10.html#chap10">10</a> 章所述，可以通过纳入第 <span class="math inline">\(i\)</span> 名个体的随机脆弱效应来考虑复发时间之间的关联。将随机个体效应 <span class="math inline">\(u_i\)</span> 添加到 AG 模型中得到</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=Y_i(t)\exp\{\boldsymbol{\beta'x}_i(t)+u_i\}h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(u_i\)</span> 可假定为具有 <span class="math inline">\(N(0,\sigma_u^2)\)</span> 分布。使用第 10 章 <a href="chap10.html#sec10-6">10.6</a> 节描述的方法，拟合具有以及不具有脆弱效应的 AG 模型，可以评估复发时间的个体内相关的程度。</p>
+<p>一旦拟合了模型，就可以确定风险比及其相应的区间估计。此外，可以使用未调整或调整的累积强度（或风险）函数和累积发生率函数（根据生存函数的补集来估计）来总结复发时间。这将在<a href="chap13.html#exm:ex13-2">示例 13.2</a> 中进行说明。</p>
+</div>
+<div id="sec13-2-2" class="section level3" number="13.2.2">
+<h3>
+<span class="header-section-number">13.2.2</span> Prentice, Williams, and Peterson 模型<a class="anchor" aria-label="anchor" href="#sec13-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>直接扩展式 <a href="chap13.html#eq:13-5">(13.5)</a> 中的 AG 模型得到了一个更灵活的模型，其中为每个事件定义了单独的层。该模型允许强度随复发而异，因此个体内复发时间 (within-subject recurrence times) 不再是独立的。在 PWP 模型中，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 发生第 <span class="math inline">\(j(j=1,2,\ldots)\)</span> 次事件的风险为</p>
+<p><span class="math display" id="eq:13-6">\[\begin{align}
+h_{ij}(t)=Y_{ij}(t)\exp\{\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_i(t)\}h_{0j}(t)
+\tag{13.6}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(Y_{ij} (t)\)</span> 在第 <span class="math inline">\(j − 1\)</span> 次复发事件之前为 1，此后为 0，<span class="math inline">\(\boldsymbol\beta_j\)</span> 是第 <span class="math inline">\(j\)</span> 次复发时间的 <span class="math inline">\(p\)</span> 个解释变量的系数向量，<span class="math inline">\(\boldsymbol x_i(t)\)</span> 是解释变量的值向量，<span class="math inline">\(h_{0j} (t)\)</span> 是第 <span class="math inline">\(j\)</span> 次复发的基线风险。在此模型中，第 <span class="math inline">\(j\)</span> 次复发的风险集仅限于经历过先前 <span class="math inline">\(j−1\)</span> 次复发的个体。由于第 <span class="math inline">\(j\)</span> 个复发事件的强度取决于第 <span class="math inline">\(j − 1\)</span> 个事件的发生，因此这称为<strong>条件模型</strong> (conditional model)，并被广泛认为是最令人满意的一般模型。</p>
+<p>式 <a href="chap13.html#eq:13-6">(13.6)</a> 中定义的 PWP 模型可以使用 Cox 回归模型进行拟合，按复发次数分层。数据以拟合 AG 模型相同的格式来表示，其中状态指示符在第 <span class="math inline">\(j\)</span> 次复发时间之前为 1，此后为 0. 此外，分层因素表示复发次数。对于每次复发，解释变量的系数可以采用不同的值，但是当大量复发不经常发生时，它们可以限制在对于层的子集（或在所有层）中具有共同值<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;The coefficients of the explanatory variables may take different values for each recurrence, but they can be constrained to have a common value for a subset of the strata when large numbers of recurrences do not occur very often, or across all the strata.&lt;/p&gt;"><sup>23</sup></a>。像往常一样，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量值的变化可用于正式检验风险比在层间恒定<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;a constant hazard ratio across strata.&lt;/p&gt;"><sup>24</sup></a>的假设。</p>
+<p>该模型特别适用于关注事件不同复发之间的时间间隔以及风险比是否因复发次数而异的情况。与 AG 模型一样，可以使用参数估计的稳健方差-协方差矩阵来进一步考虑复发时间的相关性，并且可以通过使用脆弱项来扩展该模型，以解释复发时间之间的任何关联。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex13-2" class="example"><strong>示例 13.2  (雌性大鼠乳腺肿瘤的复发) </strong></span><br></p>
+<p>在旨在比较有效的癌症预防治疗和对照治疗的动物实验中，肿瘤的发生率是令人感兴趣的。Gail, Santner and Brown (1980) 描述了一项关于雌性大鼠乳腺癌发展的实验，其中大鼠被随机分配到两个处理组中。首先给大鼠注射致癌物质，然后注射维甲酸乙酯 (retinyl acetate)，这是一种维生素 A 的自然形式，具有抑制肿瘤发展的潜力。60 天后，48 只没有肿瘤的大鼠被随机分配到继续接受维甲酸 (retinoid) 预防治疗的组，或不接受此类治疗的对照组。每周对这些大鼠进行两次肿瘤证据评估，观察期在随机接受治疗 122 天后结束。122 天时没有肿瘤的大鼠的复发时间为删失的。</p>
+<p>表 13.2 中的数据给出了接受维甲酸预防的 23 只大鼠以及 25 只对照组大鼠从随机化到发生乳腺肿瘤的时间。由于不是每天都对这些老鼠进行评估，一些老鼠在一次评估中被发现患上了不止一个肿瘤。例如，在第 42 天，对照组中的一只大鼠被发现有三个肿瘤。为了消除结观测产生的模糊性，将这些时间表示为 42, 42.1 和 42.2 天。</p>
+<details><summary><font color="#8B2232">表 13.2</font>
+</summary><img src="figure/table%2013.2.png#center" style="width:80.0%"></details><p><br>
+对第一次事件的时间进行建模可进行初步的简单分析。实验的 48 只老鼠中，只有两只没有发展出肿瘤，因此生存时间为删失的。使用 Cox 回归模型，相对于对照组，接受维甲酸治疗的大鼠中第一次出现肿瘤的风险为 0.50. 这与 1 显著不同（<span class="math inline">\(P = 0.027\)</span>），相应的 95% 置信区间为 <span class="math inline">\((0.27, 0.93)\)</span>。有强有力的证据表明，接受治疗的大鼠首次出现肿瘤的风险约为对照大鼠的一半。</p>
+<p>为了说明如何组织数据以进行复发事件分析，请考虑治疗组中第五只大鼠的数据，该大鼠检测到肿瘤的时间为 70, 74, 85 和 92 天，直到随访的第 122 天，未检测到更多的肿瘤。为了将数据用于 AG 和 PWP 模型，将该序列以计数过程格式表示，示于表 13.3 中。治疗组由一个解释变量表示，这对于接受维甲酸治疗的大鼠为 1，否则为 0.</p>
+<details><summary><font color="#8B2232">表 13.3</font>
+</summary><img src="figure/table%2013.3.png#center" style="width:80.0%"></details><p><br>
+在 AG 模型中，在时间 <span class="math inline">\(t\)</span> 发展出肿瘤的风险由下式给出</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=Y_i(t)\exp(\beta x_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中，当大鼠处于肿瘤发展的风险时，<span class="math inline">\(Y_i(t)= 1\)</span>，否则为 0，如果第 <span class="math inline">\(i\)</span> 只大鼠在治疗组中，则 <span class="math inline">\(X_i = 1\)</span>，否则为 0，<span class="math inline">\(\beta\)</span> 是接受维甲酸治疗的大鼠相对于对照组大鼠的对数风险比。然后为表 13.3 所示的数据中的停止时间（即每个区间的终点）拟合标准 Cox 回归模型。</p>
+<p>使用治疗效应的稳健标准误，得到 <span class="math inline">\(\hat{\beta}=-0.801\)</span> 以及 <span class="math inline">\(\text{se}\left(\hat{\beta}\right)=0.198\)</span>，该估计显著小于零（<span class="math inline">\(P &lt; 0.001\)</span>），并且在任何给定时间，维甲酸组大鼠发生肿瘤的总体风险相对于对照组大鼠为 0.45，95% 置信区间为 <span class="math inline">\((0.30,0.66)\)</span>。维甲酸治疗组大鼠的肿瘤发生率不到对照组大鼠的一半。</p>
+<p>可以使用每个治疗组中大鼠肿瘤复发的累积强度（或风险）估计来总结治疗差异。即 <span class="math inline">\(\exp(\hat{\beta}x)\hat{H}_0(t)\)</span>，其中，<span class="math inline">\(\hat{H}_0(t)\)</span> 是基线累积强度函数估计，对于接受维甲酸治疗的大鼠，<span class="math inline">\(x = 1\)</span>，对于对照组的大鼠，<span class="math inline">\(x = 0\)</span>。这也是随时间推移肿瘤复发的累积预期数。每种治疗的累积强度如图 13.1 所示。这表明接受维甲酸治疗的大鼠的肿瘤发生强度低于对照组大鼠。45 天时，预估治疗组中的大鼠将出现一个肿瘤，但对照组中的大鼠此时将出现两个肿瘤。</p>
+<details><summary><font color="#8B2232">图 13.1</font>
+</summary><img src="figure/figure%2013.1.png#center" style="width:80.0%"></details><p><br>
+复发的累积发生率可根据 <span class="math inline">\(1-\hat{S}_0(t)^{\exp(\hat{\beta}x)}\)</span> 计算，<span class="math inline">\(x = 0\)</span> 或 <span class="math inline">\(1\)</span>，其中 <span class="math inline">\(\hat{S}_0(t)=\exp\{-\hat{H}_0(t)\}\)</span> 是拟合的 AG 模型的基线生存函数估计。两个发生率函数如图 13.2 所示。该图再次证实对照组大鼠的肿瘤发生率明显更高。治疗组大鼠的中位肿瘤复发时间为 31 天，对照组大鼠的中位肿瘤复发时间为 17 天。</p>
+<details><summary><font color="#8B2232">图 13.2</font>
+</summary><img src="figure/figure%2013.2.png#center" style="width:80.0%"></details><p><br>
+可以通过向 AG 模型添加正态分布随机效应来对大鼠内复发时间之间的关联进行建模，而不是使用治疗效应的稳健标准误。这种随机效应对于每只大鼠来说都是不同的，但对于大鼠内的复发时间来说是恒定的。建模后，大鼠效应非常显著，随机效应的方差估计为 0.25. 在此模型中，总体风险比估计为 0.46，95% 置信区间为 <span class="math inline">\((0.31, 0.71)\)</span>。这些估计与使用稳健标准误获得的估计相似。</p>
+<p>AG 模型的一个缺点在于复发率不取决于先前复发的次数，因此我们接下来拟合 PWP 模型。在该模型中，第 <span class="math inline">\(i(i=1,2,\ldots,48)\)</span> 只大鼠第 <span class="math inline">\(j(j=1,2,\ldots)\)</span> 次复发的风险为</p>
+<p><span class="math display">\[h_{ij}(t)=Y_{ij}(t)\exp(\beta_jx_i)h_{0j}(t)\]</span></p>
+<p>其中 <span class="math inline">\(y_{ij}(t)=1\)</span>，直到第 <span class="math inline">\(j−1\)</span> 次复发后为 0，如果第 <span class="math inline">\(i\)</span> 只大鼠在治疗组，则 <span class="math inline">\(x_i=1\)</span>，否则为 0，<span class="math inline">\(\beta_j\)</span> 为第 <span class="math inline">\(j\)</span> 次复发的治疗效应。拟合该模型后，前四次复发和五次及以上复发的估计 <span class="math inline">\(\hat{\beta}_j\)</span>、风险比估计 <span class="math inline">\(\exp(\hat{\beta}_j)\)</span> 及其标准误如表 13.4 所示。该表中显示了标准的基于模型的标准误和使用三明治估计获得的标准误。不同寻常的是，基于稳健估计的估计较小，但三明治估计将用于后续分析。</p>
+<details><summary><font color="#8B2232">表 13.4</font>
+</summary><img src="figure/table%2013.4.png#center" style="width:80.0%"></details><p><br>
+首次复发的风险比为 <span class="math inline">\(\exp(-0.686)=0.50\)</span>，这与仅对第一次肿瘤发生的时间进行建模的风险比相同，理应如此。第 2 次和第 4 次复发的风险比比接近 1，<span class="math inline">\(P=0.697,0.839\)</span>，而第 3 次和 5次及以上复发的风险比显著小于 1，<span class="math inline">\(P=0.029,0.002\)</span>。然而，对于拟合的 PWP 模型，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的值为 812.82，在约束所有 <span class="math inline">\(\beta\)</span> 相等的情况下，该统计量的值增加到 816.95. 与 <span class="math inline">\(\chi^2_4\)</span> 分布的百分位点相比，4.13 的增加并不显著（<span class="math inline">\(P=0.39\)</span>），因此，总体上，没有证据表明不同次数复发的风险比之间存在差异。公共 <span class="math inline">\(\beta\)</span> 的估计为 −0.523，因此任何复发的风险比为 0.59，95% 置信区间为 <span class="math inline">\((0.46，0.77)\)</span>。这与使用 AG 模型发现的非常相似，但在这里，复发时间具有不同的基线风险。</p>
+<p>通过拟合包含与复发次数相关的因素的非分层模型，可以将风险函数 <span class="math inline">\(h_{ij} (t)\)</span> 约束为成比例的，即</p>
+<p><span class="math display">\[\begin{aligned}h_{ij}(t)=Y_{ij}(t)\exp(\beta_jx_i+\zeta_j)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\zeta_j\)</span> 是第 <span class="math inline">\(j\)</span> 次复发的效应。如果 <span class="math inline">\(\zeta_j\)</span> 都为零，则该模型简化为 AG 模型。分层和非分层模型不是嵌套的，因此两种模型不能直接进行比较。然而，假定成比例的风险，总体风险为 0.59，95% 置信区间为 <span class="math inline">\((0.45，0.77)\)</span>，这与使用分层模型得到的结果非常相似。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec13-3" class="section level2" number="13.3">
+<h2>
+<span class="header-section-number">13.3</span> 多种事件<a class="anchor" aria-label="anchor" href="#sec13-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>患有慢性病的个体可能会经历多种事件，每种事件的类型都不同。个体可能不会经历所有这些事件，虽然复发事件具有自然的时间顺序，但多种事件发生的顺序可能因个体而异。例如，肝病患者可能会经历诸如疾病的组织学进展、静脉曲张、腹水、血清胆红素水平升高、肝移植和死亡等事件。通常，这些事件中的每一个最多发生一次，其顺序可能因患者而异。这些数据可以通过为来自相同时间起点的每个事件时间拟合不同的模型来分析，但更有效的分析是基于 Wei, Lin and Weissfeld (WLW) 模型<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;Such data could be analysed by fitting separate models to the times to each event from the same time origin, but a more efficient analysis is based on the Wei, Lin and Weissfeld (WLW) model.&lt;/p&gt;"><sup>25</sup></a>。</p>
+<div id="sec13-3-1" class="section level3" number="13.3.1">
+<h3>
+<span class="header-section-number">13.3.1</span> Wei, Lin and Weissfeld 模型<a class="anchor" aria-label="anchor" href="#sec13-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在此模型中，为每个事件定义了层，层的总数等于可能事件的数量。对于 PWP 模型，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 发生第 <span class="math inline">\(j\)</span> 个事件的风险由下式给出</p>
+<p><span class="math display">\[\begin{aligned}h_{ij}(t)=Y_{ij}(t)\exp\{\boldsymbol{\beta}'_j\boldsymbol{x}_i(t)\}h_{0j}(t)\end{aligned}\]</span></p>
+<p>但现在 <span class="math inline">\(Y_{ij} (t)\)</span> 为 1，直到第 <span class="math inline">\(j\)</span> 个事件发生后为 0. 在此模型中，时间 <span class="math inline">\(t\)</span> 时的风险集由在时间 <span class="math inline">\(t\)</span> 时接受随访且尚未发生第 <span class="math inline">\(j\)</span> 个事件的所有个体组成。该模型与第 <span class="math inline">\(j\)</span> 个事件的 Cox 回归模型具有相同的形式，只是在 WLW 模型中，<span class="math inline">\(\beta\)</span> 是根据所有事件时间联合估计的。 WLW 模型称为<strong>边际模型</strong> (marginal model)，因为每个事件时间都视为单独的事件，并且每个事件的时间起点是每个个体随访时间的开始。风险比可能因事件类型而异，并且该模型还考虑到每个事件潜在强度的差异。</p>
+<p>为拟合该模型，需确定研究中所有个体可能发生的事件总数 <span class="math inline">\(r\)</span>，并且每个事件的时间表示为从时间起点开始的一系列区间 <span class="math inline">\((0, t_j]\)</span>，其中 <span class="math inline">\(t_j\)</span> 是第 <span class="math inline">\(j\)</span> 个事件时间，<span class="math inline">\(j = 1, 2,...,r\)</span>。可以再次使用稳健的方差-协方差阵，或者可以合并脆弱项，以专门考虑个体内事件时间之间的任何相关性。此外，可以将基线风险视为成比例的，也可以引入对 <span class="math inline">\(\beta\)</span> 参数的约束，如 <a href="chap13.html#sec13-2-2">13.2.2</a> 节中的 PWP 模型。</p>
+<p>WLW 模型最初是作为一种复发事件的模型提出的，但在这一领域的使用存在一些争议。具体来说，当 WLW 模型用于对复发事件进行建模时，风险集的定义是，仅经历过一次复发的个体不仅面临第二次复发的风险，而且还面临第三次、第四次、第五次复发的风险， 等等。这使得关于解释变量系数的解释变得困难。由于这种不一致，如果考虑“从时间起点到单独的事件时间”是自然的，才建议使用该模型<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;Because of this inconsistency, the model is only recommended for use in situations where it is natural to consider times to separate events from the time origin.&lt;/p&gt;"><sup>26</sup></a>。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex13-3" class="example"><strong>示例 13.3  (他莫昔芬治疗乳腺癌患者的临床试验) </strong></span><br></p>
+<p>有大量证据表明，乳腺癌女性接受保乳手术后，除他莫昔芬治疗外，局部放疗可降低同一乳房肿瘤复发的风险，并提高长期生存率。乳房筛查能够检测出非常小的肿瘤，人们关注的是确定低风险患者是否可以避免放疗。1992 年开展了一项多中心临床试验，以确定放疗辅助治疗对 50 岁及以上因直径小于等于 5cm 的浸润性腺癌接受保乳手术的女性的益处。患者被随机分配接受每日 20mg 他莫昔芬治疗五年外加乳房放疗，或仅接受他莫昔芬治疗。患者在前三年每三个月就诊一次，接下来两年每六个月就诊一次，之后每年就诊一次，随访至 2002 年结束。试验及其结果的详细信息由 Fyles et al. (2004) 提供。本示例基于 Pintilie (2006) 使用的某特定中心的数据，涉及 320 名被随机分配接受他莫昔芬加放疗的女性，以及 321 名仅接受他莫昔芬的女性。</p>
+<p>随机分组时，记录患者年龄、肿瘤大小、肿瘤组织学、激素受体水平、血红蛋白水平以及是否进行腋窝淋巴结清扫等信息。在随访过程中，记录从随机分组到首次发生局部复发、腋窝复发、远处复发、任何类型的第二个恶性肿瘤和死亡的时间。对于每位患者，数据集包含从随机化到发生任何这些事件的天数以及事件指示符。对于没有发生事件且在随访结束时仍然存活的女性，每个事件时间均在她们还存活的已知最后日期进行删失。</p>
+<p>数据集中的变量如下所示，25 名接受他莫昔芬和放疗的患者的解释变量和生存数据如表 13.5 所示。</p>
+<ul>
+<li>
+<span class="math inline">\(Id\)</span>：患者标识符</li>
+<li>
+<span class="math inline">\(Treat\)</span>：治疗组（0 = 他莫昔芬+放疗，1 = 他莫昔芬）</li>
+<li>
+<span class="math inline">\(Age\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Size\)</span>：肿瘤大小 (cm)</li>
+<li>
+<span class="math inline">\(Hist\)</span>：肿瘤组织学（1 = 导管，2 = 小叶，3 = 髓质，4 = 混合，5 = 其他）</li>
+<li>
+<span class="math inline">\(HR\)</span>：激素受体水平（0 = 阴性，1 = 阳性）</li>
+<li>
+<span class="math inline">\(Hb\)</span>：血红蛋白水平 (g/l)</li>
+<li>
+<span class="math inline">\(ANdis\)</span>：腋窝淋巴结清扫术（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Lsurv\)</span>：局部复发或最终随访的时间</li>
+<li>
+<span class="math inline">\(Ls\)</span>：局部复发（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Asurv\)</span>：腋窝复发或最终随访的时间</li>
+<li>
+<span class="math inline">\(As\)</span>：腋窝复发（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Dsurv\)</span>：远处复发或最终随访的时间</li>
+<li>
+<span class="math inline">\(Ds\)</span>：远处复发（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Msurv\)</span>：第二个恶性肿瘤或最终随访的时间</li>
+<li>
+<span class="math inline">\(Ms\)</span>：第二个恶性肿瘤（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Tsurv\)</span>：从随机分组到死亡或最终随访的时间</li>
+<li>
+<span class="math inline">\(Ts\)</span>：最终随访的状态（0 = 存活，1 = 死亡）
+<br><details><summary><font color="#8B2232">表 13.5</font>
+</summary><div style="text-align: center;">
+<p>此表可保存后旋转以便阅读</p>
+</div>
+<img src="figure/table%2013.5.png#center" style="width:80.0%"></details><br>
+这些数据将使用 WLW 模型进行分析，第一步是将数据组织成所需的格式。尽管没有患者经历过三种以上的事件，但修改后的数据集将为每位患者提供五行，分别对应于局部复发、腋窝复发、远处复发、第二个恶性肿瘤和死亡的时间。解释变量的值在每行中重复。</li>
+</ul>
+<p>为了说明数据的这种重组，表 13.6 显示了四名患者的事件时间和删失指示符，其中一名患者没有事件，一名患者有一个事件，一名患者有两个事件，一名患者有三个事件。在此表中，<span class="math inline">\(Nevents\)</span> 是事件数，解释变量已省略。</p>
+<details><summary><font color="#8B2232">表 13.6</font>
+</summary><img src="figure/table%2013.6.png#center" style="width:80.0%"></details><p><br>
+表 13.7 中给出了这四名患者的数据（按所需的格式）。这里，变量 <span class="math inline">\(Time\)</span> 是相关事件的时间，<span class="math inline">\(Status\)</span> 是事件状态，其中 0 对应于删失时间，1 对应于事件。在该表中，变量 <span class="math inline">\(Event\)</span> 编码为 1 表示局部复发，2 表示腋窝复发，3 表示远处复发，4 表示第二个恶性肿瘤，5 表示死亡。</p>
+<details><summary><font color="#8B2232">表 13.7</font>
+</summary><img src="figure/table%2013.7.png#center" style="width:80.0%"></details><p><br>
+现在为表 13.7 所示数据拟合按事件分层的 Cox 回归模型，其中解释变量系数因事件而异。对于每种事件类型，表 13.8 显示了单独使用他莫昔芬治疗相对于他莫昔芬配合放疗的风险比、基于 Wald 检验的相应 <span class="math inline">\(P\)</span> 值以及经 <span class="math inline">\(Age,Size,Hist,HR,Hb\)</span> 和 <span class="math inline">\(ANdis\)</span> 变量调整的风险比的 95% 置信限。使用了参数估计的方差-协方差阵的稳健估计。</p>
+<details><summary><font color="#8B2232">表 13.8</font>
+</summary><img src="figure/table%2013.8.png#center" style="width:80.0%"></details><p><br>
+根据该表，如果在不进行放疗的情况下使用他莫昔芬，局部复发的风险会增加 10 倍以上，这一效应非常显著（<span class="math inline">\(P &lt; 0.001\)</span>）。还有一些证据（在 10% 水平上显著）表明，缺乏放疗会增加腋窝复发的风险，但所有其他事件的风险比估计与 1 没有显著差异。对该数据集的进一步分析将确定不同事件类型风险成比例的程度，并确定哪些解释变量与每个结局相关。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec13-4" class="section level2" number="13.4">
+<h2>
+<span class="header-section-number">13.4</span> 事件史分析<a class="anchor" aria-label="anchor" href="#sec13-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>在主要结局是从时间起点到死亡的生存研究中，随访期间发生的其他非致命事件可能有助于进一步阐明潜在的死亡过程。中间事件 (intermediate events) 的序列定义了事件史 (event history)，并且可以使用<strong>多状态模型</strong> (multistate models) 来分析这类数据。</p>
+<p>患者在生存研究中的经历可认为是一个涉及两个<strong>状态</strong> (states) 的过程。在进入研究时，患者处于存活的状态。然后，患者以一定的<strong>转移率</strong> (transition rate) <span class="math inline">\(h(t)\)</span> 从这种“活”的状态转移为“死”的状态，这是在给定时间 <span class="math inline">\(t\)</span> 死亡的风险。这种情况如图 13.3 所示。然后对从一种状态到另一种状态的转移率关于解释变量的依赖性进行建模。</p>
+<details><summary><font color="#8B2232">图 13.3</font>
+</summary><img src="figure/figure%2013.3.png#center" style="width:80.0%"></details><p><br>
+作为存在多个状态的示例，请考虑有关移植患者的生存研究。移植后存在移植物衰竭的风险以及死亡的风险，并且这两种事件的转移率可能大不相同。此外，移植物衰竭的患者可以再次移植，但也可能未再次移植就去世了。这种情况如图 13.4 所示。</p>
+<details><summary><font color="#8B2232">图 13.4</font>
+</summary><img src="figure/figure%2013.4.png#center" style="width:80.0%"></details><p><br>
+这种四状态模型可根据从移植到死亡的转移率 <span class="math inline">\(h_{TD}(t)\)</span>、从移植到移植物衰竭的转移率 <span class="math inline">\(h_{TF} (t)\)</span>、从移植物衰竭到再移植的转移率 <span class="math inline">\(h_{FR}(t)\)</span>、从移植物衰竭到死亡的转移率 <span class="math inline">\(h_{FD}(t)\)</span> 以及从再移植到死亡的转移率 <span class="math inline">\(h_{RD}(t)\)</span> 来指定。请注意，虽然 <span class="math inline">\(h_{TD}(t),h_{FD}(t)\)</span> 和 <span class="math inline">\(h_{RD}(t)\)</span> 均表示时间 <span class="math inline">\(t\)</span> 时的死亡风险，但风险取决于患者是否发生移植物衰竭或已进行再移植，并且这些风险可能都不同。</p>
+<p>当没有发生移植物衰竭时，可以直接对移植后的死亡风险 <span class="math inline">\(h_{TD}(t)\)</span> 建模。此时，移植物衰竭患者的生存时间在失效时删失。存活且未经历移植物衰竭的患者的生存时间也是删失的。在对从移植物衰竭或再移植到死亡的转移率进行建模时，在任何时间处于死亡风险集的患者包括发生移植物衰竭但仍然存活或再移植且仍然存活的患者。尚未发生移植物衰竭或再移植的患者不能处于任一风险集中。幸运的是，通过以计数过程格式表达数据，Cox 回归模型可用于对该四状态模型中状态之间的所有四种转移进行建模。此外，这种方法可扩展到更复杂的多状态模型。</p>
+<div id="sec13-4-1" class="section level3" number="13.4.1">
+<h3>
+<span class="header-section-number">13.4.1</span> 事件史分析模型<a class="anchor" aria-label="anchor" href="#sec13-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设 <span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(p\)</span> 个解释变量的值向量，并令 <span class="math inline">\(\boldsymbol\beta_{jk}\)</span> 是它们从状态 <span class="math inline">\(j\)</span> 转移到状态 <span class="math inline">\(k\)</span> 的相应系数向量。另外，用 <span class="math inline">\(h_{0jk}(t)\)</span> 表示此转移的基线强度函数。多状态模型中第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 处从状态 <span class="math inline">\(j\)</span> 到状态 <span class="math inline">\(k\)</span> 的转移率为</p>
+<p><span class="math display">\[\begin{aligned}h_{ijk}(t)=Y_{ijk}(t)\exp\{\boldsymbol{\beta}'_{jk}\boldsymbol{x}_i\}h_{0jk}(t)\end{aligned}\]</span></p>
+<p>其中，如果第 <span class="math inline">\(i\)</span> 个个体处于状态 <span class="math inline">\(j\)</span> 且有在时间 <span class="math inline">\(t\)</span> 进入状态 <span class="math inline">\(k\)</span> 的风险，则 <span class="math inline">\(Y_{ijk}(t) = 1\)</span>，否则 <span class="math inline">\(Y_{ijk}(t) = 0\)</span>。如同本章描述的其他模型，该模型的解释变量也可能是时依的。时间通常是从进入初始状态的时间点开始测量的，这标志着时间起点。</p>
+<p>当为每个转移假定单独的基线风险和单独的回归系数时，可以使用分层 Cox 回归模型来对不同的转移率进行建模。还可以假定成比例的风险率，并通过在模型中包括对应于不同状态的因素来建模。一般来说，为此需要生存数据的计数过程公式，因为风险集定义将取决于所关注的转移。与从状态 <span class="math inline">\(j\)</span> 到状态 <span class="math inline">\(k\)</span> 的转移相关的特定个体数据将包含一个记录，这给出了进入状态 <span class="math inline">\(j\)</span> 的时间、从状态 <span class="math inline">\(j\)</span> 退出的时间以及一个状态指示符，如果转移是从状态 <span class="math inline">\(j\)</span> 到状态 <span class="math inline">\(k\)</span>，则该状态指示符为 1，否则为 0。该过程如示例 13.4 所示。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex13-4" class="example"><strong>示例 13.4  (骨髓移植后的患者结局) </strong></span><br></p>
+<p>The European Group for Blood and Marrow Transplantation (EBMT) 的成立是为了促进干细胞移植，并允许临床医生开展合作研究。这是由 EBMT Registry 促进的，其包含了接受过造血干细胞移植的患者的临床和结局数据。该登记处成立于 20 世纪 70 年代初，由移植中心和国家登记处提供数据，包括对其患者的年度随访数据。因此，EBMT Registry 是对白血病、淋巴瘤、骨髓瘤和其他血液疾病患者进行干细胞移植结局的回顾性研究的宝贵数据来源。</p>
+<p>本实例基于 2204 名接受骨髓移植的白血病患者数据，这些患者向 EBMT Registry 报告，在 Putter, Fiocco and Geskus (2007) 中使用过。移植的目的是让血小板计数恢复到正常水平，但有些人可能会在达到这种状态之前复发或死亡。而那些血小板计数已恢复正常的个体也可能会复发或死亡。将使用具有三个状态的模型来表示该事件史。移植后的时间是初始状态（状态 1），患者随后可能进入血小板已恢复的状态（状态 2）或对应于复发或死亡的状态（状态 3）。从状态 2 到状态 3 的转移也是可能的。该多状态模型如图 13.5 所示。在此图中，从状态 <span class="math inline">\(i\)</span> 到状态 <span class="math inline">\(j\)</span> 的转移率表示为 <span class="math inline">\(h_{ij} (t)\)</span>，因此三个速率为 <span class="math inline">\(h_{12}(t), h_{13}(t)\)</span> 和 <span class="math inline">\(h_{23}(t)\)</span>。</p>
+<details><summary><font color="#8B2232">图 13.5</font>
+</summary><img src="figure/figure%2013.5.png#center" style="width:80.0%"></details><p><br>
+对于每位患者，还获取到与疾病类型相关的变量 <span class="math inline">\(Leukaemia\)</span> 的数据，这划分为急性髓性白血病 (AML)、急性淋巴细胞白血病 (ALL) 和慢性髓性白血病 (CML). 还记录了他们的年龄组 <span class="math inline">\(Age\)</span>（<span class="math inline">\(\leqslant 20,21-40,&gt;40\)</span>）、供体与受体的性别是否匹配 <span class="math inline">\(Match\)</span>（0 = 否，1 = 是）以及 T 细胞是否耗尽 <span class="math inline">\(Tcell\)</span>（0 = 否，1 = 是）。前 20 名患者的数据如表 13.9 所示。该表显示了从移植到血小板恢复的时间（<span class="math inline">\(Ptime\)</span>）以及复发或死亡的时间（<span class="math inline">\(RDtime\)</span>）。还显示了血小板恢复（<span class="math inline">\(Pcens\)</span>）和复发或死亡（<span class="math inline">\(RDcens\)</span>）时的事件指示符，这对于删失观测为 0，对于事件为 1.</p>
+<details><summary><font color="#8B2232">表 13.9</font>
+</summary><img src="figure/table%2013.9.png#center" style="width:80.0%"></details><p><br>
+在 2204 名接受骨髓移植的患者中，有 1169 名患者血小板恢复到正常水平，458 名患者在血小板水平恢复正常之前复发或死亡。另有 383 名患者在血小板恢复后复发或死亡。还有 152 名患者病情复发，但仍在监测血小板恢复情况（例如表 13.9 中的患者 10, 18 和 20）。由于图 13.5 所示的模型不允许从复发或死亡到血小板恢复的转移，因此在这些患者复发时血小板恢复的时间是删失的。</p>
+<p>为拟合多状态模型，需要对数据进行格式化，使得每个患者每个可能的转移都有一行观测。存在三种可能的转移，表示为 <span class="math inline">\(1\rightarrow 2,1\rightarrow 3\)</span> 和 <span class="math inline">\(2\rightarrow 3\)</span>。对于转移 <span class="math inline">\(2\rightarrow 3\)</span>，只有血小板水平恢复正常的患者才有后续复发或死亡的风险，因此仅记录这些患者的两种可能的转移。对于表 13.9 中前 10 名患者的数据，表 13.10 展示了以这种格式表示的数据。</p>
+<details><summary><font color="#8B2232">表 13.10</font>
+</summary><img src="figure/table%2013.10.png#center" style="width:80.0%"></details><p><br>
+为表 13.10 所示格式的数据拟合 Cox 回归模型来为三种状态之间的转移建模，并按转换类型分层。首先，为模型纳入四个解释变量（<span class="math inline">\(Leukaemia,Age, Match\)</span> 和 <span class="math inline">\(Tcell\)</span>）以及层与这四个变量之间的交互作用，拟合了一个分层模型，该模型允许与四个解释变量相关的参数取决于转移类型。使用 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 统计量比较替代模型，结果表明，没有证据表明因素 <span class="math inline">\(Tcell\)</span> 和 <span class="math inline">\(Match\)</span> 在三种转移类型中有所不同，并且这三种转移都不依赖于 <span class="math inline">\(Match\)</span>。因此，缩减模型包含 <span class="math inline">\(Leukaemia,Age\)</span> 和 <span class="math inline">\(Tcell\)</span> 的主效应，以及 <span class="math inline">\(Leukaemia\)</span> 与 <span class="math inline">\(Transition\)</span>、<span class="math inline">\(Age\)</span> 与 <span class="math inline">\(Transition\)</span> 之间的交互作用。对于该模型，风险比及其相关的 95% 置信区间如表 13.11 所示。在此示例中，使用了方差的稳健估计，但所得标准误与基于模型的估计差别不大。</p>
+<details><summary><font color="#8B2232">表 13.11</font>
+</summary><img src="figure/table%2013.11.png#center" style="width:80.0%"></details><p><br>
+白血病类型和年龄组对这三个转移的效应不同。CML 患者血小板恢复的速度比其他两种患者要慢，并且在血小板恢复后更有可能复发。与 AML 或 CML 患者相比，ALL 患者在血小板恢复前复发或死亡的风险更大。21 - 40 岁的患者血小板恢复速度比其他人慢，而 40 岁以上的患者无论血小板是否恢复，复发或死亡的风险都会增加。 T T 细胞耗竭会显著提高向其他状态的转移率，但没有证据表明这些转移类型之间的转移率有所不同。</p>
+<p>对于 20 岁以下、患 AML 且无 T 细胞耗竭的患者的三个基线累积风险和发生率，如图 13.6 和 13.7 所示。基线累积风险图显示，向血小板恢复转移发生的速度比向复发或死亡转移的速度快得多。累积发生率函数具有非常相似的模式，从图 13.7 中可以看出，对于基线组的患者，从两种可能状态中的任何一种转移为复发或死亡的一年累积发生率大约是血小板恢复发生率的三分之一<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;The cumulative incidence functions have a very similar pattern, and from Figure 13.7, the one-year cumulative incidence of relapse or death from either of the two possible states is about one-third that of platelet recovery, for patients in the baseline group.&lt;/p&gt;"><sup>27</sup></a>。</p>
+<details><summary><font color="#8B2232">图 13.6</font>
+</summary><img src="figure/figure%2013.6.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 13.7</font>
+</summary><img src="figure/figure%2013.7.png#center" style="width:80.0%"></details><p><br>
+图 13.6 表明，从其他两种状态转移为复发或死亡的基线风险函数很可能是成比例的，尽管转移为血小板恢复状态的风险率与其他两种不同。因此，也许模型可进一步简化，但这对由此产生的推断几乎没有影响。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec13-5" class="section level2" number="13.5">
+<h2>
+<span class="header-section-number">13.5</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec13-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>许多文献描述了生存分析中的计数过程方法，包括 Fleming and Harrington (2005) , Aalen, Borgan and Gjessing (2008) 以及 Andersen et al. (1993) . Andersen and Gill (1982) 给出了基于计数过程理论的生存数据模型的数学处理，而 Gill (1984) 中包含了更易读的总结。另见 Andersen and Borgan (1985) 的综述文章。Lin and Wei (1989) 介绍了 Cox 回归模型中参数估计的方差-协方差阵的稳健三明治估计，Therneau and Grambsch (2000) 描述了其与 delta-beta 的联系。</p>
+<p>本章涵盖的三个关于复发和多种事件的模型是由 Andersen and 和 Gill (1982) , Prentice, Williams and Petersen (1981) 以及 Wei, Lin and Weissfeld (1989) 提出的。Cook and Lawless (2007) 对复发事件方法进行了全面回顾，Therneau and Grambsch (2000) 在其关于 Cox 回归模型扩展的文本中描述了复发和多种事件的模型。Cook and Lawless (2018) 提供了对多状态建模和分析的全面处理，Wei and Glidden (1997) 概述了临床试验中分析多种事件的统计方法。Kelly and Lim (2000) 对复发事件数据的不同模型进行了仔细的讨论，得出的结论是 WLW 模型是不合适的。Metcalfe and Thompson (2007) 提出了支持和反对 WLW 模型来分析复发事件数据的论点。</p>
+<p>Andersen and Keiding 于 2002 年在 <em>Statistical Methods in Medical Research</em> 专刊上发表的文章（该专刊专门讨论这一主题）及其后续论文对多状态模型进行了详尽的综述。其他综述文章包括 Commenges (1999), Hougaard (1999) 以及 MeiraMachado et al. (2009). Hougaard (2000) 在对多变量生存数据的解释中阐述了事件史模型。Putter, Fiocco and Geskus (2007) 的教程文章介绍了 Cox 回归模型如何应用于事件史建模，并以第 13.4 节<a href="chap13.html#exm:ex13-4">示例 13.4</a> 中使用的 EBMT 数据为例进行了说明。其他一些文章也对骨髓移植患者的多状态模型进行了介绍，包括 Keiding, Klein and Horowitz (2001) 和 Klein and Shu (2002)，Hougaard and Madsen (1985) 和 Andersen (1988) 给出了在医学研究中使用多状态模型的进一步示例。</p>
+<p>Beyersmann, Allignol and Schumacher (2012) 以及 Putter, Fiocco and Geskus (2007) 的文章介绍了 R 软件在竞争风险分析和多状态建模中的应用，另见 Putter (2011)，这是 <em>Journal of Statistical Software</em> 的一期特刊。</p>
+<p>必须知道复发时间才能使用本章介绍的方法。许多作者在动物致癌实验中考虑了不依赖于已知复发时间的多状态模型。具体来说有 Dinse (1991), Kodell and Nelson (1980) 以及 McKnight and Crowley (1984). Lindsey and Ryan (1993) 给出了这些文献的综述。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></div>
+<div class="next"><a href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap13"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li>
+<a class="nav-link" href="#sec13-1"><span class="header-section-number">13.1</span> 计数过程的介绍</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec13-1-1"><span class="header-section-number">13.1.1</span> 强度函数建模</a></li>
+<li><a class="nav-link" href="#sec13-1-2"><span class="header-section-number">13.1.2</span> 作为计数过程的生存数据</a></li>
+<li><a class="nav-link" href="#sec13-1-3"><span class="header-section-number">13.1.3</span> 计数过程格式的生存数据</a></li>
+<li><a class="nav-link" href="#sec13-1-4"><span class="header-section-number">13.1.4</span> 方差-协方差阵的稳健估计</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec13-2"><span class="header-section-number">13.2</span> 复发事件建模</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec13-2-1"><span class="header-section-number">13.2.1</span> Anderson and Gill 模型</a></li>
+<li><a class="nav-link" href="#sec13-2-2"><span class="header-section-number">13.2.2</span> Prentice, Williams, and Peterson 模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec13-3"><span class="header-section-number">13.3</span> 多种事件</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec13-3-1"><span class="header-section-number">13.3.1</span> Wei, Lin and Weissfeld 模型</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec13-4"><span class="header-section-number">13.4</span> 事件史分析</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec13-4-1"><span class="header-section-number">13.4.1</span> 事件史分析模型</a></li></ul>
+</li>
+<li><a class="nav-link" href="#sec13-5"><span class="header-section-number">13.5</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

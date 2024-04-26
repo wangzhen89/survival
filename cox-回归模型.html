@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>►Cox 回归模型 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="3.9 参数估计的解释 当 Cox 回归模型用于生存数据分析时，模型中解释变量的系数可以解释为死亡风险与基线风险之比的对数。这意味着，可以很容易地从拟合模型中找到该风险比的估计值和相应的置信区间。以下各节描述了 Cox 回归模型中不同类型的项对应的参数解释。  3.9.1 具有一个变量的模型 假设 Cox 回归模型包含单个连续变量 \(X\)，则第 \(i\) 个个体（\(X\) 的值为...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="►Cox 回归模型 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="3.9 参数估计的解释 当 Cox 回归模型用于生存数据分析时，模型中解释变量的系数可以解释为死亡风险与基线风险之比的对数。这意味着，可以很容易地从拟合模型中找到该风险比的估计值和相应的置信区间。以下各节描述了 Cox 回归模型中不同类型的项对应的参数解释。  3.9.1 具有一个变量的模型 假设 Cox 回归模型包含单个连续变量 \(X\)，则第 \(i\) 个个体（\(X\) 的值为...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="►Cox 回归模型 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="3.9 参数估计的解释 当 Cox 回归模型用于生存数据分析时，模型中解释变量的系数可以解释为死亡风险与基线风险之比的对数。这意味着，可以很容易地从拟合模型中找到该风险比的估计值和相应的置信区间。以下各节描述了 Cox 回归模型中不同类型的项对应的参数解释。  3.9.1 具有一个变量的模型 假设 Cox 回归模型包含单个连续变量 \(X\)，则第 \(i\) 个个体（\(X\) 的值为...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="active" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="cox-回归模型" class="section level1 unnumbered">
+<h1>►Cox 回归模型<a class="anchor" aria-label="anchor" href="#cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B"><i class="fas fa-link"></i></a>
+</h1>
+<div id="sec3-9" class="section level2" number="3.9">
+<h2>
+<span class="header-section-number">3.9</span> 参数估计的解释<a class="anchor" aria-label="anchor" href="#sec3-9"><i class="fas fa-link"></i></a>
+</h2>
+<p>当 Cox 回归模型用于生存数据分析时，模型中解释变量的系数可以解释为死亡风险与基线风险之比的对数。这意味着，可以很容易地从拟合模型中找到该风险比的估计值和相应的置信区间。以下各节描述了 Cox 回归模型中不同类型的项对应的参数解释。</p>
+<div id="sec3-9-1" class="section level3" number="3.9.1">
+<h3>
+<span class="header-section-number">3.9.1</span> 具有一个变量的模型<a class="anchor" aria-label="anchor" href="#sec3-9-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设 Cox 回归模型包含单个连续变量 <span class="math inline">\(X\)</span>，则第 <span class="math inline">\(i\)</span> 个个体（<span class="math inline">\(X\)</span> 的值为 <span class="math inline">\(x_i\)</span>）的风险函数为</p>
+<p><span class="math display">\[h_{\boldsymbol{i}}(t)=e^{\boldsymbol{\beta}x_{\boldsymbol{i}}}h_{\boldsymbol{0}}(t)\]</span></p>
+<p>该模型中 <span class="math inline">\(x_i\)</span> 的系数可以解释为风险比的对数。具体来说，考虑在 <span class="math inline">\(X\)</span> 上的记录值为 <span class="math inline">\(x + 1\)</span> 的个体的死亡风险，与记录值为 <span class="math inline">\(x\)</span> 的个体的死亡风险的之比。即</p>
+<p><span class="math display">\[\begin{aligned}\frac{\exp\{\beta(x+1)\}}{\exp(\beta x)}=e^{\beta}\end{aligned}\]</span></p>
+<p>因此拟合的 Cox 回归模型中的 <span class="math inline">\(\hat \beta\)</span> 是当 <span class="math inline">\(X\)</span> 的值增加 1 个单位时对数风险比估计的变化。</p>
+<p>使用类似的论点，当变量 <span class="math inline">\(X\)</span> 的值增加 <span class="math inline">\(r\)</span> 个单位时，对数风险比估计的变化为 <span class="math inline">\(r \hat \beta\)</span>，相应的风险比估计为 <span class="math inline">\(\exp(r \hat \beta)\)</span>。对数风险比估计的标准误将为 <span class="math inline">\(r\, \text{se}\,(\hat \beta)\)</span>，从中可以得出真实风险比的置信区间。</p>
+<p>上述论证表明，当连续变量 <span class="math inline">\(X\)</span> 包含在 Cox 回归模型中时，<span class="math inline">\(X\)</span> 的值改变 <span class="math inline">\(r\)</span> 个单位前后的风险比并不依赖于 <span class="math inline">\(X\)</span> 的实际值。例如，如果 <span class="math inline">\(X\)</span> 指的是个体的年龄，那么 70 岁的个体相对于 65 岁的个体的风险比与 20 岁的个体相对于 15 岁的个体的风险比是相同的。这一特征是直接将 <span class="math inline">\(X\)</span> 作为 Cox 回归模型中的线性项进行拟合的直接结果。如果对线性假设存疑，可以使用 <a href="chap3.html#sec3-8-1">3.8.1</a> 节中描述的程序进行检查。然后可以在建模过程中使用 <span class="math inline">\(X\)</span> 的分数多项式或 <span class="math inline">\(X\)</span> 的非线性变换。</p>
+</div>
+<div id="sec3-9-2" class="section level3" number="3.9.2">
+<h3>
+<span class="header-section-number">3.9.2</span> 具有一个因素的模型<a class="anchor" aria-label="anchor" href="#sec3-9-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>当个体属于 <span class="math inline">\(m(m\ge 2)\)</span> 组中的一组，这对应于解释变量的类别时，这些组可以通过因素的水平进行索引。在 Cox 回归模型下，第 <span class="math inline">\(j(j=1,2,\ldots,m)\)</span> 组中个体的风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_j(t)=\exp(\gamma_j)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\gamma_j\)</span> 是因素的第 <span class="math inline">\(j\)</span> 个水平的效应，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。该模型过度参数化了，因此，如 <a href="chap3.html#sec3-2-2">3.2.2</a> 节所示，我们取 <span class="math inline">\(\gamma_1=0\)</span>。基线风险函数对应于第一组中的个体在时间 <span class="math inline">\(t\)</span> 的死亡风险。第 <span class="math inline">\(j(j\ge 2)\)</span> 组中的个体在时间 <span class="math inline">\(t\)</span> 的风险比相对于第一组中的个体的风险比为 <span class="math inline">\(\exp(\gamma_j)\)</span>。因此，参数 <span class="math inline">\(\gamma_j\)</span> 是该相对风险的对数，即</p>
+<p><span class="math display">\[\begin{aligned}\gamma_j=\log\{h_j(t)/h_0(t)\}\end{aligned}\]</span></p>
+<p>可以通过定义 <span class="math inline">\(m-1\)</span> 个指示变量 <span class="math inline">\(X_2,X_3,...,X_m\)</span>（如 <a href="chap3.html#sec3-2-2">3.2.2</a> 节所示）来拟合包含 <span class="math inline">\(\gamma_j(j = 1,2,...,m)\)</span> 且 <span class="math inline">\(\gamma_1 = 0\)</span> 的模型。拟合该模型会得出估计值 <span class="math inline">\(\hat\gamma_2,\hat\gamma_3,\ldots,\hat\gamma_m\)</span> 及其标准误。那么，，第 j 组的个体相对于第 1 组的个体的相对风险比的对数估计值为 <span class="math inline">\(\hat\gamma_j\)</span>。真实对数风险比的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信区间是从 <span class="math inline">\(\hat{\gamma}_j-z_{{\alpha}/2}\text{se}\left(\hat{\gamma}_j\right)\)</span> 到 <span class="math inline">\(\hat{\gamma}_j+z_{{\alpha}/2}\text{se}\left(\hat{\gamma}_j\right)\)</span> 的区间，其中 <span class="math inline">\(z_{{\alpha}/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位数。通过对这些置信限进行指数运算，可以得到风险比本身的相应置信区间。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-10" class="example"><strong>示例 3.10  (肾癌的治疗) </strong></span><br></p>
+<p>表 3.6 给出了肾癌患者的生存时间数据。在本例中，我们将只考虑表 3.6 第 4 - 6 列中所示的那些接受过肾切除术的患者的数据。这组患者的生存时间是根据他们的年龄组进行分类的。如果第 <span class="math inline">\(j\)</span> 个年龄组的效应用 <span class="math inline">\(\alpha_j\)</span> 表示，<span class="math inline">\(j=1,2,3\)</span>，则第 <span class="math inline">\(j\)</span> 个年龄段患者在时间 <span class="math inline">\(t\)</span> 的风险的 Cox 回归模型如下</p>
+<p><span class="math display">\[\begin{aligned}h_j(t)=\exp(\alpha_j)h_0(t)\end{aligned}\]</span></p>
+<p>该模型可以通过定义两个指示变量 <span class="math inline">\(A_2\)</span> 和 <span class="math inline">\(A_3\)</span> 来拟合，其中，如果患者年龄在 60 岁到 70 岁之间，<span class="math inline">\(A_2\)</span> 为 1，如果患者超过 70 岁，<span class="math inline">\(A_3\)</span> 为 1，如<a href="chap3.html#exm:ex3-4">示例 3.4</a> 所示。这对应于 <span class="math inline">\(\alpha_1=0\)</span>。</p>
+<p>零模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值为 128.901，当添加项 <span class="math inline">\(\alpha_j\)</span> 时，该统计量的值减小为 122.501。在 2 个自由度上减小了 6.400. 在 5% 水平上显著 (<span class="math inline">\(P = 0.041\)</span>)，因此我们得出结论，风险函数确实取决于患者所处的年龄组。</p>
+<p>指示变量 <span class="math inline">\(A_2\)</span> 和 <span class="math inline">\(A_3\)</span> 的系数分别是 <span class="math inline">\(\alpha_2\)</span> 和 <span class="math inline">\(\alpha_3\)</span> 的估计，见表 3.14. 由于使用了约束 <span class="math inline">\(\alpha_1 = 0\)</span>，因此 <span class="math inline">\(\hat\alpha_1 = 0\)</span>。</p>
+<details><summary><font color="#8B2232">表 3.14</font>
+</summary><img src="figure/table%203.14.png#center" style="width:80.0%"></details><p><br>
+60 - 70 岁患者相对于 60 岁以下患者的风险比为 <span class="math inline">\(e^{-0.065}=0.94\)</span>，而 70 岁以上患者相对于 60 岁以下患者的风险比为 <span class="math inline">\(e^{1.824}=6.20\)</span>。这些结果表明，在任何给定时间，70 岁以上患者的死亡风险最大，但其他两个年龄组患者的风险函数几乎没有差异。</p>
+<p>表 3.14 中参数估计的标准误可用于获得真实风险比的置信区间。对于年龄在 60 - 70 岁之间的患者，相对于年龄在 60 岁以下的患者，其对数风险比的 95% 置信区间是 <span class="math inline">\(−0.065 ± (1.96 × 0.498)\)</span>，即区间 <span class="math inline">\((−1.041, 0.912)\)</span>。对于风险比本身，相应的 95% 置信区间是 <span class="math inline">\((0.35, 2.49)\)</span>。该置信区间包含 1，这表明年龄在 60 - 70 岁之间的个体的风险函数与年龄小于 60 岁的患者相似。同样地，年龄在 70 岁以上的患者相对于年龄在 60 岁以下的患者，其风险比的 95% 置信区间为 <span class="math inline">\((1.63, 23.59)\)</span>。该区间不包含 1，因此，在任何给定时间，年龄超过 70 岁的个体的死亡风险显著高于年龄在 60 岁以下的患者。</p>
+</div>
+</div>
+<p>在某些应用中，可能需要计算除第一个水平以外的其他因素水平的风险比。在这种情况下，可以重新定义该因素的水平以及相关的指示变量，使该因素的某个其他水平对应于所需的基线水平，然后重新拟合模型。虽然这比较困难，但也可以直接从以原始因素的第一个水平为基线时获得的估计值中直接找到所需的估计值。</p>
+<p>因素水平 <span class="math inline">\(j\)</span> 和 <span class="math inline">\(j^\prime\)</span> 的个体的风险函数分别为 <span class="math inline">\(\exp(\alpha_j)h_0(t)\)</span> 和 <span class="math inline">\(\exp(\alpha_{j^\prime})h_0(t)\)</span>，因此水平 <span class="math inline">\(j\)</span> 的个体相对于水平 <span class="math inline">\(j^\prime\)</span> 的个体的风险比为 <span class="math inline">\(\exp(\alpha_j-\alpha_{j'})\)</span>。对数风险比为 <span class="math inline">\(\alpha_j-\alpha_{j'}\)</span>，其估计为 <span class="math inline">\(\hat\alpha_j-\hat\alpha_{j'}\)</span>。为了获得该估计的标准误，我们使用差值 <span class="math inline">\(\hat\alpha_j-\hat\alpha_{j'}\)</span> 方差的如下结果</p>
+<p><span class="math display">\[\begin{aligned}\text{var}\left(\hat{\alpha}_j-\hat{\alpha}_{j'}\right)&amp;=\text{ var}\left(\hat{\alpha}_j\right)+\text{ var}\left(\hat{\alpha}_{j'}\right)-2\text{ cov}\left(\hat{\alpha}_j,\hat{\alpha}_{j'}\right)\end{aligned}\]</span></p>
+<p>鉴于此，需要估计 <span class="math inline">\(\hat\alpha_j\)</span> 和 <span class="math inline">\(\hat\alpha_{j'}\)</span> 之间的协方差以及它们的方差估计来计算 <span class="math inline">\(\hat\alpha_j-\hat\alpha_{j'}\)</span> 的标准误。计算如<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-11">示例 3.11</a> 所示。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-11" class="example"><strong>示例 3.11  (肾癌的治疗) </strong></span><br></p>
+<p>再次考虑<a href="chap3.html#exm:ex3-4">示例 3.4</a> 中的数据子集，这对应于那些接受过肾切除术的患者。假设需要估计 70 岁以上个体相对于 60 - 70 岁个体的风险比。使用表 3.14 中的估计，对数风险比估计为 <span class="math inline">\(\hat{\alpha}_3-\hat{\alpha}_2=1.824+0.065=1.889\)</span>，因此风险比估计为 <span class="math inline">\(e^{1.889}=6.61\)</span>。这表明，70 岁以上的人在任何时间的死亡风险是 60 - 70 岁的人的 6.5 倍以上。</p>
+<p><span class="math inline">\(\hat{\alpha}_3-\hat{\alpha}_2\)</span> 的方差为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(\hat{\alpha}_3\right)+\operatorname{var}\left(\hat{\alpha}_2\right)-2\operatorname{cov}\left(\hat{\alpha}_3,\hat{\alpha}_2\right)\end{aligned}\]</span></p>
+<p>参数估计的方差-协方差阵给出了所需的方差和协方差。该矩阵可以从用于拟合 Cox 回归模型的统计软件中获得，为</p>
+<p><span class="math display">\[\begin{array}{cc}A_2\\A_3\\\,\end{array}\begin{array}{cc}0.2484&amp;0.0832\\0.0832&amp;0.4649\\A_2&amp;A_3\end{array}\]</span></p>
+<p>其中 <span class="math inline">\(\text{var}\left(\hat{\alpha}_2\right)=0.2484,\text{var}\left(\hat{\alpha}_3\right)=0.4649\)</span> 以及 <span class="math inline">\(\mathrm{cov}\left(\hat{\alpha}_2,\hat{\alpha}_3\right)=0.0832\)</span>。当然，方差只是表 3.14 中标准误的平方。那么</p>
+<p><span class="math display">\[\begin{aligned}\text{var}\left(\hat{\alpha}_3-\hat{\alpha}_2\right)=0.4649+0.2484-(2\times0.0832)=0.5469\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(\hat{\alpha}_3-\hat{\alpha}_2\)</span> 的标准误为 0.740。因此，对数风险比的 95% 置信区间为 <span class="math inline">\((0.440, 3.338)\)</span>，风险比本身的 95% 置信区间为 <span class="math inline">\((1.55, 28.18)\)</span>。</p>
+<p>获取年龄大于 70 岁的个体相对于年龄在 60 - 70 岁之间的个体的风险比估计及其估计的标准误的一种更简单的方法，是重新定义与年龄组相关的因素的水平。假设数据现在是这样安排的：因素的第一水平对应于 60 - 70 岁的患者，第二水平对应于年龄大于 70 岁的患者，第三水平对应于年龄小于 60 岁的患者。选择指示变量使得重新定义的因素的第一水平的效应等于零，从而得到表 3.15 中定义的变量 <span class="math inline">\(B_2\)</span> 和 <span class="math inline">\(B_3\)</span>。现在，所需对数风险比估计就是 <span class="math inline">\(B_2\)</span> 的系数估计，而其标准误可以直接从标准计算机输出中读取。</p>
+<details><summary><font color="#8B2232">表 3.15</font>
+</summary><img src="figure/table%203.15.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>指示变量系数的解释方式在很大程度上取决于它们所使用的编码。这意味着，当使用能够直接拟合因素的统计软件包来拟合 Cox 回归模型时，<strong>必须了解软件包中使用的指示变量是如何定义的</strong>。</p>
+<p>为进一步说明，假设个体属于 <span class="math inline">\(m\)</span> 个组中的一个，并且用于 <span class="math inline">\(m − 1\)</span> 个指示变量 <span class="math inline">\(X_2, X_3,...,X_m\)</span> 的编码使得 <span class="math inline">\(A\)</span> 的主效应之和 <span class="math inline">\(\sum_{j=1}^m\alpha_j\)</span> 等于 0。具有 <span class="math inline">\(m\)</span> 个水平的因素 <span class="math inline">\(A\)</span> 对应的指示变量值如表 3.16 所示。</p>
+<details><summary><font color="#8B2232">表 3.16</font>
+</summary><img src="figure/table%203.16.png#center" style="width:80.0%"></details><p><br>
+通过选择指示变量，包含该因素的 Cox 回归模型可以表示为以下形式</p>
+<p><span class="math display">\[\begin{aligned}h_j(t)=\exp(\alpha_2x_2+\alpha_3x_3+\cdots+\alpha_mx_m)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(x_j\)</span> 是因素 <span class="math inline">\(A\)</span> 处于第 <span class="math inline">\(j\)</span> 水平的个体的 <span class="math inline">\(X_j\)</span> 值，<span class="math inline">\(j = 2, 3,...,m\)</span>。处于因素第一水平的个体在给定时间的死亡风险为</p>
+<p><span class="math display">\[\begin{aligned}\exp\{-(\alpha_2+\alpha_3+\cdots+\alpha_m)\}h_0(t)\end{aligned}\]</span></p>
+<p>而对于第 <span class="math inline">\(j\)</span> 水平因素的个体，其风险比为 <span class="math inline">\(\exp(\alpha_j)h_0(t)\)</span>，其中 <span class="math inline">\(j \ge 2\)</span>。组 <span class="math inline">\(j\)</span> 中的个体的风险比相对于第一组中的个体的风险比为</p>
+<p><span class="math display">\[\begin{aligned}\exp(\alpha_j+\alpha_2+\alpha_3+\cdots+\alpha_m)\end{aligned}\]</span></p>
+<p>例如，如果 <span class="math inline">\(m = 4\)</span> 且 <span class="math inline">\(j = 3\)</span>，则风险比为 <span class="math inline">\(\exp(\alpha_2+2\alpha_3+\alpha_4)\)</span>，相应对数风险比估计的方差为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(\hat{\alpha}_2\right)+4\operatorname{var}\left(\hat{\alpha}_3\right)+\operatorname{var}\left(\hat{\alpha}_4\right)+4\operatorname{cov}\left(\hat{\alpha}_2,\hat{\alpha}_3\right)\\+4\operatorname{cov}\left(\hat{\alpha}_3,\hat{\alpha}_4\right)+2\operatorname{cov}\left(\hat{\alpha}_2,\hat{\alpha}_4\right)\end{aligned}\]</span></p>
+<p>该表达式中的每一项都可以在拟合 Cox 回归模型后从参数估计的方差-协方差阵中找到，并获得风险比的置信区间。然而，指示变量的这种特殊编码使拟合模型各个参数估计的解释变得更加复杂。</p>
+<p>在前面的部分中，我们仅考虑了包含单个项的 Cox 回归模型参数估计的解释。更一般地，拟合模型将包含与多个变量、因素或两者的组合相对应的项。通过对与模型中的因素相对应的指示变量进行适当的编码，参数估计可以再次解释为风险比的对数。</p>
+<p>当一个模型包含一个以上的变量时，与特定效应相关的参数估计被认为是经模型中其他变量调整的 (adjusted)，因此这些估计是经模型其他项调整的对数风险比。因此，考虑模型中包含的其他变量，Cox 回归模型可用于估计风险比。</p>
+<p>当拟合因素之间的交互作用，或涉及因素和变量的混合项时，特定因素的对数风险比估计将因任何因素的水平或与之交互的任何变量的值而异。在这种情况下研究感兴趣因素的风险比估计时，需要明确任何此类因素水平或变量的值。</p>
+<p>我们不会详细介绍在拟合具有不同项的组合的模型后如何估计风险比的代数细节，而是将通过两个例子来说明一般方法。第一个例子涉及因素和变量，而第二个例子包括两个因素之间的交互作用。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-13" class="example"><strong>示例 3.12  (前列腺癌两种疗法的比较) </strong></span><br></p>
+<p>在<a href="chap3.html#exm:ex3-6">示例 3.6</a> 中，发现在前列腺癌患者的生存研究中最重要的预后变量是肿瘤大小 (Size) 和肿瘤分期的 Greason index (Index). 代表治疗效应的指示变量 Treat 也包含在 Cox 回归模型中，因为研究的目的是量化治疗效应。第 <span class="math inline">\(i\)</span> 个个体的模型可以表示为以下形式</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp\{\beta_1Size_i+\beta_2Index_i+\beta_3Treat_i\}h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(i=1,2,\ldots,38\)</span>。该模型的 <span class="math inline">\(\beta\)</span> 系数估计及其标准误如表 3.17 所示。</p>
+<details><summary><font color="#8B2232">表 3.17</font>
+</summary><img src="figure/table%203.17.png#center" style="width:80.0%"></details><p><br>
+对于接受 DES 治疗 (Treat = 1) 的个体，与接受安慰剂 (Treat = 0) 的个体相比，在 Size 和 Index 值相同的情况下，其对数风险比估计为 <span class="math inline">\(\hat{\beta}_3=-1.113\)</span>。因此，风险比估计为 <span class="math inline">\(e^{-1.113}=0.329\)</span>。这个风险比的值不受 Size 和 Index 实际值的影响。然而，由于这两个解释变量被纳入了模型，因此估计的风险比已经针对这些变量进行了调整。</p>
+<p>作为比较，如果拟合仅包含 Treat 的模型，则 Treat 的系数估计为 -1.978. 相对于使用安慰剂的个体，使用 DES 的个体的风险比估计（未经 Size 和 Index 调整）现在为 <span class="math inline">\(e^{-1.978}=0.14\)</span>。这表明，除非适当考虑肿瘤大小和肿瘤分级指数的影响，否则会高估治疗效应。</p>
+<p>现在考虑某接受特定治疗的个体，在变量 Index 值一定且肿瘤大小一定的情况下，与接受相同治疗、Index 值相同但肿瘤大小小一个单位的个体相比的风险比。该风险比为 <span class="math inline">\(e^{0.083}=1.09\)</span>。因为这个值大于 1，我们可以得出结论，在其他条件相同的情况下，肿瘤越大，在任何给定时间的死亡风险就越大。类似地，某接受特定治疗且 Size 值一定的个体，与接受相同治疗、Size 值相同但 Index 值小一个单位的个体相比的风险比为 <span class="math inline">\(e^{0.710}=2.03\)</span>。这也意味着，Gleason 指数的值越大，在任何给定时间的死亡风险就越大。具体来说，Index 值增加一个单位会使死亡风险加倍。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-13" class="example"><strong>示例 3.12  (肾癌的治疗) </strong></span><br></p>
+<p>再次考虑表 3.6 中给出的肾癌治疗后生存时间的完整数据集。在<a href="chap3.html#exm:ex3-4">示例 3.4</a> 中，发现最合适的 Cox 回归模型包含对应于年龄组的项 <span class="math inline">\(\alpha_j, j = 1, 2, 3\)</span>，以及对应于是否进行肾切除术的项 <span class="math inline">\(\nu_k, k = 1, 2\)</span>。出于说明目的，在本示例中，我们将考虑还包含这两个因素之间交互作用的模型，尽管该模型并不显著。在此模型下，第 <span class="math inline">\(j\)</span> 个年龄组和第 <span class="math inline">\(k\)</span> 个肾切除状态水平的个体的风险函数为</p>
+<p><span class="math display" id="eq:3-17">\[\begin{equation}
+h(t)=\exp\{\alpha_j+\nu_k+(\alpha\nu)_{jk}\}h_0(t)
+\tag{3.17}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\((\alpha\nu)_{jk}\)</span> 为交互作用项。</p>
+<p>考虑第 <span class="math inline">\(j(j = 1, 2, 3)\)</span> 个年龄组、第 <span class="math inline">\(k(k = 1, 2)\)</span> 个肾切除状态水平的患者相对于第一个年龄组、接受肾切除术的患者在时间 <span class="math inline">\(t\)</span> 的死亡风险比</p>
+<p><span class="math display">\[\begin{aligned}\exp\{\alpha_j+\nu_k+(\alpha\nu)_{jk}\}\\\exp\{\alpha_1+\nu_1+(\alpha\nu)_{11}\}\end{aligned}\]</span></p>
+<p>如<a href="chap3.html#exm:ex3-4">示例 3.4</a> 所示，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-17">(3.17)</a> 中的模型是通过在模型中包含指示变量 <span class="math inline">\(A_2,A_3\)</span> 和 <span class="math inline">\(N\)</span> 以及乘积 <span class="math inline">\(A_2N\)</span> 和 <span class="math inline">\(A_3N\)</span> 来拟合的。这些变量的系数估计分别为 <span class="math inline">\(\alpha_2,\alpha_3,\nu_2,(\alpha\nu)_{22}\)</span> 和 <span class="math inline">\((\alpha\nu)_{32}\)</span>。根据所使用的指示变量的编码，估计值 <span class="math inline">\(\hat{\alpha}_{2},\hat{\alpha}_{3},\hat{\nu}_{2},\widehat{\left(\alpha\nu\right)}_{22}\)</span> 和 <span class="math inline">\(\widehat{\left(\alpha\nu\right)}_{32}\)</span> 均为零。第 <span class="math inline">\(j(j = 1, 2, 3)\)</span> 个年龄组、第 <span class="math inline">\(k(k = 1, 2)\)</span> 个肾切除状态水平的患者相对于第一个年龄组、接受肾切除术的患者的死亡风险比估计，为</p>
+<p><span class="math display">\[\exp\{\hat{\alpha}_j+\hat{\nu}_k+\widehat{(\alpha\nu)}_{jk}\}\]</span></p>
+<p>非零参数估计值为 <span class="math inline">\(\hat{\alpha}_2=0.005,\hat{\alpha}_3=0.065,\hat{\nu}_2=-1.943,\widehat{(\alpha\nu)}_{22}=-0.051\)</span> 和 <span class="math inline">\(\widehat{\left(\alpha\nu\right)_{32}}=2.003\)</span>，风险比估计总结于表 3.18 中。</p>
+<details><summary><font color="#8B2232">表 3.18</font>
+</summary><img src="figure/table%203.18.png#center" style="width:80.0%"></details><p><br>
+在表 3.18 中，包含了风险比估计为 1.000 的因素水平组合，这强调了风险是相对于第一年龄组中没有接受过肾切除手术的个体而言的。该表显示，与其他年龄组的个体以及未接受肾切除手术的个体相比，年龄小于等于 70 岁且接受过肾切除手术的个体死亡风险要小得多。</p>
+<p>可以使用 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9-2">3.9.2</a> 节中描述的方法找到相应真实风险比的置信区间。作为进一步说明，将获得接受过肾切除术的第二年龄组中的个体相对于第一年龄组中的个体的风险比的置信区间。对数风险比估计现在为 <span class="math inline">\(\hat{\alpha}_2+\widehat{(\alpha\nu)}_{22}\)</span>，因此风险比估计为 0.955。该估计的方差由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(\hat{\alpha}_2\right)+\operatorname{var}\left\{\widehat{\left(\alpha\nu\right)}_{22}\right\}+2\operatorname{cov}\left\{\hat{\alpha}_2,\widehat{\left(\alpha\nu\right)}_{22}\right\}\end{aligned}\]</span></p>
+<p>根据式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-17">(3.17)</a> 拟合模型，从其参数估计的方差-协方差阵可得，<span class="math inline">\(\operatorname{var}\left(\hat{\alpha}_2\right)=0.697,\operatorname{var}\left\{\widehat{\left(\alpha\nu\right)}_{22}\right\}=0.942\)</span>，协方差项为 <span class="math inline">\(\mathrm{cov}\left\{\hat{\alpha}_2,\widehat{(\alpha\nu)}_{22}\right\}=-0.695\)</span>。因此，对数风险比估计的方差为 0.248，因此真实对数风险比的 95% 置信区间范围为 -0.532 到 0.441. 真实风险比的相应置信区间为 <span class="math inline">\((0.59, 1.55)\)</span>。该区间包含 1，因此风险比 0.955 在 5% 水平下与 1 没有显著差异。表 3.18 中风险比的置信区间可以用类似的方式得出。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec3-10" class="section level2" number="3.10">
+<h2>
+<span class="header-section-number">3.10</span> 估计风险函数和生存函数<a class="anchor" aria-label="anchor" href="#sec3-10"><i class="fas fa-link"></i></a>
+</h2>
+<p>到目前为止，在本章中，我们只考虑了 Cox 回归模型中线性部分的 <span class="math inline">\(\beta\)</span> 参数的估计。正如我们所见，为了推断模型中解释变量对风险函数的影响，我们只需要进行这些步骤。一旦确定了适用于一组生存数据的合适模型，就可以估计风险函数和相应的生存函数。然后，这些估计值可用于总结研究中个体的生存经历。</p>
+<p>假设 Cox 回归模型的线性部分包含 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span>，并且这些变量的估计系数为 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span>。研究中 <span class="math inline">\(n\)</span> 个个体的第 <span class="math inline">\(i\)</span> 个风险函数估计由下式给出</p>
+<p><span class="math display" id="eq:3-18">\[\begin{equation}
+\hat{h}_i(t)=\exp(\hat{\boldsymbol{\beta}}'\boldsymbol x_i)\hat{h}_0(t)
+\tag{3.18}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的解释变量的值向量，<span class="math inline">\(i = 1, 2,...,n\)</span>，<span class="math inline">\(\hat {\boldsymbol \beta}\)</span> 是系数向量的估计，<span class="math inline">\(\hat h_0(t)\)</span> 是基线风险函数估计。使用该方程，一旦得到 <span class="math inline">\(h_0(t)\)</span> 的估计，就可以得到个体风险函数估计。然后可以使用风险、累积风险和生存函数之间的关系来给出累积风险函数和生存函数的估计。</p>
+<p>Kalbfleisch and Prentice (1973) 使用基于最大似然法的方法得出了基线风险函数的估计。假设有 <span class="math inline">\(r\)</span> 个不同的死亡时间，按升序排列时，为 <span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;\cdots&lt;t_{(j)}\)</span>，并且在时间 <span class="math inline">\(t\)</span> 有 <span class="math inline">\(d_j\)</span> 个人死亡，<span class="math inline">\(n_j\)</span> 个人处于风险之中。时间 <span class="math inline">\(t_{(j)}\)</span> 处的基线风险函数估计由下式给出</p>
+<p><span class="math display" id="eq:3-19">\[\begin{equation}
+\hat{h}_0(t_{(j)})=1-\hat{\xi_j}
+\tag{3.19}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,r\)</span>。<span class="math inline">\(\widehat{\xi}_j\)</span> 为下式的解</p>
+<p><span class="math display" id="eq:3-20">\[\begin{equation}
+\sum_{l\in D(t_{(j)})}\frac{\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)}{1-\hat{\xi}_j^{\exp(\hat{\boldsymbol{\beta}}'\boldsymbol x_l)}}=\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)
+\tag{3.20}
+\end{equation}\]</span></p>
+<p>在式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 中，<span class="math inline">\(D(t_{(j)})\)</span> 是在第 <span class="math inline">\(j\)</span> 个有序死亡时间 <span class="math inline">\(t_{(j)}\)</span> 处死亡的所有 <span class="math inline">\(d_j\)</span> 个个体的集合，以及如 <a href="chap3.html#sec3-3">3.3</a> 节所示，<span class="math inline">\(R(t_{(j)})\)</span> 是在时间 <span class="math inline">\(t_{(j)}\)</span> 处于风险中的所有 <span class="math inline">\(n_j\)</span> 个个体的集合。那些 <span class="math inline">\(\beta\)</span> 的估计构成了向量 <span class="math inline">\(\hat{\boldsymbol \beta}\)</span>，就是那些使式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的似然函数达到最大化的值。<span class="math inline">\(h_0(t)\)</span> 的估计的推导相当复杂，此处不再赘述。</p>
+<p>在没有死亡时间结的情况下，即对于 <span class="math inline">\(j=1,2,\ldots,r\)</span> 有 <span class="math inline">\(d_j=1\)</span>，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 的左侧将成为单个项（直接省去求和号）。那么可以求解该方程，得到</p>
+<p><span class="math display">\[\begin{equation}
+\hat{\xi_j}=\left(1-\frac{\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_{(j)})}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)}\right)^{\exp(-\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_{(j)})}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{x}_{(j)}\)</span> 是在时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的个体的解释变量向量。</p>
+<p>当存在观测结时，即当一个或多个 <span class="math inline">\(d_j&gt;1\)</span> 时，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 左侧的求和是一系列分数之和，其中，在分母中出现了 <span class="math inline">\(\widehat{\xi}_{j}\)</span>，并具有不同的幂次。则式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 无法显式求解，需要迭代计算。</p>
+<p>我们现在假设相邻死亡时间之间的死亡风险是恒定的。然后，通过将式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-19">(3.19)</a> 中的风险估计除以时间区间长度，从而得到该区间内基线风险函数的合适估计，这是一个阶跃函数</p>
+<p><span class="math display" id="eq:3-21">\[\begin{equation}
+\hat{h}_0(t)=\frac{1-\hat{\xi}_j}{t_{(j+1)}-t_{(j)}}
+\tag{3.21}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(j)}\leqslant t&lt;t_{(j+1)},j=1,2,\ldots,r-1\)</span>，且对于 <span class="math inline">\(t&lt;t_{(1)}\)</span> 有 <span class="math inline">\(\hat{h}_0(t)=0\)</span>。</p>
+<p>量 <span class="math inline">\(\hat{\xi}_j\)</span> 可视为个体在 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)}\)</span> 区间内生存概率的估计。那么基线生存函数可估计为</p>
+<p><span class="math display" id="eq:3-22">\[\begin{equation}
+\hat{S}_0(t)=\prod_{j=1}^k\hat{\xi}_j
+\tag{3.22}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r-1\)</span>，该估计也为阶跃函数。且对于 <span class="math inline">\(t&lt;t_{(1)}\)</span>，基线生存函数的估计为 1；对于 <span class="math inline">\(t\geqslant t_{(r)}\)</span>，估计为 0，除非有大于 <span class="math inline">\(t_{(r)}\)</span> 的删失生存时间，如果是这种情况，则在最大删失时间之前可以将 <span class="math inline">\(\hat{S}_0(t)\)</span> 取为 <span class="math inline">\(\hat{S}_0(t_{(r)})\)</span>，但在该时间之后生存函数估计是未定义的。</p>
+<p>根据式 <a href="chap1.html#eq:1-8">(1.8)</a>，基线累积风险函数为 <span class="math inline">\(H_0(t)=-\log S_0(t)\)</span>，该函数的估计为</p>
+<p><span class="math display" id="eq:3-23">\[\begin{equation}
+\hat{H}_0(t)=-\log\hat{S}_0(t)=-\sum_{j=1}^k\log\hat{\xi}_j
+\tag{3.23}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r-1\)</span>，且对于 <span class="math inline">\(t&lt;t_{(1)}\)</span> 有 <span class="math inline">\(\hat{H}_0(t)=0\)</span>。</p>
+<p>式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-21">(3.21)</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-22">(3.22)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-23">(3.23)</a> 中的基线风险函数、生存函数和累积风险函数的估计可用于得到具有解释变量向量 <span class="math inline">\(\boldsymbol{x}_{i}\)</span> 的个体的相应估计。具体来说，根据式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-18">(3.18)</a> ，通过 <span class="math inline">\(\exp(\hat{\boldsymbol{\beta}}'\boldsymbol x_i)\hat{h}_0(t)\)</span> 来估计风险函数。接下来，对式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-18">(3.18)</a> 两边进行积分，我们得到</p>
+<p><span class="math display" id="eq:3-24">\[\begin{equation}
+\int_0^t\hat{h}_i(u)\mathrm{d}u=\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i)\int_0^t\hat{h}_0(u)\mathrm{d}u
+\tag{3.24}
+\end{equation}\]</span></p>
+<p>因此第 <span class="math inline">\(i\)</span> 个个体的累积风险函数估计为</p>
+<p><span class="math display" id="eq:3-25">\[\begin{equation}
+\hat{H}_{\boldsymbol{i}}(t)=\operatorname{exp}(\hat{\boldsymbol \beta}'\boldsymbol x_{{i}})\hat{H}_{0}(t)
+\tag{3.25}
+\end{equation}\]</span></p>
+<p>将式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-24">(3.24)</a> 的两边乘以 −1 后进行指数运算，并利用式 <a href="chap1.html#eq:1-6">(1.6)</a>，我们得到第 <span class="math inline">\(i\)</span> 个个体的生存函数估计</p>
+<p><span class="math display" id="eq:3-26">\[\begin{equation}
+\hat{S}_i(t)=\left\{\hat{S}_0(t)\right\}^{\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i)}
+\tag{3.26}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r-1\)</span>。请注意，一旦获得了生存函数估计 <span class="math inline">\(\hat{S}_i(t)\)</span>，累积风险函数的估计就简单地是 <span class="math inline">\(-\operatorname{log}\hat{S}_{{i}}(t)\)</span>。</p>
+<div id="sec3-10-1" class="section level3" number="3.10.1">
+<h3>
+<span class="header-section-number">3.10.1</span> 无协变量的特例<a class="anchor" aria-label="anchor" href="#sec3-10-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>当不存在协变量时，因此我们只有一个生存时间样本，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 变为</p>
+<p><span class="math display">\[\begin{aligned}\frac{d_j}{1-\hat{\xi}_j}&amp;=n_j\end{aligned}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\hat{\xi_j}=\frac{n_j-d_j}{n_j}\]</span></p>
+<p>那么，在时间 <span class="math inline">\(t_{(j)}\)</span> 处的基线风险函数估计为 <span class="math inline">\(1-\hat{\xi}_j\)</span>，也就是 <span class="math inline">\(d_j/n_j\)</span>。式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-22">(3.22)</a> 中生存函数的相应估计为 <span class="math inline">\(\prod_{j=1}^k\hat{\xi}_j\)</span>，即</p>
+<p><span class="math display">\[\prod_{j=1}^k\left(\frac{n_j-d_j}{n_j}\right)\]</span></p>
+<p>这正是之前在式 <a href="chap2.html#eq:2-4">(2.4)</a> 中给出的生存函数的 Kaplan-Meier 估计。这表明，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-26">(3.26)</a> 给出的生存函数估计将 Kaplan-Meier 估计推广到风险函数取决于解释变量的情况。</p>
+<p>此外，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-21">(3.21)</a> 中的风险函数估计简化为 <span class="math inline">\(d_j/\{n_j(t_{(j+1)}-t_{(j)})\}\)</span>，这是第 2 章式 <a href="chap2.html#eq:2-13">(2.13)</a> 中给出的风险函数估计。</p>
+</div>
+<div id="sec3-10-2" class="section level3" number="3.10.2">
+<h3>
+<span class="header-section-number">3.10.2</span> 基线函数估计的一些近似<a class="anchor" aria-label="anchor" href="#sec3-10-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>当存在生存时间结时，只能通过使用迭代方法求解式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 来得到的基线风险估计。但可以通过使用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 左侧求和的近似来绕过这种迭代过程。</p>
+<p>在式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 左侧分母中的项</p>
+<p><span class="math display">\[\hat{\xi}_j^{\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)}\]</span></p>
+<p>可写为</p>
+<p><span class="math display">\[\exp\left\{e^{\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l}\log\hat{\xi}_j\right\}\]</span></p>
+<p>取指数展开中的前两项，得到</p>
+<p><span class="math display">\[\exp\left\{e^{\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l}\log\hat{\xi}_j\right\}\approx1+e^{\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l}\log\hat{\xi}_j\]</span></p>
+<p>将使用该近似在时间 <span class="math inline">\(t_{\left(j\right)}\)</span> 处获得的基线风险估计记作 <span class="math inline">\(1-\tilde{\xi}_j\)</span>，并在式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-20">(3.20)</a> 中用 <span class="math inline">\(1+e^{\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l}\log\widetilde{\xi}_{j}\)</span> 替换 <span class="math inline">\(\hat{\xi}_j^{\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)}\)</span>，我们发现 <span class="math inline">\(\tilde{\xi}_j\)</span> 满足</p>
+<p><span class="math display">\[-\sum_{l\in D(t_{(j)})}\frac1{\log\tilde{\xi}_j}=\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\frac{-d_j}{\log\widetilde{\xi_j}}&amp;=\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_l)\end{aligned}\]</span></p>
+<p>由于 <span class="math inline">\(d_j\)</span> 是第 <span class="math inline">\(j\)</span> 个有序死亡时间 <span class="math inline">\(t_{(j)}\)</span> 处的死亡人数，因此</p>
+<p><span class="math display" id="eq:3-27">\[\begin{equation}
+\tilde{\xi}_j=\exp\left(\frac{-d_j}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta'x}}_l)}\right)
+\tag{3.27}
+\end{equation}\]</span></p>
+<p>根据式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-22">(3.22)</a> ，基于 <span class="math inline">\(\tilde{\xi}_j\)</span> 的值，生存函数的估计为</p>
+<p><span class="math display" id="eq:3-28">\[\begin{equation}
+\tilde{S}_0(t)=\prod_{j=1}^k\exp\left(\frac{-d_j}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_l)}\right)
+\tag{3.28}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r-1\)</span>。根据该定义，与式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-22">(3.22)</a> 中的估计不同，当最长生存时间未删失时，生存函数估计不一定为 0. 根据 <span class="math inline">\(\tilde{S}_0(t)\)</span> 得出的基线累积风险函数的估计为</p>
+<p><span class="math display" id="eq:3-29">\[\begin{equation}
+\tilde{H}_0(t)=-\log\tilde{S}_0(t)=\sum_{j=1}^k\frac{d_j}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol x_l)}
+\tag{3.29}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r-1\)</span>。该估计通常称为基线累积风险函数的 Nelson-Aalen 估计或 Breslow 估计。</p>
+<p>当不存在协变量时，由于 <span class="math inline">\(n_j\)</span> 是在时间 <span class="math inline">\(t_{(j)}\)</span> 处于风险的个体数量，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-28">(3.28)</a> 中的基线生存函数估计变为</p>
+<p><span class="math display" id="eq:3-30">\[\begin{equation}
+\prod_{j=1}^k\exp(-d_j/n_j)
+\tag{3.30}
+\end{equation}\]</span></p>
+<p>这是第 2 章式 <a href="chap2.html#eq:2-5">(2.5)</a> 中给出的生存函数的 Nelson-Aalen 估计，基线累积风险函数的相应估计为 <span class="math inline">\(\sum_{j=1}^kd_j/n_j\)</span> ，如第 2 章 <a href="chap2.html#sec2-3-3">2.3.3</a> 节所示。</p>
+<p>注意到表达式</p>
+<p><span class="math display">\[\frac{-d_j}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_l)}\]</span></p>
+<p>是式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-27">(3.27)</a> 的指数部分，该值往往很小，除非在特定死亡时间有大量的结。取此指数展开的前两项，将这个关于 <span class="math inline">\(\xi_j\)</span> 的新的近似记为 <span class="math inline">\(\xi_j^*\)</span>，得到</p>
+<p><span class="math display">\[\xi_j^*=1-\frac{d_j}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_l)}\]</span></p>
+<p>利用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-21">(3.21)</a>，从 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)}\)</span> 的区间的基线风险函数估计由下式给出</p>
+<p><span class="math display" id="eq:3-31">\[\begin{equation}
+h_0^*(t)=\frac{d_j}{(t_{(j+1)}-t_{(j)})\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_l)}
+\tag{3.31}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(j)}\leqslant t&lt;t_{(j+1)},j=1,2,\ldots,r-1\)</span>。使用 <span class="math inline">\(\xi_{j}^{*}\)</span> 替换式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-22">(3.22)</a> 中的 <span class="math inline">\(\xi_{j}\)</span>，相应的基线生存函数估计为</p>
+<p><span class="math display">\[\begin{aligned}S_0^*(t)=\prod_{j=1}^k\left(1-\frac{d_j}{\sum_{l\in R(t_{(j)})}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_l)}\right)\end{aligned}\]</span></p>
+<p>以及，基线累积风险函数估计的进一步近似为 <span class="math inline">\(H^*_0(t)=-\log S_0^*(t)\)</span>。请注意，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-29">(3.29)</a> 中在时间 <span class="math inline">\(t\)</span> 处 的累积风险函数可以表示为</p>
+<p><span class="math display">\[\begin{aligned}\tilde{H}_0(t)=\sum_{j=1}^k(t_{(j+1)}-t_{(j)})h_0^*(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(h^*_0(t)\)</span> 由式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-31">(3.31)</a> 给出。因此，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-29">(3.29)</a> 中基线累积风险函数估计的连续值之差提供了在时间 <span class="math inline">\(t_{(1)},t_{(2)},\ldots,t_{(r)}\)</span> 处的基线风险函数的近似，这很容易计算。</p>
+<p>在无协变量的特例中，估计 <span class="math inline">\(h_0^*(t),S_0^*(t)\)</span> 和 <span class="math inline">\(H_0^*(t)\)</span> 与 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10-1">3.10.1</a> 节中给出的相同。类似于式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-25">(3.25)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-26">(3.26)</a> 的方程可用于估计解释变量向量为 <span class="math inline">\(\boldsymbol x_i\)</span> 的个体的累积风险和生存函数。</p>
+<p>在实践中，使用 <span class="math inline">\(\tilde{S}_0(t)\)</span> 或 <span class="math inline">\(S_0^*(t)\)</span> 代替 <span class="math inline">\(\hat{S}_0(t)\)</span> 通常在计算上是有利的。当生存时间结的数量很小时，三种估计往往非常相似。此外，由于估计通常用作生存数据的描述性总结，因此估计之间的微小差异不太可能具有实际意义。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-14" class="example"><strong>示例 3.13  (肾癌的治疗) </strong></span><br></p>
+<p>在<a href="chap3.html#exm:ex3-4">示例 3.4</a> 中，利用 Cox 回归模型拟合了高肾瘤患者的生存时间数据。研究发现，风险函数取决于患者的年龄组，以及是否进行了肾切除术。第 <span class="math inline">\(i\)</span> 名患者的风险函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\exp\{0.013A_{2i}+1.342A_{3i}-1.412N_i\}\hat{h}_0(t)\end{aligned}\]</span></p>
+<p>其中，如果患者年龄在 60 - 70 岁之间，则 <span class="math inline">\(A_{2i}\)</span> 为 1，否则为 0；如果患者年龄超过 70 岁，则 <span class="math inline">\(A_{3i}\)</span> 为 1，否则为 0，并且如果患者进行了肾切除术，则 <span class="math inline">\(N_i\)</span> 为 1，反之为 0. 因此基线风险函数估计是年龄小于 60 且未进行肾切除术的个体在时间 <span class="math inline">\(t\)</span> 时死亡的风险估计。</p>
+<p>分别使用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-19">(3.19)</a>, <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-23">(3.23)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-22">(3.22)</a> 得到的基线风险函数估计 <span class="math inline">\(\hat{h}_0(t)\)</span>、累积风险函数估计 <span class="math inline">\(\hat{H}_0(t)\)</span> 和 生存函数估计 <span class="math inline">\(\hat{S}_0(t)\)</span>，列于表 3.19 中。</p>
+<details><summary><font color="#8B2232">表 3.19</font>
+</summary><img src="figure/table%203.19.png#center" style="width:80.0%"></details><p><br>
+根据该表，我们可以看出，基线风险函数估计的总体趋势是随着时间的推移而增加。根据基线风险函数估计的计算方式，该估计仅适用于研究中患者的死亡时间。然而，如果假设在每个时间区间内存在恒定的风险，通过将估计的风险除以相应的时间区间长度，可以得到每单位时间的死亡风险。这得到了式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-21">(3.21)</a> 中的估计。该风险函数如图 3.4 所示。</p>
+<details><summary><font color="#8B2232">图 3.4</font>
+</summary><img src="figure/figure%203.4.png#center" style="width:80.0%"></details><p><br>
+该图显示，在研究期间，每单位时间的死亡风险大致恒定。表 3.19 还显示，正如预期的那样，<span class="math inline">\(\hat{H}_{0}(t)\)</span> 的连续观测之差与 <span class="math inline">\(\hat{h}_{0}(t)\)</span> 非常相似。</p>
+<p>我们现在考虑中位生存时间估计，其定义为生存函数估计小于 0.5 的最小观测生存时间。根据表 3.19，年龄在 60 岁以下且未进行肾切除术的患者的中位生存时间估计为 12 个月。</p>
+<p>通过将基线生存函数估计的指定合适的幂，可以使用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-26">(3.26)</a> 获得其他年龄组患者以及接受过肾切除术患者的生存函数估计。因此，第 <span class="math inline">\(i\)</span> 个个体的生存函数估计由下式给出</p>
+<p><span class="math display">\[\hat{S}_i(t)=\left\{\hat{S}_0(t)\right\}^{\exp\{0.013A_{2i}+1.342A_{3i}-1.412N_i\}}\]</span></p>
+<p>对于一个年龄小于 60 岁、接受过肾切除术的个体，有 <span class="math inline">\(A_2=0,A_3=0\)</span> 以及 <span class="math inline">\(N_=1\)</span>，因此该个体的生存函数估计成为</p>
+<p><span class="math display">\[\left\{\hat{S}_0(t)\right\}^{\exp\{-1.412\}}\]</span></p>
+<p>该函数与同一年龄组但未接受肾切除术个体的基线生存函数估计一起绘制在图 3.5 中。此图表明，接受肾切除术的患者相比未接受肾切除术的患者，在任何给定时间的生存概率都更大，从而证实肾切除术能够改善肾癌患者的预后。</p>
+<details><summary><font color="#8B2232">图 3.5</font>
+</summary><img src="figure/figure%203.5.png#center" style="width:80.0%"></details><p><br>
+请注意，由于假设了比例风险，图 3.5 中的两个生存函数估计不会交叉。此外，那些接受过肾切除的患者的生存函数估计高于那些没有接受过肾切除的患者。这是接受过手术的人相对于未接受手术的人风险比估计小于 1 的直接结果。</p>
+<p>此类患者的中位生存时间估计可以从生存函数估计的表格或图 3.5 中获得。我们发现，年龄小于 60 岁、接受肾切除术的患者的中位生存时间估计为 36 个月。可以使用类似的方法估计生存时间分布的其他百分位数。</p>
+<p>以类似的方式，可以比较不同年龄组患者的生存函数，无论是否接受过肾切除术。例如，对于接受过肾切除术的患者，三个年龄组患者的生存函数估计分别为 <span class="math inline">\(\{\hat{S}_0(t)\}^{\exp\{-1.412\}},~\{\hat{S}_0(t)\}^{\exp\{-1.412+0.013\}}\)</span> 和 <span class="math inline">\(\{\hat{S}_0(t)\}^{\exp\{-1.412+1.342\}}\)</span>。这些生存函数估计如图 3.6 所示，它清楚地表明 70 岁以上的患者的预后比其他两个年龄组的患者更差。</p>
+<details><summary><font color="#8B2232">图 3.6</font>
+</summary><img src="figure/figure%203.6.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+</div>
+<div id="sec3-11" class="section level2" number="3.11">
+<h2>
+<span class="header-section-number">3.11</span> 风险调整的生存函数<a class="anchor" aria-label="anchor" href="#sec3-11"><i class="fas fa-link"></i></a>
+</h2>
+<p>一旦拟合了 Cox 回归模型，就可以获得每个个体的生存函数估计。接下来可能会关注拟合的生存函数与未经调整的 Kaplan-Meier 估计的生存函数有何差异。这样就可以确定风险调整的影响。为此，通过在每个事件时间点上对个体生存函数估计进行平均来获得风险调整的生存函数 (risk-adjusted survival function).</p>
+<p>正式地说，假设 Cox 回归模型拟合了 <span class="math inline">\(n\)</span> 个个体的生存数据，其中第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol\beta'\boldsymbol{x}_i=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\)</span>。<span class="math inline">\(x_{1i},x_{2i},\ldots,x_{pi}\)</span> 为每个个体的 <span class="math inline">\(p\)</span> 个解释变量的值，<span class="math inline">\(h_0(t)\)</span> 为基线风险函数。第 <span class="math inline">\(i\)</span> 个个体相应的生存函数为</p>
+<p><span class="math display">\[S_i(t)=\{S_0(t)\}^{\exp(\boldsymbol{\beta'x_i})}\]</span></p>
+<p>模型拟合过程会得出 <span class="math inline">\(p\)</span> 个 <span class="math inline">\(\beta\)</span> 参数 <span class="math inline">\(\hat{\beta}_1,\hat{\beta}_2,\ldots,\hat{\beta}_p\)</span> 以及基线生存函数 <span class="math inline">\(\hat{S}_0(t)\)</span> 的估计。然后，在给定时间 <span class="math inline">\(t\)</span> 处的平均生存函数 (average survivor function) 为</p>
+<p><span class="math display" id="eq:3-32">\[\begin{equation}
+\hat{S}(t)=\frac{1}{n}\sum_{i=1}^n\hat{S}_i(t)
+\tag{3.32}
+\end{equation}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\hat{S_i}(t)=\left\{\hat{S_0}(t)\right\}^{\exp(\hat{\boldsymbol{\beta}}'\boldsymbol x_i)}\]</span></p>
+<p>为第 <span class="math inline">\(i\)</span> 个个体的生存函数估计。那么可以根据 <span class="math inline">\(\hat{S_i}(t)\)</span> 获得生存率（生存时间分布中位数和其他百分位数）的风险调整估计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-15" class="example"><strong>示例 3.14  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在<a href="chap3.html#exm:ex3-5">示例 3.5</a> 中，发现包含解释变量 Hb 和 Bun 的 Cox 回归模型适合对<a href="chap1.html#exm:ex1-3">示例 1.3</a> 中介绍的多发性骨髓瘤患者生存时间数据进行建模。第 <span class="math inline">\(i\)</span> 个患者 <span class="math inline">\(i = 1, 2,..., 48\)</span> 的生存函数估计为</p>
+<p><span class="math display">\[\hat{S_i}(t)=\left\{\hat{S_0}(t)\right\}^{\exp(\hat{\eta_i})}\]</span></p>
+<p>其中风险评分 <span class="math inline">\(\hat{\eta}_{{i}}\)</span> 为 <span class="math inline">\(\hat{\eta}_i=-0.134Hb_i+0.019Bun_i\)</span>。那么可以在数据集中的每个事件时间获取 48 名患者的生存函数估计。对每个事件时间的 48 名患者的估计进行平均，得出风险调整的生存函数。图 3.7 绘制了该函数以及生存函数未经调整的 Kaplan-Meier 估计。这两种生存函数估计非常接近，因此在本例中，风险调整过程对生存率或中位生存时间的估计几乎没有影响。</p>
+<details><summary><font color="#8B2232">图 3.7</font>
+</summary><img src="figure/figure%203.7.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<div id="sec3-11-1" class="section level3" number="3.11.1">
+<h3>
+<span class="header-section-number">3.11.1</span> 分组风险调整的生存函数<a class="anchor" aria-label="anchor" href="#sec3-11-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在许多情况下，对个体的某些特定组别进行风险调整以调整这些分组之间因解释变量值的不同而产生的差异，并估计调整的生存函数是有意义的。例如，考虑一项关于采用两种不同治疗方案的无病生存 (disease-free survival) 的研究。若这项研究是以随机对照试验的方式进行，那么很可能各治疗组之间解释变量的值会均衡分配。这时，可以使用未经调整的 Kaplan-Meier 方法对每个组别估计生存函数，辅以未经调整和经过调整的治疗效应的风险比，从而充分总结数据。然而，如果数据来源于观察性研究，在该研究中，解释变量的值在两个治疗组之间不一定均衡分布。在这种情况下，对两个组别未经调整的生存函数估计可能会产生误导。此时，在得出关于治疗效应的结论之前，需要先进行风险调整过程，以便考虑到两个组别内个体特征之间不均衡的情况。</p>
+<p>如果可以假设治疗组之间的差异与时间无关，则可以将组别效应添加到生存模型中，并利用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-32">(3.32)</a> 计算每个治疗组中个体的风险调整的生存函数。然而，在许多应用中，例如在第 <a href="chap11.html#chap11">11</a> 章中要考虑的比较机构之间的生存率时，不能做出这种假设。此时，就需要将 Cox 回归模型扩展：每组具有不同的基线风险函数。</p>
+<p>假设在一项比较 <span class="math inline">\(g\)</span> 组个体生存率的研究中，已拟合了一个包含有意义的解释变量的 Cox 回归模型，但不包含组别效应。那么在第 <span class="math inline">\(j(j=1,2,\ldots,g)\)</span> 组中，第 <span class="math inline">\(i(i=1,2,\ldots,n_j)\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 处的死亡风险模型可表示为</p>
+<p><span class="math display">\[\begin{aligned}h_{ij}(t)=\exp(\boldsymbol{\beta'x}_{ij})h_{0j}(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{\beta'x_{ij}}=\beta_1x_{1ij}+\beta_2x_{2ij}+\cdots+\beta_px_{pij}\)</span>。<span class="math inline">\(x_{1{i}j},x_{2{i}j},\ldots,x_{{pi}j}\)</span> 为对每个个体测量的 <span class="math inline">\(p\)</span> 个解释变量的值。<span class="math inline">\(h_{0j}(t)\)</span> 是第 <span class="math inline">\(j\)</span> 组的基线风险函数。在该模型中，<span class="math inline">\(p\)</span> 个解释变量的系数，<span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p\)</span> 在 <span class="math inline">\(g\)</span> 个组中是恒定的，但每组的基线风险函数不同。这是一个分层 Cox 回归模型 (stratified Cox regression model)，其中 <span class="math inline">\(g\)</span> 个组定义了单独的分层。这些模型将在第 <a href="chap11.html#chap11">11</a> 章中进行更详细的讨论。</p>
+<p>在拟合分层模型时，第 <span class="math inline">\(j\)</span> 组中第 <span class="math inline">\(i\)</span> 名患者的相应生存函数估计为</p>
+<p><span class="math display">\[\hat{S}_{{i}{j}}(t)=\left\{\hat{S}_{{0}{j}}(t)\right\}^{\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_{ij})}\]</span></p>
+<p>其中，<span class="math inline">\(\hat{S}_{0j}(t)\)</span> 是第 <span class="math inline">\(j\)</span> 组中个体的基线生存函数估计。</p>
+<p>如果假定各组对风险函数的效应呈比例关系，则将拟合一个公共基线风险，并在模型中包含组别效应。那么 <span class="math inline">\(h_{0{j}}(t)\)</span> 被 <span class="math inline">\(\exp(g_j)h_0(t)\)</span> 代替，其中 <span class="math inline">\(g_j\)</span> 是第 <span class="math inline">\(j\)</span> 组的效应。一般来说，通过使用分层模型，允许组别效应随时间变化的限制较少。</p>
+<p>在分层模型中，可以通过对各组别内的个体在每个事件时间点上的生存函数估计值进行平均，从而求得每个组别的风险调整的生存函数。因此，在时间 <span class="math inline">\(t\)</span> 处的平均风险调整生存函数为</p>
+<p><span class="math display">\[\hat{S}_j(t)=\frac1{n_j}\sum_{i=1}^{n_j}\hat{S}_{ij}(t)\]</span></p>
+<p>这对应于第 <span class="math inline">\(j\)</span> 组中的个体。</p>
+<p>另一种方法是对每个组中个体的每个解释变量的值进行平均，然后使用这些值来估计特定于组的生存函数。令 <span class="math inline">\({\bar{\boldsymbol{x}}}_j\)</span> 为第 <span class="math inline">\(j\)</span> 组中个体的 <span class="math inline">\(p\)</span> 个变量的平均值向量，则组 <span class="math inline">\(j\)</span> 中“平均个体”的相应生存函数估计为</p>
+<p><span class="math display">\[\tilde{S}_j(t)=\left\{\hat{S}_{0j}(t)\right\}^{\exp(\hat{\boldsymbol{\beta}}^{\prime}\bar{\boldsymbol{x}}_j)}\]</span></p>
+<p>尽管这种方法被广泛应用，但它也受到了广泛的批评。对于分类变量而言，对其值进行平均并不恰当。例如，假设与糖尿病有无相关的某个变量有两个水平，分别编码为 1 和 0，且数据中有 10% 的个体患有糖尿病。将指示变量的平均值设为 0.1，在糖尿病状态以该值定义时，并不能得到生存函数有意义的解读。另外，即使对于连续型解释变量，在一个组别内部的解释变量平均值集合可能并不对应于真实组合的值，而且平均个体的生存函数可能与各个个体生存函数的模式大相径庭。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-16" class="example"><strong>示例 3.15  (前列腺癌两种疗法的比较) </strong></span><br></p>
+<p>考虑<a href="chap1.html#exm:ex1-4">示例 1.4</a> 中关于两个治疗组 38 名前列腺癌患者生存时间的数据。在<a href="chap3.html#exm:ex3-6">示例 3.6</a> 中，发现解释变量 Size 和 Index 会影响死亡风险，因此现在拟合包含这两个变量的分层 Cox 回归模型。对于 <span class="math inline">\(j = 1\)</span>（安慰剂）和 <span class="math inline">\(2\)</span>（DES），第 <span class="math inline">\(j\)</span> 个治疗组中第 <span class="math inline">\(i\)</span> 个患者的生存函数估计为</p>
+<p><span class="math display">\[\hat{S}_{{i}{j}}(t)=\left\{\hat{S}_{0{j}}(t)\right\}^{\exp(\hat{\eta}_{{i}{j}})}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\hat{\eta}_{ij}=0.0673Size_{ij}+0.6532Index_{ij}\end{aligned}\]</span></p>
+<p><span class="math inline">\(\hat{S}_{0{j}}(t)\)</span> 是第 <span class="math inline">\(j\)</span> 个治疗组的基线生存函数估计。对每组患者在每个事件时间的生存函数估计进行平均，得到风险调整的生存函数，如图 3.8 所示。该图还显示了每组生存函数未经调整的 Kaplan-Meier 估计。</p>
+<details><summary><font color="#8B2232">图 3.8</font>
+</summary><img src="figure/figure%203.8.png#center" style="width:80.0%"></details><p><br>
+该图显示了风险调整过程如何缩小治疗差异。当然，通过将 DES 组相对于安慰剂组的未调整的风险比 (0.14) 与根据肿瘤大小和 Gleason 指数调整的相应值 (0.33) 进行比较（这两个值见<a href="#exm:ex3-12">示例 3.12</a>），也能看出这一点，但这种分析假设了两种疗法的风险成比例。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec3-12" class="section level2" number="3.12">
+<h2>
+<span class="header-section-number">3.12</span> 一致性，预测能力和解释的变异<a class="anchor" aria-label="anchor" href="#sec3-12"><i class="fas fa-link"></i></a>
+</h2>
+<p>已经提出了许多指标用于：度量生存时间和基于模型的预测之间的一致性、解释变量在多大程度上解释了生存数据中的变异。这些指标量化了拟合模型的预测能力。在本节中，我们将介绍其中一些最有用的指标。</p>
+<div id="sec3-12-1" class="section level3" number="3.12.1">
+<h3>
+<span class="header-section-number">3.12.1</span> 一致性的度量<a class="anchor" aria-label="anchor" href="#sec3-12-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>生存时间与预测的生存时间的排序之间的一致性 (agreement or concordance)，通过区分生存时间较长和较短的个体，总结了拟合的模型区分个体的能力。一致性度量值介于 0 和 1 之间，分别对应于完全不一致和完全一致。当模型没有预测能力时，一致性度量值约为 0.5；而具有合理预测能力的模型往往具有大于 0.7 的值。</p>
+<p>Harrell, Lee and Mark (1996) 描述的 <span class="math inline">\(c\)</span> 统计量是一种特殊的一致性度量。该统计量是对以下概率的估计：对于任何两个个体，生存时间较短者是死亡风险较大者。要计算此统计量，请考虑所有可能的这样的生存时间对 (pairs)：要么两个个体均已死亡，要么其一的生存时间小于另一个的删失生存时间。这样的对子不包括在内：两个个体的生存时间都删失，或者其一的生存时间大于另一个的删失生存时间。如果在两个个体均已死亡的对子中，基于模型的预测生存时间对于实际生存更久的个体而言更长，则称这两个个体是一致的 (concordant).</p>
+<p>在比例风险模型中，预测生存时间最长的个体将会是：在给定时间下死亡风险较低、在给定时间下生存函数估计较高，或风险评分较低的个体。对于其一死亡且另一人的生存时间在其之后删失的对子，具有删失时间的个体生存时间超过了另一名成员，因此可以确定这种配对的两个成员是否一致。<span class="math inline">\(c\)</span> 统计量是通过将一致的配对数除以所考虑的所有可能的配对数来获得的。</p>
+<p>对于只有一名个体死亡且另一名个体的删失生存时间大于此死亡时间的对子，具有删失生存时间的个体比另一名个体生存时间更长，因此可以判断这样的对子中的两名成员是否一致。通过将一致的对子数除以所有可能的对子数，可以得到 <span class="math inline">\(c\)</span> 统计量。</p>
+<p>由于两名个体都删失或其中一名个体的删失生存时间小于另一名个体死亡时间的对子不会对 <span class="math inline">\(c\)</span> 统计量做出贡献，因此 <span class="math inline">\(c\)</span> 统计量会受到删失模式的影响。Gönen and Heller (2005) 提出了一个统计量克服了这一重大缺陷。他们对一致性的度量是在任何两个个体中，其一的生存时间超过另一人生存时间的概率的估计，条件是生存时间较长的个体的风险评分较低。</p>
+<p>为了获得该统计量，令 <span class="math inline">\(\hat{\eta}_i=\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span> 为第 <span class="math inline">\(i\)</span> 个个体的风险评分。如果风险评分较低的个体具有较长的生存时间，则一对生存时间 <span class="math inline">\((T_i,T_j)\)</span> 是一致的。则一致性概率为 <span class="math inline">\(K=\mathrm{P}(T_i&gt;T_j\mid\eta_i\leqslant\eta_j)\)</span>，并且该一致性概率的估计值 <span class="math inline">\(\hat K\)</span> 是模型预测值的 Gönen and Heller 度量。该估计由下式给出</p>
+<p><span class="math display">\[\hat{K}=\frac{2}{n(n-1)}\mathop{\sum\sum}\limits_{i &lt; j}\left\{\frac{I\{(\hat{\eta}_j-\hat{\eta}_i)&lt;0\}}{1+\exp(\hat{\eta}_j-\hat{\eta}_i)}+\frac{I\{(\hat{\eta}_i-\hat{\eta}_j)&lt;0\}}{1+\exp(\hat{\eta}_i-\hat{\eta}_j)}\right\} \]</span></p>
+<p>其中指示函数 <span class="math inline">\(I(\cdot)\)</span> 满足：若 <span class="math inline">\(X &lt; 0\)</span>，则 <span class="math inline">\(I\{X &lt; 0\} = 1\)</span>，否则为 0. 另外，还可以得到 <span class="math inline">\(\hat K\)</span> 的标准误，从而评估 <span class="math inline">\(\hat K\)</span> 的精度，这里不再赘述。</p>
+</div>
+<div id="sec3-12-2" class="section level3" number="3.12.2">
+<h3>
+<span class="header-section-number">3.12.2</span> 预测能力<a class="anchor" aria-label="anchor" href="#sec3-12-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>评估模型根据风险评分值对个体或群体进行区分的能力的一个度量指标是 Royston and Sauerbrei (2004) 提出的 <span class="math inline">\(D\)</span> 统计量。该统计量还总结了模型的预测能力，并且与风险评分的方差紧密相关。</p>
+<p>为了得到该统计量，首先按照从小到大的顺序排列根据 Cox 回归模型得到的风险评分值 <span class="math inline">\(\hat{\eta_i}=\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span>，如此一来，第 <span class="math inline">\(i\)</span> 个有序值便是 <span class="math inline">\(\hat{\eta}_{(i)}=\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_{(i)}\)</span>，其中 <span class="math inline">\(\hat{\eta}_{(1)}&lt;\hat{\eta}_{(2)}&lt;\cdots&lt;\hat{\eta}_{(n)}\)</span>。然后，将这些有序值中的第 <span class="math inline">\(i\)</span> 个值与量 <span class="math inline">\(z_{(i)}\)</span> 关联起来，该量是对样本量为 <span class="math inline">\(n\)</span> 的观测值在标准正态分布中第 <span class="math inline">\(i\)</span> 个顺序统计量期望的一种近似。该量通常称为<strong>正态得分</strong> (normal score)，使用最广泛的得分公式为 <span class="math inline">\(z_{(i)}=\Phi^{-1}\{(i-3/8)/(n+1/4)\}\)</span>，其中 <span class="math inline">\(\Phi^{-1}(\cdot)\)</span> 是标准正态分布函数的逆。然后，一个包含由标准化正态得分 <span class="math inline">\(z_{(i)}/√(8/π)\)</span> 形成的变量的 Cox 回归模型用于拟合生存数据。所得该变量的系数估计就是 <span class="math inline">\(D\)</span> 统计量，同时拟合模型还会给出 <span class="math inline">\(D\)</span> 的标准误。</p>
+</div>
+<div id="sec3-12-3" class="section level3" number="3.12.3">
+<h3>
+<span class="header-section-number">3.12.3</span> Cox 回归模型解释的变异<a class="anchor" aria-label="anchor" href="#sec3-12-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>在线性回归分析中，解释变量所占的响应变量变异的比例广泛用于总结模型的解释能力。该统计量通常用 <span class="math inline">\(R^2\)</span> 表示。对于具有 <span class="math inline">\(p\)</span> 个解释变量的一般线性模型 (general linear model)，响应变量 <span class="math inline">\(Y\)</span> 的第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个值为</p>
+<p><span class="math display" id="eq:3-33">\[\begin{equation}
+y_i=\beta_0+\beta_1x_{1i}+\cdots+\beta_px_{pi}+\epsilon_i
+\tag{3.33}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\beta_0\)</span> 为常数，<span class="math inline">\(\beta_1,\beta_2,\ldots,\beta_p\)</span>为 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(x_{ji},j=1,2,\ldots,p\)</span> 的系数，以及 <span class="math inline">\(\epsilon\)</span> 为残差或误差项。拟合该模型时，<span class="math inline">\(R^2\)</span> 统计量定义为</p>
+<p><span class="math display">\[\begin{aligned}R^2&amp;=\frac{\text{模型平方和}}{\text{总平方和}} = \frac{\text{模型平方和}}{\text{模型平方和}+\text{残差平方和}}\end{aligned}\]</span></p>
+<p>在此式中，由模型解释的响应变量的变异总结在模型平方和 (Model Sum of Squares, Model SS) <span class="math inline">\(\sum_{{i}}(\hat{y}_i-\bar{y})^2\)</span> 中，该式表示模型平方和占数据总变异的比例，而数据总变异由总平方和 (Total Sum of Squares, Total SS) <span class="math inline">\(\sum_{{i}}(y_{{i}}-\bar{y})^2\)</span> 表示，其中 <span class="math inline">\(\bar{y}=n^{-1}\sum_iy_i\)</span> 且 <span class="math inline">\(\hat y_i\)</span> 是第 <span class="math inline">\(i\)</span> 个由下式给出的拟合值</p>
+<p><span class="math display" id="eq:3-34">\[\begin{equation}
+\hat{y}_i=\hat{\beta}_0+\hat{\beta}_1x_{1i}+\cdots+\hat{\beta}_px_{pi}
+\tag{3.34}
+\end{equation}\]</span></p>
+<p>总平方和可分解为模型平方和与残差平方和 <span class="math inline">\(\sum_{{i}}(y_{{i}}-\hat{y_{i}})^{2}\)</span>，后者表示无法解释的变异。<span class="math inline">\(R^2\)</span> 的值越大，模型所能解释的响应变量变异的比例就越大。</p>
+<p>一般线性模型的 <span class="math inline">\(R^2\)</span> 统计量也可表示为以下形式</p>
+<p><span class="math display" id="eq:3-35">\[\begin{equation}
+R^2=\frac{\hat{V}_M}{\hat{V}_M+s^2}
+\tag{3.35}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{V}_M=\text{模型平方和}/(n-1)\)</span> 为由模型解释的数据变异的估计，是式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-34">(3.34)</a> 中 <span class="math inline">\(n\)</span> 个拟合值 <span class="math inline">\(\hat y_i\)</span> 的样本方差。此外，<span class="math inline">\(s^2\)</span> 是残差变异的估计，其中 <span class="math inline">\(s^2 = 残差平方和/(n − 1)\)</span>，而不是除数为 <span class="math inline">\(n − p − 1\)</span> 的通常的无偏估计。量 <span class="math inline">\(\hat{V}_{M}\)</span> 也可用矩阵形式表示为 <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{S}\hat{\boldsymbol{\beta}}\)</span>，其中 <span class="math inline">\(\hat{\boldsymbol{\beta}}\)</span> 是拟合的回归模型中 <span class="math inline">\(p\)</span> 个解释变量的系数估计向量，<span class="math inline">\(\boldsymbol S\)</span> 是解释变量的方差-协方差阵。<span class="math inline">\(p\)</span> 个解释变量的样本方差 <span class="math inline">\((n-1)^{-1}\sum_i(x_{ij}-\bar{x}_j)^2\)</span> 组成了该矩阵的对角元，其样本协方差 <span class="math inline">\((n-1)^{-1}\sum_i(x_{ij}-\bar{x}_j)(x_{ij'}-\bar{x}_{j'})\)</span> 组成了该矩阵的非对角元，其中 <span class="math inline">\(i=1,2,\ldots,n\)</span>，<span class="math inline">\(j,j^\prime=1,2,\ldots,p,j\ne j^\prime\)</span> 且 <span class="math inline">\(\bar x_j\)</span> 为第 <span class="math inline">\(j\)</span> 个变量的样本均值。</p>
+<p>在生存数据的分析中，已经提出了大量的度量方法，用于度量由 Cox 回归模型解释的数据变异的比例。然而，基于大量模拟研究的综述表明，有三种特定的统计量具有理想的性质。它们的取值都在 0 到 1 之间，在很大程度上与删失的程度无关，并且不受生存数据尺度的影响，随着解释变量数量的增加，它们的值也会增加。这些将在下一节描述。</p>
+</div>
+<div id="sec3-12-4" class="section level3" number="3.12.4">
+<h3>
+<span class="header-section-number">3.12.4</span> 解释的变异的度量<a class="anchor" aria-label="anchor" href="#sec3-12-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>考虑用于第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险的 Cox 回归模型 <span class="math inline">\(h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\)</span>，其中 <span class="math inline">\(x_i\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的值向量，<span class="math inline">\(\boldsymbol\beta\)</span> 是其未知系数的向量，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。Kent and O’Quigley (1988) 提出了关于 <span class="math inline">\(R^2\)</span> 型统计量的最早建议之一，在形式上与式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-35">(3.35)</a> 中用于线性回归分析的 <span class="math inline">\(R^2\)</span> 统计量相似。此统计量定义为</p>
+<p><span class="math display" id="eq:3-36">\[\begin{equation}
+R_P^2=\frac{\hat V_P}{\hat V_P+\pi^2/6}
+\tag{3.36}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{V}_P=\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{S}\hat{\boldsymbol{\beta}}\)</span> 为风险评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span> 在 <span class="math inline">\(n\)</span> 个个体间的变异的估计。<span class="math inline">\(\hat{\boldsymbol{\beta}}\)</span> 为拟合的 Cox 回归模型的参数估计向量，<span class="math inline">\(\boldsymbol{S}\)</span> 为解释变量的方差-协方差阵。量 <span class="math inline">\(\hat{V}_P\)</span> 最简便的计算方法是根据拟合的 Cox 回归模型中得到的 <span class="math inline">\(n\)</span> 个风险评分的样本方差。将 <span class="math inline">\(π^2/6\)</span> 包含在式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-36">(3.36)</a> 中以代替式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-35">(3.35)</a> 中的 <span class="math inline">\(s^2\)</span> 的原因将在后面的第 5 章 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-14">5.14</a> 节中解释。</p>
+<p>Royston and Sauerbrei (2004) 提出的 <span class="math inline">\(R^2_D\)</span> 统计量也是基于对个体间风险评分变异的估计，并与他们的 <span class="math inline">\(D\)</span> 统计量密切相关，后者是第 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-2">3.12.2</a> 节中定义的预测能力的度量。为了获得这一统计量，对 <span class="math inline">\(D\)</span> 值进行缩放得到 <span class="math inline">\(D_0=D/\sqrt{(8/\pi)}\)</span>。由 Cox 回归模型解释的变异的 <span class="math inline">\(R^2_D\)</span> 度量为</p>
+<p><span class="math display" id="eq:3-37">\[\begin{equation}
+R_D^2=\frac{D_0^2}{D_0^2+\pi^2/6}
+\tag{3.37}
+\end{equation}\]</span></p>
+<p>这形似 <span class="math inline">\(R_P^2\)</span> 统计量。事实上，<span class="math inline">\(D^2_0\)</span> 也可视为风险评分值之间变异的估计。如果要直接获得 <span class="math inline">\(R^2_D\)</span>，则可以在 Cox 回归模型中使用 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-2">3.12.2</a> 节中的未缩放的正态分数 <span class="math inline">\(z_{(i)}\)</span>，所得回归系数即为式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-37">(3.37)</a> 中的 <span class="math inline">\(D_0\)</span>。</p>
+<p>Kent and O’Quigley (1988) 提出的另一个统计量基于感兴趣的模型与无解释变量的模型之间的“距离”。后一个模型称为零模型，因此每个个体的风险函数只是基线风险 <span class="math inline">\(h_{0}(t)\)</span>。该统计量为</p>
+<p><span class="math display">\[\begin{aligned}R_W^2=1-\exp(-\tilde{W})\end{aligned}\]</span></p>
+<p>其中距离的度量 <span class="math inline">\(\tilde W\)</span> 是似然比统计量期望值的估计，该期望值定义为 <span class="math inline">\(W=-2\mathrm{E}\,\{\log L(0)-\log L(\hat{\boldsymbol{\beta}})\}\)</span>，用于比较拟合模型的最大对数似然 <span class="math inline">\(\operatorname{log}L(\hat{\boldsymbol{\beta}})\)</span> 与零模型的最大对数似然 <span class="math inline">\(\log L(0)\)</span>。<span class="math inline">\(\tilde W\)</span> 由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\tilde{W}&amp;=2\left[(1-\tilde{\omega})\Psi(1)+\log\Gamma(\tilde{\omega})+\log\left\{n^{-1}\sum_{i=1}^n\exp(-\tilde{\omega}z_i)\right\}\right]\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(z_i=\hat{\boldsymbol{\beta}}^{\prime}(\boldsymbol{x}_i-\boldsymbol{\bar{x}})\)</span>，<span class="math inline">\(\hat{\boldsymbol{\beta}}\)</span> 为拟合的 Cox 回归模型中的参数估计向量，<span class="math inline">\(\bar {\boldsymbol x}\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的平均值向量，<span class="math inline">\(\Gamma(\tilde{\omega})=\int_0^\infty u^{\tilde{\omega}-1}e^{-u}\mathrm{d}u\)</span> 为 gamma 函数。此外，<span class="math inline">\(\tilde \omega\)</span> 是满足如下非线性方程的 <span class="math inline">\(\omega\)</span> 的值</p>
+<p><span class="math display">\[\begin{aligned}\Psi(1)-\Psi(\omega)+\sum_{i=1}^n\frac{\exp(-\omega z_i)}{\sum_{l=1}^n\exp(-\omega z_l)}z_i&amp;=0\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\Psi(\omega)\)</span> 为 digamma 函数，定义为如下的级数展开</p>
+<p><span class="math display">\[\begin{aligned}\Psi(\omega)&amp;=-\lambda+\sum_{j=0}^\infty\frac{\omega-1}{(1+j)(\omega+j)}\end{aligned}\]</span></p>
+<p>使得 <span class="math inline">\(\Psi(1)=-\lambda\)</span>，其中 <span class="math inline">\(\lambda=0.577216\)</span> 为欧拉常数。这是一个计算起来非常复杂的统计量，但由于它表现良好，因此被包括在这里，并且可以使用几个用于生存分析的软件包来获得。</p>
+</div>
+<div id="sec3-12-5" class="section level3" number="3.12.5">
+<h3>
+<span class="header-section-number">3.12.5</span> 模型验证<a class="anchor" aria-label="anchor" href="#sec3-12-5"><i class="fas fa-link"></i></a>
+</h3>
+<p><a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-1">3.12.1</a> 节至 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-4">3.12.4</a> 节所描述的方法总结了 Cox 回归模型的预测能力，以及拟合模型对一组生存数据变异的解释程度。然而，如果同一组数据既用于构建模型又用于验证模型，那么这些方法可能会导致对模型能力过于乐观的评估。因此，最佳的做法是使用未参与建模过程的数据来确定预测能力和解释变异的指标。如果有来自其他地区或国家的独立数据集可用，则应将这些数据用于验证过程。这一过程称为<strong>外部验证</strong> (external validation).</p>
+<p>在许多情况下，外部验证是不可能的。那么可以使用基于将数据随机划分为建模数据集和验证数据集的数据分割程序。首先根据建模数据集确定模型，并使用剩余数据进行验证，此为<strong>内部验证</strong> (internal validation). 根据数据集的大小，最多可以留出 50% 的数据用于验证，但对于较小的数据集，这一比例可能在 20% 至 40% 之间。无论如何，验证数据集应包含足够数量的事件，一般建议至少需要 100 个事件。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-17" class="example"><strong>示例 3.16  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在本示例中，将对<a href="chap1.html#exm:ex1-3">示例 1.3</a> 中所示的多发性骨髓瘤患者生存时间数据的预测能力和解释的变异的各种度量进行比较。在<a href="chap3.html#exm:ex3-5">示例 3.5</a> 中，最令人满意的 Cox 回归模型包含解释变量 Hb（血清血红蛋白）和 Bun（血尿素氮）。</p>
+<p>对于模型和数据之间的一致性，用 <span class="math inline">\(c\)</span> 统计量总结，选定模型为 0.67 (se = 0.053)，全模型为 0.71 (se = 0.048). 关于 Gönen and Heller 的一致性度量，对于所选模型为 0.67 (se = 0.041)，对于全模型为 0.68 (se = 0.040). 在这个例子中，由于只有相对较少的删失，大部分生存时间对可用于 <span class="math inline">\(c\)</span> 统计量的计算，因此两个模型区分能力 (discriminatory power) 的度量非常接近。同时，所选模型和全模型在这两种统计量上的数值差异也非常小，进一步证实了所选模型的预测能力与全模型相当。然而，Gönen and Heller 统计量的值为 0.67，表明该模型在区分本研究中个体的生存时间方面并不是特别好。</p>
+<p>拟合模型的 <span class="math inline">\(D\)</span> 统计量为 1.008 (se = 0.351). 该统计量的值约为其标准误的三倍，表明拟合模型实现了一定的预后分离。全模型该统计量值仅稍大一些，为 1.236 (se = 0.346)，这表明额外变量对提高模型质量几乎没有作用。</p>
+<p>现在转向解释的变异的度量，表 3.20 中显示了包含 Hb 和 Bun 的选定模型以及包含 Age, Sex, Bun, Ca, Hb, Pcells 和 Protein 的全模型的各种统计量。</p>
+<details><summary><font color="#8B2232">表 3.20</font>
+</summary><img src="figure/table%203.20.png#center" style="width:80.0%"></details><p><br>
+针对这两种模型，三个不同解释的变异的度量大体上具有相似的值。基于这些统计量，我们得出结论：大约 30% 的生存时间变异可由血清血红蛋白和血液尿素氮水平解释。相应地，模型未能解释的变异比例约为 70%，这表明模型还有很大的改进空间。例如，可能需要测量并纳入更多的解释变量以改进模型。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec3-13" class="section level2" number="3.13">
+<h2>
+<span class="header-section-number">3.13</span> 时依 ROC 曲线<a class="anchor" aria-label="anchor" href="#sec3-13"><i class="fas fa-link"></i></a>
+</h2>
+<p><a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-1">3.12.1</a> 节中描述的一致性度量提供了对拟合模型中生存时间与风险评分之间关联的总体评估。然而，模型对短期生存的预测能力不一定与长期生存的预测能力相同，因此需要时依度量 (time-dependent measures). <strong>受试者工作特征</strong> (Receiver operating characteristic, ROC) 曲线广泛用于总结拟合的 logistic 回归模型中的预测准确性。因此，本节首先简要总结它们在这种情况下的使用，然后再开发可用于生存数据的时依版本。</p>
+<div id="sec3-13-1" class="section level3" number="3.13.1">
+<h3>
+<span class="header-section-number">3.13.1</span> 灵敏度和特异度<a class="anchor" aria-label="anchor" href="#sec3-13-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在利用诊断程序结果区分患某种疾病的人群与未患病人群时，可能出现两种类型的错误。首先，检测程序可能导致实际患病的人被误判为未患病。其次，未患病的人可能被误判为患病。对于临床准确 (clinically accurate) 的诊断测试程序，这两种错误发生的概率将会很小。正确识别出患病个体的概率称为测试的<strong>灵敏度</strong> (sensitivity)，而正确识别出未患病个体的概率称为<strong>特异度</strong> (specificity). 灵敏度有时也称为<strong>真阳性率</strong> (true positive rate)，而 (1 - 特异度)，即未患病个体被误判为患病的概率，称为<strong>假阳性率</strong> (false positive rate). 这些概念通过以下示例加以阐明。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-18" class="example"><strong>示例 3.17  (侧流装置检测 COVID-19 的性能) </strong></span><br></p>
+<p>本示例使用用于识别 COVID-19 感染的 Innova 侧流装置 (lateral flow device, LFD) 的性能数据。这些数据来自 Wolf, Hulmes and Hopkins (2021) 报告的一项上市后监测研究，该研究由 Public Health England 和 Oxford University 在 2020 年 11 月至 2021 年 1 月期间进行。共有 8223 名个体根据他们在逆转录聚合酶链反应 (RT-PCR) 测试（这是诊断 COVID-19 的最优测试或“金标准”测试）中是否获得阳性结果进行分类，还根据使用 LFD 的测试（更快、更便宜）是否给出阳性结果对这些人进行了分类，总结数据显示在表 3.21 中。</p>
+<details><summary><font color="#8B2232">表 3.21</font>
+</summary><img src="figure/table%203.21.png#center" style="width:80.0%"></details><p><br>
+根据该表，LFD 测试的灵敏度为 339/677，即 50.1%。特异度为 7525/7546，即 99.7%，假阳性率为 0.3%，极低。根据这些总结数据，LFD 设备在正确识别 COVID-19 感染方面的效率仅为约 50%，但在识别某人是否无病方面的效率接近 100%。</p>
+</div>
+</div>
+</div>
+<div id="sec3-13-2" class="section level3" number="3.13.2">
+<h3>
+<span class="header-section-number">3.13.2</span> 疾病概率建模<a class="anchor" aria-label="anchor" href="#sec3-13-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>个体是否患有某种特定疾病或症状，或者在未来患该疾病的风险，通常可以通过使用<strong>生物标志物</strong> (biological marker or biomarker) 来评估疾病的存在或进展。许多生物标志物广泛应用于筛查或诊断程序的一部分被，例如血清胆红素水平作为肝脏疾病的指标、前列腺特异性抗原 (prostate-specific antigen, PSA) 水平用于前列腺癌筛查、血糖水平作为糖尿病的标志物。这些生物标志物可以精确测量，并且是在连续测量尺度上的观察值，其中更高的生物标志物值表明存在疾病的可能性更大。诊断测试的结果基于标志物值是否超过阈值，若超过，则将个体归类为患有该疾病。</p>
+<p>当生物标志物用作诊断辅助时，可以使用线性 logistic 模型总结疾病概率对生物标志物值的依赖性。在此过程中，响应变量是二元的，表示个体是否患有相关疾病，如果个体没有疾病，则记录值为 0，否则记录为 1. 将 <span class="math inline">\(n\)</span> 个个体中的第 <span class="math inline">\(i\)</span> 个个体的疾病概率写作 <span class="math inline">\(p_i\)</span>，<span class="math inline">\(p_i\)</span> 的线性 logistic 模型为</p>
+<p><span class="math display" id="eq:3-38">\[\begin{equation}
+\text{logit }(p_i)=\log\left(\frac{p_i}{1-p_i}\right)=\beta_0+\beta_1x_i
+\tag{3.38}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的生物标志物的值。为二元响应变量拟合该模型会得到模型的参数估计 <span class="math inline">\(\hat{\beta}_0,\hat{\beta}_1\)</span>。那么，基于模型的对第 <span class="math inline">\(i\)</span> 个个体患有该疾病的概率的 logisic 变换估计为 <span class="math inline">\(\hat{\beta}_0+\hat{\beta}_1x_i\)</span>，并且第 <span class="math inline">\(i\)</span> 个个体患病的相应概率估计 <span class="math inline">\(\hat p_i\)</span> 由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\hat{p}_i=\frac{\exp(\hat{\beta}_0+\hat{\beta}_1x_i)}{1+\exp(\hat{\beta}_0+\hat{\beta}_1x_i)}\end{aligned}\]</span></p>
+<p>对于具有不同 <span class="math inline">\(x_i\)</span> 值的患病和无病个体，这些疾病概率估计会有所不同。对于基于二元疾病标志物的诊断测试，例如<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-18">示例 3.18</a> 中侧流测试的结果，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-38">(3.38)</a> 中的 <span class="math inline">\(x_i\)</span> 值将为 0 或 1，分别对应于阴性或阳性侧流测试结果。那么，拟合的概率将等于具有阳性测试结果的患病和无病个体的比例，从而直接估计测试的灵敏度和特异度。</p>
+<p>当使用如血清胆红素水平这样的具有连续值的生物标志物时，需要设定一个阈值 <span class="math inline">\(x_i\)</span>，以便根据测试结果判断个体是否患病。在诊断测试中选用的阈值应参考该生物标志物在不同阈值下的灵敏度和特异度。理想测试的阈值将使灵敏度和特异度值都很低，但实践中往往需要在这两者之间做出一定的权衡。例如，在类似于<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-18">示例 3.18</a> 的情况下，如果不误诊患病的人是非常重要的，可能就需要牺牲一定的特异度来换取较高的灵敏度。</p>
+<p>疾病风险的度量可以基于个体的特征，而不是使用单一的生物标志物。其中包括人口统计学变量，如年龄和性别、健康的临床指标和生物标志物。然后将其他解释变量包含在式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-38">(3.38)</a> 中的模型中。模型的线性部分变为 <span class="math inline">\(\boldsymbol{\beta'x}_i=\beta_0+\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_kx_{ki}\)</span>，其中 <span class="math inline">\(x_{1i},x_{2i},\ldots,x_{ki}\)</span> 是 <span class="math inline">\(k\)</span> 个变量的值，包括任何生物标志物。拟合模型 <span class="math inline">\(\log\{p_i/(1-p_i)\}=\boldsymbol{\beta'x}_i\)</span> 得到对第 <span class="math inline">\(i\)</span> 个个体的疾病概率的估计 <span class="math inline">\(\hat p_i\)</span> 和他们风险评分的估计 <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span>。同样，为了确定个体是否患有某种疾病，也需要设定疾病概率或风险评分的阈值。随后，可以根据生物标志物值或风险评分在各阈值处的估计，来评估基于这些值的诊断程序的灵敏度和特异度。</p>
+</div>
+<div id="sec3-13-3" class="section level3" number="3.13.3">
+<h3>
+<span class="header-section-number">3.13.3</span> ROC 曲线<a class="anchor" aria-label="anchor" href="#sec3-13-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>一旦针对一系列阈值估计了生物标志物或风险评分的灵敏度和特异度，绘制灵敏度与 (1 - 特异度) 在不同的阈值处的图形就形成了一个有用的图形总结。这就是所谓的受试者工作特征曲线 (Receiver Operating Characteristic Curve) 或 ROC 曲线，这个名字最初由二战期间的无线电工程师创造。ROC 曲线总结了诊断测试、生物标志物或风险评分区分患病个体与非患病个体的能力。当比较不同的阈值时，该曲线对于展示灵敏度和特异度之间的权衡特别有用。</p>
+<p>最优阈值应具有 100% 的灵敏度和特异度，这对应于完美的真阳性率和假阳性率，在 ROC 曲线上表现为左上角的一个点。相反，若灵敏度与 (1 - 特异度) 之间呈现直线关系，则表明该测试具有相等的真阳性率和假阳性率，即不具备预测能力。图 3.9 展示了几个理想化的 ROC 曲线。</p>
+<details><summary><font color="#8B2232">图 3.9</font>
+</summary><img src="figure/figure%203.9.png#center" style="width:80.0%"></details><p><br>
+在该图中，直线代表一个不具备区分能力的模型。这条线上方的曲线是可能的生物标志物或风险评分的 ROC 曲线，其区分患有和不患有疾病个体的能力越来越强。</p>
+<p>一个用于 ROC 曲线的整体总结指标是<strong>曲线下面积</strong> (area under the curve, AUC)，它可以用来比较不同模型对疾病概率的预测能力。ROC 曲线下面积衡量的是二元响应变量与基于模型拟合概率之间的符合程度。AUC值越大，说明测试在区分患者与非患者方面的效果越好。AUC 值始终介于 0 到 1 之间，两个极值对应于预测总是错误或正确的模型。值 0.5 对应于没有区分能力的模型。</p>
+<p>ROC 曲线提供了一种公认的方法，用于总结模型在依赖生物标志物或风险评分值来预测个体患病概率方面的预测能力。然而，如今 ROC 曲线的应用远远超出了诊断测试范畴，因为它们提供了一种方便的方式来总结二元响应变量观测值与拟合值之间的一致性。</p>
+</div>
+<div id="sec3-13-4" class="section level3" number="3.13.4">
+<h3>
+<span class="header-section-number">3.13.4</span> 时依 ROC 曲线<a class="anchor" aria-label="anchor" href="#sec3-13-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>生物标志物区分可能发展出特定疾病的个体和不会发展出这种疾病的个体的能力，是一个重要的考虑因素。在结局是事件发生时间的情况下，例如特定疾病的发生或死亡，诊断测试的灵敏度和特异度可能会在个体接受随访的时间段内发生变化。那么 ROC 曲线是时依的 (time-dependent)，需要在随访期的特定时间进行估计。还必须考虑到疾病发生或死亡等事件的时间删失的可能性。</p>
+<p>时依结局的灵敏度和特异度的估计可以通过以下方式获得。令 <span class="math inline">\(T\)</span> 为与事件发生时间（例如疾病或死亡的发生）相关的变量，令 <span class="math inline">\(D(t)\)</span> 为个体在时间 <span class="math inline">\(t\)</span> 时的状态，其中如果 <span class="math inline">\(T &lt;t\)</span> 则 <span class="math inline">\(D(t) = 0\)</span>，如果 <span class="math inline">\(T \ge t\)</span>，则 <span class="math inline">\(D(t) = 1\)</span>。将变量 <span class="math inline">\(D(t)\)</span> 称为疾病状态，其中 <span class="math inline">\(D(t) = 0\)</span> 表示在时间 <span class="math inline">\(t\)</span> 时无病的个体。然而，<span class="math inline">\(D(t)\)</span> 也可以表示一个个体是否已经发展出某种特征，或者在时间 <span class="math inline">\(t\)</span> 是生或死。</p>
+<p>与生物标志物或风险评分相关的变量由 <span class="math inline">\(X\)</span> 表示，其中较大的 <span class="math inline">\(X\)</span> 值更能指示疾病的存在。用 <span class="math inline">\(c\)</span> 值作为生物标志物或风险评分的阈值，诊断测试在时间 <span class="math inline">\(t\)</span> 的灵敏度是在时间 <span class="math inline">\(t\)</span> 时对于患有疾病的个体，<span class="math inline">\(X&gt;c\)</span> 的概率，即</p>
+<p><span class="math display">\[\begin{aligned}\text{sens}(t,c)=\text{P}(X&gt;c\mid D(t)=1)\end{aligned}\]</span></p>
+<p>类似地，灵敏度为</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{spec}(t,c)&amp;=\operatorname{P}(X\leqslant c\mid D(t)=0)\end{aligned}\]</span></p>
+<p>这两个概率可以使用条件概率的结论来计算，根据条件概率，以事件 <span class="math inline">\(B\)</span> 为条件，事件 <span class="math inline">\(A\)</span> 的概率为</p>
+<p><span class="math display" id="eq:3-39">\[\begin{equation}
+\mathrm{P}(A\mid B)=\frac{\mathrm{P}(B\mid A)\mathrm{P}(A)}{\mathrm{P}(B)}
+\tag{3.39}
+\end{equation}\]</span></p>
+<p>这个结果称为<strong>贝叶斯定理</strong> (Bayes’ theorem)，它是 <a href="chap16.html#chap16">16</a> 章中描述的生存数据分析的贝叶斯方法（在该章的 <a href="chap16.html#sec16-1">16.1</a> 节中推导）的基础。利用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-39">(3.39)</a>，可以写出诊断程序的灵敏度</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(X&gt;c\mid D(t)=1)&amp;=\frac{\mathrm{P}(D(t)=1\mid X&gt;c)\mathrm{P}(X&gt;c)}{\mathrm{P}(D(t)=1)}\end{aligned}\]</span></p>
+<p>概率 <span class="math inline">\(\mathrm{P}(D(t)=1|X&gt;c)\)</span> 和 <span class="math inline">\(\mathrm{P}(D(t)=1)\)</span> 可以从关于 <span class="math inline">\(T\)</span> 的生存函数 <span class="math inline">\(S(t)=\operatorname{P}(T\geqslant t)\)</span> 中获得。那么灵敏度就是</p>
+<p><span class="math display" id="eq:3-40">\[\begin{equation}
+\frac{\{1-S(t\mid X&gt;c)\}\text{P}(X&gt;c)}{1-S(t)}
+\tag{3.40}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(S(t\mid X&gt;c)\)</span> 是那些 <span class="math inline">\(X&gt;c\)</span> 的个体的生存函数。同理，特异度为</p>
+<p><span class="math display" id="eq:3-41">\[\begin{equation}
+\frac{S(t\mid X\leqslant c)\text{P}(X\leqslant c)}{S(t)}
+\tag{3.41}
+\end{equation}\]</span></p>
+<p>灵敏度和特异度可以使用生存函数的 Kaplan-Meier 估计 <span class="math inline">\(\hat S(t)\)</span> 来估计，该生存函数是根据这些个体可能删失的事件时间以及其中 <span class="math inline">\(X&gt;c\)</span> 或 <span class="math inline">\(X\le c\)</span> 的子集来获得的。此外，<span class="math inline">\(\mathrm{P}(X\leqslant c)\)</span> 可以根据标志物值小于等于 <span class="math inline">\(c\)</span> 的个体比例 <span class="math inline">\(\hat{p}_X(c)\)</span> 进行估计，<span class="math inline">\(P(X&gt;c)\)</span> 则是通过 <span class="math inline">\(1−\hat{p}_X(c)\)</span> 来估计的。所得灵敏度和特异度的估计为</p>
+<p><span class="math display" id="eq:3-43">\[\begin{align}
+&amp;\widehat{\text{sens}}(t,c)=\frac{\{1-\hat{S}(t\mid X&gt;c)\}\{1-\hat{p}_X(c)\}}{1-\hat{S}(t)}
+\tag{3.42}\\
+&amp;\widehat{\text{spec}}(t,c)=\frac{\hat{S}(t\mid X\leqslant c)\hat{p}_X(c)}{\hat{S}(t)}
+\tag{3.43}
+\end{align}\]</span></p>
+<p>这些估计现在可用于构建选定疾病或死亡时间值的时依 ROC 曲线。</p>
+<p>时依 ROC 曲线下面积提供了模型在给定时间区分患病个体和无病个体总体能力的总结。该面积值越大，模型的预后性能越好。该统计量可用于识别模型预测能力最大化的时间点，并基于不同的生物标志物或风险评分的不同形式来比较模型。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-19" class="example"><strong>示例 3.18  (前列腺癌两种疗法的比较) </strong></span><br></p>
+<p>对于第一章<a href="chap1.html#exm:ex1-3">示例 1.3</a> 中首次提到的关于诊断为多发性骨髓瘤患者生存时间的研究，第三章<a href="chap3.html#exm:ex3-5">示例 3.5</a> 发现有意义的解释变量为血清血红蛋白水平 (Hb) 和血尿素氮 (Bun). 风险评分将作为标志物变量 <span class="math inline">\(X\)</span>，用于式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-42">(3.42)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-43">(3.43)</a>，其中第 <span class="math inline">\(i\)</span> 个个体的分数值为 <span class="math inline">\(-0.1336~Hb_i+0.0186~Bun_i\)</span>。可以为 48 名患者计算该值，用作生物标志物变量 <span class="math inline">\(X\)</span>。将评估标志物在 6 个月、12 个月、18 个月和 24 个月时的预测能力，将阈值 <span class="math inline">\(c\)</span> 设为 48 个风险评分值。然后，针对这 48 名患者的集合，以及每个给定的阈值 <span class="math inline">\(c\)</span> 下风险评分大于 <span class="math inline">\(c\)</span> 或小于等于 <span class="math inline">\(c\)</span> 的患者子集，确定其生存函数的 Kaplan-Meier 估计。随后，根据式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-42">(3.42)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-43">(3.43)</a> 计算灵敏度和特异度估计，从而得出所选时间点的时依 ROC 曲线。这些曲线以及 灵敏度与 (1 - 特异度) 的等值线一起展示在图 3.10 中。</p>
+<details><summary><font color="#8B2232">图 3.10</font>
+</summary><img src="figure/figure%203.10.png#center" style="width:80.0%"></details><p><br>
+该图显示，风险评分的预测能力随时间推移而减弱，因为 ROC 曲线估计越来越接近“灵敏度 = (1 - 特异度)”的线。风险评分对诊断后 6 个月死亡的预测最佳。ROC 曲线下面积证实了这一点：在 6 个月、12 个月、18 个月和 24 个月时分别为 0.793、0.730、0.686 和 0.600.</p>
+</div>
+</div>
+<p>基于生存函数的 Kaplan-Meier 估计的时依 ROC 曲线存在两个问题。首先，通过式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-42">(3.42)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-43">(3.43)</a> 估计出的灵敏度与 (1 - 特异度) 并不一定是标志物值的单调递减函数，这一点可以在图 3.10 中观察到。其次，对于 <span class="math inline">\(X&gt;c\)</span> 条件下生存函数的 Kaplan-Meier 估计，假设了删失与 <span class="math inline">\(X\)</span> 无关。如果患者随访的严格程度受到标志物值的影响，该假设可能就不成立了。因此，在实践中经常使用基于估计 <span class="math inline">\(X\)</span> 和 <span class="math inline">\(T\)</span> 的联合分布的替代程序。</p>
+<p>令 <span class="math inline">\(x_i\)</span> 表示生存时间为 <span class="math inline">\(t_i\)</span> 的第 <span class="math inline">\(i\)</span> 个个体的生物标志物值，并令 <span class="math inline">\(\delta_i\)</span> 为删失指示符，使得如果 <span class="math inline">\(t_i\)</span> 是事件时间，则 <span class="math inline">\(\delta_i=1\)</span>，否则为 <span class="math inline">\(0\)</span>. 联合概率 <span class="math inline">\(S(t, c) = \mathrm{P}(T &gt; t, X &gt; c)\)</span> 可估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{S}_\omega(t,c)&amp;=n^{-1}\sum_{i=1}^n\hat{S}_\omega(t\mid X=x_i)I(x_i&gt;c)\end{aligned}\]</span></p>
+<p>其中指示函数 <span class="math inline">\(I(\cdot)\)</span> 满足：如果 <span class="math inline">\(x_i &gt; c\)</span>，则 <span class="math inline">\(I(x_i &gt; c) = 1\)</span>，否则为 <span class="math inline">\(0\)</span>. <span class="math inline">\(\hat{S}_{{\omega}}(t|X=x_{{i}})\)</span> 是条件生存函数的平滑估计，取决于平滑参数 <span class="math inline">\(\omega\)</span>。合适的平滑估计是加权 Kaplan-Meier 估计，其中</p>
+<p><span class="math display" id="eq:3-44">\[\begin{equation}
+\hat{S}_\omega(t\mid X=x_i)=\prod_s\left\{1-\frac{\sum_jK_\omega(x_i,x_j)I(t_j=s)\delta_j}{\sum_jK_\omega(x_i,x_j)I(t_j\geqslant s)}\right\}
+\tag{3.44}
+\end{equation}\]</span></p>
+<p>该乘积是对所有小于等于 <span class="math inline">\(t\)</span> 的唯一事件时间计算得到的。在此表达式中，<span class="math inline">\(K_{\boldsymbol{\omega}}(x_{i},x_{j})\)</span> 是<strong>最近邻核平滑函数</strong> (nearest-neighbour kernel smoothing function)，它给予相近的标志物变量值 <span class="math inline">\(x_i,x_j\)</span> 更大的权重。该函数由下式给出</p>
+<p><span class="math display">\[\left.K_\omega(x_i,x_j)=\left\{\begin{array}{ll}1&amp;\text{ if }|\hat{p}_X(x_i)-\hat{p}_X(x_j)|&lt;\omega,\\0&amp;\text{ otherwise.}\end{array}\right.\right.\]</span></p>
+<p>其中 <span class="math inline">\(p_X(x)=\text{P}(X\leqslant x)\)</span>，<span class="math inline">\(\hat p_X(x)\)</span> 是其估计，因此，<span class="math inline">\(\hat p_X(x)\)</span> 是 <span class="math inline">\(X\)</span> 值小于等于 <span class="math inline">\(x_i\)</span> 的比例。此外，<span class="math inline">\(0&lt;2\omega&lt;1\)</span>，这意味着标志物值在近邻 (near neighbour) 中的比例为 <span class="math inline">\(2\omega\)</span>，其中 <span class="math inline">\(\omega\)</span> 必须小于 0.5. 事实上，为了确保估计 <span class="math inline">\(\hat{S}_{\omega}(t,c)\)</span> 的一致性，<span class="math inline">\(\omega\)</span> 必须小于 <span class="math inline">\(n^{-1/3}\)</span>。<span class="math inline">\(\omega\)</span> 的值越大，平滑度就越大，通常使用 0.05.</p>
+<p>然后利用 <span class="math inline">\(S(t\mid X&gt;c)\text{P}(X&gt;c)=S(t,c),S(t\mid X\leqslant c)\text{P}(X\leqslant c)=\text{P}(T&gt;t,X\leqslant c)\)</span> 以及 <span class="math inline">\(\text{P}(T&gt;t\mid X\leqslant c)=S(t)-S(t,c)\)</span> 这一结果，灵敏度和特异度可以根据式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-40">(3.40)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-41">(3.41)</a> 得到，即</p>
+<p><span class="math display" id="eq:3-46">\[\begin{align}
+&amp;\widehat{\operatorname{sens}}(t,c)=\frac{1-\hat{p}_X(c)-\hat{S}_\omega(t,c)}{1-\hat{S}_\omega(t,-\infty)}\tag{3.45}\\
+&amp;\widehat{\operatorname{spec}}(t,c)=1-\frac{\hat{S}_\omega(t,c)}{\hat{S}_\omega(t,-\infty)}\tag{3.46}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{S}_\omega(t,-\infty)=\hat{S}_\omega(t)=n^{-1}\sum_i\hat{S}_\omega(t\mid X=x_i)\)</span>。现在可以使用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-45">(3.45)</a> 和 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-46">(3.46)</a> 构建时依 ROC 曲线。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex3-20" class="example"><strong>示例 3.19  (多发性骨髓瘤患者的生存率) </strong></span><br></p>
+<p>在<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-19">示例 3.19</a> 中，Kaplan-Meier 方法用于获得多发性骨髓瘤生存数据的时依 ROC 曲线。现在说明最近邻估计方法。使用由式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-44">(3.44)</a> 给出的生存函数的平滑加权 Kaplan-Meier 估计，取 <span class="math inline">\(\omega = 0.05\)</span>，所得的时依 ROC 曲线估计见图 3.11.</p>
+<details><summary><font color="#8B2232">图 3.11</font>
+</summary><img src="figure/figure%203.11.png#center" style="width:80.0%"></details><p><br>
+在该图中，灵敏度和 (1 - 特异度) 严格递增，但这些曲线与图 3.10 所示的曲线没有实质性差异。相应的曲线下面积为 0.753, 0.683, 0.690 和 0.609. 这些面积略小于图 3.10 中时依 ROC 曲线的面积，但风险评分仍然对 6 个月内死亡的预测是最佳的。</p>
+</div>
+</div>
+<p>尽管时依 ROC 曲线的使用是在诊断测试背景下开发的，但它们提供了一种有用的方法来总结不同时间范围内事件时间与拟合模型之间的一致性。</p>
+</div>
+</div>
+<div id="sec3-14" class="section level2" number="3.14">
+<h2>
+<span class="header-section-number">3.14</span> 比例风险建模和 log-rank 检验<a class="anchor" aria-label="anchor" href="#sec3-14"><i class="fas fa-link"></i></a>
+</h2>
+<p>Cox 回归模型可用于检验两组生存时间的风险函数之间无差异的原假设，如<a href="chap3.html#exm:ex3-3">示例 3.3</a> 所示。因此在这种情况下，这种建模方法为 log-rank 检验提供了一种替代方法。然而，这两个程序之间有着密切的联系，本节将对此进行更详细的探讨。</p>
+<p>使用 <a href="chap2.html#sec2-6-2">2.6.2</a> 节中使用的符号（总结于表 2.7 中），两个组将分别标记为 Group I 和 Group II. 两组在第 <span class="math inline">\(j\)</span> 个有序死亡时间 <span class="math inline">\(t_{(j)}, j = 1, 2,...,r\)</span> 处死亡的个体数量分别用 <span class="math inline">\(d_{1j}\)</span> 和 <span class="math inline">\(d_{2j}\)</span> 表示。类似地，在时间 <span class="math inline">\(t_{(j)}\)</span> 时两组处于风险的个体数量，即在此时间之前存活且未删失的数量，分别表示为 <span class="math inline">\(n_{1j}\)</span> 和 <span class="math inline">\(n_{2j}\)</span>。</p>
+<p>现在令 <span class="math inline">\(X\)</span> 为一指示变量，当个体处于 Group I 时，该变量为 1；当个体处于 Group II 时，该变量为 0. 第 <span class="math inline">\(i\)</span> 个个体的 Cox 回归模型可写为</p>
+<p><span class="math display">\[h_i(t)=e^{\boldsymbol{\beta}x_i}h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(X\)</span> 值，<span class="math inline">\(i＝1,2,\ldots,n\)</span>。当不存在观测结时，即当 <span class="math inline">\(d_j=d_{1j}+d_{2j}=1\)</span> 时，可以通过最大化式 <a href="chap3.html#eq:3-4">(3.4)</a> 中的似然函数来拟合该模型。以 <span class="math inline">\(x_{(j)}\)</span> 表示死于 <span class="math inline">\(t_{(j)}\)</span> 的个体的 <span class="math inline">\(X\)</span> 值。由于在时间 <span class="math inline">\(t_{(j)}\)</span> 的风险集 <span class="math inline">\(R(t_{(j)})\)</span> 中有 <span class="math inline">\(n_j＝n_{1j}+n_{2j}\)</span> 个个体，似然函数为</p>
+<p><span class="math display" id="eq:3-47">\[\begin{equation}
+L(\beta)=\prod_{j=1}^{r}\frac{\exp(\beta x_{(j)})}{\sum_{l=1}^{n_{j}}\exp(\beta x_{l})}
+\tag{3.47}
+\end{equation}\]</span></p>
+<p>相应的对数似然函数为</p>
+<p><span class="math display">\[\begin{equation}
+\log L(\beta)=\sum_{j=1}^r\beta x_{(j)}-\sum_{j=1}^r\log\left\{\sum_{l=1}^{n_j}\exp(\beta x_l)\right\}
+\end{equation}\]</span></p>
+<p>由于 Group II 中的个体的 <span class="math inline">\(x_{(j)}\)</span> 为 0，因此该表达式中的第一个求和运算是关于 Group I 的死亡时间进行的，因此简单地为 <span class="math inline">\(d_{1}\beta\)</span>，其中 <span class="math inline">\(d_1=\sum_{j=1}^rd_{1j}\)</span> 是 Group I 中的死亡总数。此外，</p>
+<p><span class="math display">\[\begin{aligned}\sum_{l=1}^{n_j}\exp(\beta x_l)&amp;=n_{1j}e^\beta+n_{2j}\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display" id="eq:3-48">\[\begin{equation}
+\log L(\beta)=d_1\beta-\sum_{j=1}^r\log\left\{n_{1j}e^\beta+n_{2j}\right\}\tag{3.48}
+\end{equation}\]</span></p>
+<p>可以通过针对 <span class="math inline">\(\beta\)</span> 最大化该表达式来找到 <span class="math inline">\(\beta\)</span> 的最大似然估计，这需要非线性优化算法。那么，声称 <span class="math inline">\(\beta=0\)</span> 的原假设可以通过比较 <span class="math inline">\(-2\log L(\hat{\beta})\)</span> 和 <span class="math inline">\(-2\log L(0)\)</span> 的值来检验。后者其实简单地为 <span class="math inline">\(2\sum_{j=1}^r\log n_j\)</span>。</p>
+<p>可以通过对声称 <span class="math inline">\(\beta=0\)</span> 的原假设进行得分检验 (score test) 来避免计算 <span class="math inline">\(\hat\beta\)</span>。该检验程序在附录 <a href="A.html#A">A</a> 中有概述，它基于检验统计量 <span class="math inline">\(u^2(0)/i(0)\)</span>，其中</p>
+<p><span class="math display">\[\begin{aligned}u(\beta)&amp;=\frac{\partial\log L(\beta)}{\partial\beta}\end{aligned}\]</span></p>
+<p>为有效得分，且</p>
+<p><span class="math display">\[\begin{aligned}i(\beta)=-\frac{\partial^2\log L(\beta)}{\partial\beta^2}\end{aligned}\]</span></p>
+<p>是 Fisher（观测）信息函数。在 <span class="math inline">\(\beta = 0\)</span> 的原假设下，<span class="math inline">\(u^2(0)/i(0)\)</span> 服从自由度为一的卡方分布。现在，根据式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-48">(3.48)</a>，有</p>
+<p><span class="math display">\[\begin{aligned}\frac{\partial\log L(\beta)}{\partial\beta}=\sum_{j=1}^r\left(d_{1j}-\frac{n_{1j}e^\beta}{n_{1j}e^\beta+n_{2j}}\right)\end{aligned}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\begin{gathered}
+\begin{aligned}\frac{\partial^2\log L(\beta)}{\partial\beta^2}\end{aligned} \begin{aligned}=-\sum_{j=1}^r\frac{(n_{1j}e^\beta+n_{2j})n_{1j}e^\beta-(n_{1j}e^\beta)^2}{(n_{1j}e^\beta+n_{2j})^2}\end{aligned} \\
+=-\sum_{j=1}^r\frac{n_{1{j}}n_{2{j}}e^\beta}{(n_{1{j}}e^\beta+n_{2{j}})^2}
+\end{gathered}\]</span></p>
+<p>因此，在 <span class="math inline">\(\beta = 0\)</span> 处计算的有效得分和信息函数为</p>
+<p><span class="math display">\[\begin{aligned}u(0)=\sum_{j=1}^r\left(d_{1j}-\frac{n_{1j}}{n_{1j}+n_{2j}}\right)\end{aligned}\]</span></p>
+<p>和</p>
+<p><span class="math display">\[\begin{aligned}i(0)&amp;=\sum_{j=1}^r\frac{n_{1j}n_{2j}}{(n_{1j}+n_{2j})^2}\end{aligned}\]</span></p>
+<p>这些恰好是第 2 章的式 <a href="chap2.html#eq:2-20">(2.20)</a> 和 <a href="chap2.html#eq:2-22">(2.22)</a> 中给出的 <span class="math inline">\(U_L\)</span> 和 <span class="math inline">\(V_L\)</span> 的表达式，适用于没有生存时间结的特殊情况，即，对于 <span class="math inline">\(j=1,2,\ldots,r\)</span> 有 <span class="math inline">\(d_j = 1\)</span>。</p>
+<p>当存在观测结时，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-47">(3.47)</a> 中的似然函数需替换为能够处理结的函数。具体来说，如果使用式 <a href="chap3.html#eq:3-12">(3.12)</a> 中的似然函数，则有效得分函数和信息函数恰好是式 <a href="chap2.html#eq:2-20">(2.20)</a> 和 <a href="chap2.html#eq:2-22">(2.22)</a> 中给出的那些函数。因此，当存在生存时间结时，log-rank 检验对应于使用 Cox (1972) 提出的<strong>离散比例风险模型</strong> (discrete proportional hazards model) 的得分检验。在实践中，比较两个模型（含与不含治疗效应项）的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量所得的 <span class="math inline">\(P\)</span> 值，与该得分检验给出的 <span class="math inline">\(P\)</span> 值通常没有太大差异。这一点在讨论<a href="chap3.html#exm:ex3-3">示例 3.3</a> 时已注意到这一点。当然，使用 Cox 回归模型分析这类数据的一个优点是，它可以直接得到风险比的估计。</p>
+</div>
+<div id="sec3-15" class="section level2" number="3.15">
+<h2>
+<span class="header-section-number">3.15</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec3-15"><i class="fas fa-link"></i></a>
+</h2>
+<p>Draper and Smith (1998) 以及 Montgomery, Peck and Vining (2021) 对线性回归分析中的统计建模进行了全面介绍。McCullagh and Nelder (1989) 在其关于广义线性模型百科全书式的综述中包含了关于生存数据模型的章节。</p>
+<p>Cox (1972) 提出了生存数据的比例风险模型，其中未指定基线风险函数。该文引入了偏似然的概念，随后 Cox (1975) 对其进行了更详细的研究。另见 Kalbfleisch and Prentice (1972) 以及 Breslow (1972) 关于 Cox (1972) 的讨论所作的贡献。Therneau and Grambsch (2000) 对该模型及其扩展进行了详细的回顾。</p>
+<p>Christensen (1987), Elashoff (1983) 和 Tibshirani (1982) 为医学研究人员介绍了 Cox 回归模型。较近的论述可见第 1 章 <a href="chap1.html#sec1-6">1.6</a> 节引用的教科书。特别是，Hosmer, Lemeshow and May (2008) 对模型发展和基于模型的参数估计的解释进行了仔细的讨论。</p>
+<p>Kalbfleisch and Prentice (2002) 以及 Lawless (2002) 对生存数据中的结进行了细致的处理；另见 Breslow (1972) 和 Peto (1972). 在 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节中用 <span class="math inline">\(\hat S_0(t)\)</span> 表示的基线生存函数，其估计由 Kalbfleisch and Prentice (1973) 引入，在 Kalbfleich and Prentise (2002) 中也进行了描述。估计 <span class="math inline">\(S_{0}^{*}(t)\)</span> 由 Breslow (1972, 1974) 提出，但它使用了不同于 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10-2">3.10.2</a> 节的论点。</p>
+<p>有关线性回归分析的书籍中讨论了模型制定和模型选择策略。 Harrell (2015) 解决了模型构建中的许多实际问题，并使用大量涉及生存数据的案例研究说明了该过程。另请参见 Chatfield (1995) 的第 5 章以及 Cox and Snell (1981) 的第 4 章。 Miller (2002) 描述了一系列用于识别线性回归模型中合适的变量子集的程序。Akaike (1974) 提出了后来称为 Akaike 信息准则的概念。它广泛用于时间序列分析，并在有关该主题的书籍中进行了描述，例如 Chatfield and Xing (2019). Volinsky and Raftery (2000) 描述了 BIC 统计量在生存数据建模中的使用。 Nelder (1977) 以及 McCullagh and Nelder (1989) 的第 3 章充分讨论了层次原则。</p>
+<p>Lasso 首先由 Tibshirani (1996) 提出，Tibshirani (1997) 展示了如何将该方法用于 Cox 模型中的变量选择。Goeman (2010) 描述了一种计算 lasso 估计的有效算法。该算法现已在 R 包 <code>penalized</code> 中实现，用于拟合惩罚 Cox 回归模型；参见 Goeman, Meijer and Chaturvedi (2022). Efron et al. (2004) 建立了 lasso 的分段线性性质，Yuan and Lin (2006) 引入了 group lasso 来处理分类变量。</p>
+<p>Royston and Altman (1994) 描述了分数多项式在回归建模中的使用；另见 Sauerbrei and Royston (1999). Box and Tidwell (1962) 引入了在分数多项式背景下的 Box-Tidwell 变换。</p>
+<p>Nieto and Coresh (1996) 回顾了调整的生存函数的计算方法，Zahl (1997) 在对该文的评论中概述了一些相关方法。Zhang et al. (2007) 也描述了该方法，他们给出了一个 SAS 宏来实现该方法。Neuberger et al. (1986) 使用基于解释变量平均值的方法来总结肝移植项目的观测数据，随后 Thomsen, Keiding and Altman (1991) 引用了该方法。</p>
+<p>已经提出了相当多的解释的变异的度量，并有几篇综述对这些方法的性质进行了比较和对比。其中最为详尽的综述来自 Schemper and Stare (1996), Hielscher et al. (2010) 以及 Choodari-Oskooei, Royston and Parmar (2012) 的两篇连续论文。本章中描述的 <span class="math inline">\(R^2\)</span> 度量是由 Kent and O’Quigley (1988) 以及 Royston and Sauerbrei (2004) 引入的。Royston (2006) 还描述了这些度量与其他解释的变异的度量之间的联系。Heinzl (2000) 给出了用于计算 Kent and O’Quigley 的 <span class="math inline">\(R^2_W\)</span> 统计量的 SAS 宏。Harrell 的 <span class="math inline">\(c\)</span> 统计量在 Harrell, Lee and Mark (1996) 中有所描述，而 Gönen and Heller (2005) 则介绍了一种更受欢迎的一致性度量。Stare, Perme and Henderson (2011) 提出的另一种解释的变异的度量可用于比例风险模型，其优势在于适用于后面章节中介绍的一些其他模型。该统计量基于解释观测值排序的变异，且可在 R 软件中计算。</p>
+<p>Heagerty, Lumley and Pepe (2000) 是有关时依 ROC 曲线的关键论文，他们给出了 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13">3.13</a> 节中描述的两种估计该曲线的方法。 Akritas (1994) 提供了最近邻平滑方法。 Kamarudin, Cox and Kolamunnage-Dona (2017) 全面回顾了许多估计时依 ROC 曲线的方法。Collett (2003) 详细描述了 logistic 回归模型，评估诊断测试和时依预测能力的教程包括 Pepe, Leisenring and Rutter (1999) 以及 Pepe, Longton and Janes (2009).</p>
+<p>本章未讨论的一个问题是如何处理解释变量的缺失值。基于全条件定义 (fully conditional specification) 的多重插补 (multiple imputation) 法，也称为链式方程多重插补 (multiple imputation by chained equations)，是处理这一常见问题广泛使用的技术。多重插补过程涉及为每个具有缺失值的解释变量生成多组插补值。然后为待插补数据集拟合给定模型，将所得参数估计进行组合，以得到总体估计，其标准误考虑了插补值的不确定性。软件开发的进步意味着这种技术现在可以与常用的软件包结合使用，包括 SAS, Stata 和 R. White, Royston and Wood (2011) 的教程描述了该方法、其局限性和可能的危险，另附一个全面的参考列表。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></div>
+<div class="next"><a href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B">►Cox 回归模型</a></li>
+<li>
+<a class="nav-link" href="#sec3-9"><span class="header-section-number">3.9</span> 参数估计的解释</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-9-1"><span class="header-section-number">3.9.1</span> 具有一个变量的模型</a></li>
+<li><a class="nav-link" href="#sec3-9-2"><span class="header-section-number">3.9.2</span> 具有一个因素的模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-10"><span class="header-section-number">3.10</span> 估计风险函数和生存函数</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-10-1"><span class="header-section-number">3.10.1</span> 无协变量的特例</a></li>
+<li><a class="nav-link" href="#sec3-10-2"><span class="header-section-number">3.10.2</span> 基线函数估计的一些近似</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-11"><span class="header-section-number">3.11</span> 风险调整的生存函数</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec3-11-1"><span class="header-section-number">3.11.1</span> 分组风险调整的生存函数</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-12"><span class="header-section-number">3.12</span> 一致性，预测能力和解释的变异</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-12-1"><span class="header-section-number">3.12.1</span> 一致性的度量</a></li>
+<li><a class="nav-link" href="#sec3-12-2"><span class="header-section-number">3.12.2</span> 预测能力</a></li>
+<li><a class="nav-link" href="#sec3-12-3"><span class="header-section-number">3.12.3</span> Cox 回归模型解释的变异</a></li>
+<li><a class="nav-link" href="#sec3-12-4"><span class="header-section-number">3.12.4</span> 解释的变异的度量</a></li>
+<li><a class="nav-link" href="#sec3-12-5"><span class="header-section-number">3.12.5</span> 模型验证</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec3-13"><span class="header-section-number">3.13</span> 时依 ROC 曲线</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec3-13-1"><span class="header-section-number">3.13.1</span> 灵敏度和特异度</a></li>
+<li><a class="nav-link" href="#sec3-13-2"><span class="header-section-number">3.13.2</span> 疾病概率建模</a></li>
+<li><a class="nav-link" href="#sec3-13-3"><span class="header-section-number">3.13.3</span> ROC 曲线</a></li>
+<li><a class="nav-link" href="#sec3-13-4"><span class="header-section-number">3.13.4</span> 时依 ROC 曲线</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec3-14"><span class="header-section-number">3.14</span> 比例风险建模和 log-rank 检验</a></li>
+<li><a class="nav-link" href="#sec3-15"><span class="header-section-number">3.15</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

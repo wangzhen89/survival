@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>参考书目 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="Aalen, O.O. (1978a) Nonparametric estimation of partial transition probabilities in multiple decrement models. Annals of Statistics, 6, 534–545. Aalen, O.O. (1978b) Nonparametric inference for a...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="参考书目 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="Aalen, O.O. (1978a) Nonparametric estimation of partial transition probabilities in multiple decrement models. Annals of Statistics, 6, 534–545. Aalen, O.O. (1978b) Nonparametric inference for a...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="参考书目 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="Aalen, O.O. (1978a) Nonparametric estimation of partial transition probabilities in multiple decrement models. Annals of Statistics, 6, 534–545. Aalen, O.O. (1978b) Nonparametric inference for a...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="active" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="bib" class="section level1 unnumbered">
+<h1>参考书目<a class="anchor" aria-label="anchor" href="#bib"><i class="fas fa-link"></i></a>
+</h1>
+<p>Aalen, O.O. (1978a) Nonparametric estimation of partial transition probabilities in multiple decrement models. Annals of Statistics, 6, 534–545.</p>
+<p>Aalen, O.O. (1978b) Nonparametric inference for a family of counting processes. Annals of Statistics, 6, 701–726.</p>
+<p>Aalen, O.O. (1994) Effects of frailty in survival analysis. Statistical Methods in Medical Research, 3, 227–243.</p>
+<p>Aalen, O.O. (1998) Frailty models. In: Statistical Analysis of Medical Data: New Developments (eds. B.S. Everitt and G. Dunn), Arnold, London.</p>
+<p>Aalen, O.O. and Johansen, S. (1978) An empirical transition matrix for non-homogeneous Markov chains based on censored observations. Scandinavian Journal of Statistics, 5, 141–150.</p>
+<p>Aalen, O.O., Borgan, Ø. and Gjessing, H. (2008) Survival and Event History Analysis: A Process Point of View, Springer, New York.</p>
+<p>Aitkin, M., Anderson, D.A., Francis, B. and Hinde, J.P. (1989) Statistical Modelling in GLIM, Clarendon Press, Oxford.</p>
+<p>Aitkin, M., Laird, N. and Francis, B. (1983) A reanalysis of the Stanford heart transplant data (with comments). Journal of the American Statistical Association, 78, 264–292.</p>
+<p>Akaike, H. (1974) A new look at the statistical model identification. IEEE Transactions on Automatic Control, 19, 716–723.</p>
+<p>Akritas, M.G. (1994) Nearest neighbor estimation of a bivariate distribution under random censoring. Annals of Statistics, 22, 1299–1327.</p>
+<p>Allison, P.D. (2010) Survival Analysis Using SAS⃝R: A Practical Guide, 2nd ed., SAS Institute Inc., Cary, North Carolina.</p>
+<p>Altman, D.G. (1991) Practical Statistics for Medical Research, Chapman &amp; Hall/CRC, London.</p>
+<p>Altman, D.G. and De Stavola, B.L. (1994) Practical problems in fitting a proportional hazards model to data with updated measurements of the covariates. Statistics in Medicine, 13, 301–341.</p>
+<p>Altshuler, B. (1970) Theory for the measurement of competing risks in animal experiments. Mathematical Biosciences, 6, 1–11.</p>
+<p>Andersen, P.K. (1982) Testing goodness of fit of Cox’s regression and life model. Biometrics, 38, 67–77.</p>
+<p>Andersen, P.K. (1988) Multistate models in survival analysis: a study of nephropathy and mortality in diabetes. Statistics in Medicine, 7, 661–670.</p>
+<p>Andersen, P.K. (1992) Repeated assessment of risk factors in survival analysis. Statistical Methods in Medical Research, 1, 297–315.</p>
+<p>Andersen, P.K. and Borgan, Ø. (1985) Counting process models for life history data: a review. Scandinavian Journal of Statistics, 12, 97–158.</p>
+<p>Andersen, P.K. and Gill, R.D. (1982) Cox’s regression model for counting processes: a large sample study. Annals of Statistics, 10, 1100–1120.</p>
+<p>Andersen, P.K. and Keiding, N. (2002) Multi-state models for event history analysis. Statistical Methods in Medical Research, 11, 91–115.</p>
+<p>Andersen, P.K. and Perme, M.P. (2010) Pseudo-observations in survival analysis. Statistical Methods in Medical Research, 19, 71–99.</p>
+<p>Andersen, P.K., Borgan, Ø., Gill, R.D. and Keiding, N. (1993) Statistical Methods Based on Counting Processes, Springer, New York.</p>
+<p>Andersen, P.K., Hansen, M.G. and Klein, J.P. (2004) Regression analysis of restricted mean survival time based on pseudo-observations. Lifetime Data Analysis, 10, 335–350.</p>
+<p>Andrews, D.F. and Herzberg, A.M. (1985) Data, Springer, New York.</p>
+<p>Arjas, E. (1988) A graphical method for assessing goodness of fit in Cox’s proportional hazards model. Journal of the American Statistical Association, 83, 204–212.</p>
+<p>Armitage, P., Berry, G. and Matthews, J.N.S. (2002) Statistical Methods in Medical Research, 4th ed., Blackwells Science Ltd, Oxford.</p>
+<p>Atkinson, A.C. (1985) Plots, Transformations and Regression, Clarendon Press, Oxford.</p>
+<p>Bagot, M., Mary, J.Y., Heslan, M., Kuentz, M., Cordonnier, C., Vernant, J.P., Dubertret, L. and Levy, J.P. (1988) The mixed epidermal cell lymphocyte-reaction is the most predictive factor of acute graft-versus-host disease in bone marrow graft recipients. British Journal of Haematology, 70, 403–409.</p>
+<p>Balan, T.A. and Putter, H. (2020) A tutorial on frailty models. Statistical Methods in Medical Research, 29, 3424–3454.</p>
+<p>Barlow, W.E. and Prentice, R.L. (1988) Residuals for relative risk regression. Biometrika, 75, 65–74.</p>
+<p>Barnett, V. (1999) Comparative Statistical Inference, 3rd ed., Wiley, Chichester.</p>
+<p>Bennett, S. (1983a) Analysis of survival data by the proportional odds model. Statistics in Medicine, 2, 273–277.</p>
+<p>Bennett, S. (1983b) Log-logistic regression models for survival data. Applied Statistics, 32, 165–171.</p>
+<p>Bernardo, J.M. and Smith, A.F.M. (1994) Bayesian Theory, John Wiley &amp; Sons, Inc., Hoboken, New Jersey.</p>
+<p>Bernstein, D. and Lagakos, S.W. (1978) Sample size and power determination for stratified clinical trials. Journal of Statistical Computation and Simulation, 8, 65–73.</p>
+<p>Beyersmann, J., Allignol, A. and Schumacher, M. (2012) Competing Risks and Multistate Models with R, Springer, New York.</p>
+<p>Bogaerts, K., Komarek, A. and Lesaffre, E. (2018) Survival Analysis with Interval-Censored Data: A Practical Approach with Examples in R, SAS, and BUGS, Chapman &amp; Hall/CRC Press, Boca Raton, Florida.</p>
+<p>Bolstad, W.M. and Curran, J.M. (2016) Introduction to Bayesian Statistics, 3rd ed., John Wiley &amp; Sons, Inc., Hoboken, New Jersey.</p>
+<p>Box, G.E.P. and Tiao, G.C. (1973) Bayesian Inference in Statistical Analysis, Wiley, New York.</p>
+<p>Box, G.E.P. and Tidwell, P.W. (1962) Transformation of the independent variables. Technometrics, 4, 531–550.</p>
+<p>Box-Steffensmeier, J.M. and Jones, B.S. (2004) Event History Modeling: A Guide for Social Scientists, Cambridge University Press, Cambridge.</p>
+<p>Breslow, N.E. (1972) Contribution to the discussion of a paper by D.R. Cox. Journal of the Royal Statistical Society, B, 34, 216–217.</p>
+<p>Breslow, N.E. (1974) Covariance analysis of censored survival data. Biometrics, 30, 89–100.</p>
+<p>Breslow, N.E. and Crowley, J. (1974) A large sample study of the life table and product limit estimates under random censorship. Annals of Statistics, 2, 437–453.</p>
+<p>Breslow, N.E. and Day, N.E. (1987) Statistical Methods in Cancer Research. 2: The Design and Analysis of Cohort Studies, I.A.R.C., Lyon, France.</p>
+<p>Brilleman, S.L., Elci, E.M., Novik, J.B. and Wolfe, R. (2020) Bayesian survival analysis using the rstanarm R package. <a href="https://arxiv.org/abs/2002.09633" class="uri">https://arxiv.org/abs/2002.09633</a>.</p>
+<p>Brookmeyer, R. and Crowley, J. (1982) A confidence interval for the median survival time. Biometrics, 38, 29–41.</p>
+<p>Brooks, S.P. and Gelman, A. (1998) General methods for monitoring convergence of iterative simulations. Journal of Computational and Graphical Statistics, 7, 434–455.</p>
+<p>Broström, G. (2022) Event History Analysis with R, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Brown, H. and Prescott, R.J. (2000) Applied Mixed Models in Medicine, Wiley, Chichester.</p>
+<p>Burdette, W.J. and Gehan, E.A. (1970) Planning and Analysis of Clinical Studies, Charles C. Thomas, Springfield, Illinois.</p>
+<p>Byar, D.P. (1982) Analysis of survival data: Cox and Weibull models with covariates. In: Statistics in Medical Research (eds. V. Mike and K.E. Stanley), Wiley, New York.</p>
+<p>Cai, T. and Betensky, R.A. (2003). Hazard regression for interval-censored data with penalized spline. Biometrics, 59, 570–579.</p>
+<p>Cain, K.C. and Lange, N.T. (1984) Approximate case influence for the proportional hazards regression model with censored data. Biometrics, 40, 493–499.</p>
+<p>Casella, G. and George, E.I. (1992) Explaining the Gibbs sampler. The American Statistician, 46, 167–174.</p>
+<p>Chan, P.H., Xu, R. and Chambers, C.D. (2018) A study of R2 measure under the accelerated failure time models. Communications in Statistics–Simulation and Computation, 47, 380–391.</p>
+<p>Chatfield, C. (1995) Problem Solving: A Statisticians Guide, 2nd ed., Chapman &amp; Hall/CRC, London.</p>
+<p>Chatfield, C. and Xing, H. (2019) The Analysis of Time Series, 7th ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Chen, D.G., Sun, J. and Peace, K.E. (2012) Interval-Censored Time-to-Event Data: Methods and Applications, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Chhikara, S. and Folks, J.L. (1989) Inverse Gaussian Distribution, Marcel Dekker, New York.</p>
+<p>Choodari-Oskooei, B., Royston, P. and Parmar, M.K.B. (2012) A simulation study of predictive ability measures in a survival model I: Explained variation measures. Statistics in Medicine, 31, 2627–2643.</p>
+<p>Choodari-Oskooei, B., Royston, P. and Parmar, M.K.B. (2012) A simulation study of predictive ability measures in a survival model II: Explained randomness and predictive accuracy. Statistics in Medicine, 31, 2644–2659.</p>
+<p>Christensen, E. (1987) Multivariate survival analysis using Cox’s regression model. Hepatology, 7, 1346–1358.</p>
+<p>Christensen, E., Schlichting, P., Andersen, P.K., Fauerholdt, L., Schou, G., Pedersen, B.V., Juhl, E., Poulsen, H., Tygstrup, N. and Copenhagen Study Group for Liver Diseases (1986) Updating prognosis and therapeutic effect evaluation in cirrhosis with Cox’s multiple regression model for time-dependent variables. Scandinavian Journal of Gastroenterology, 21, 163–174.</p>
+<p>Ciampi, A. and Etezadi-Amoli, J. (1985) A general model for testing the proportional hazards and the accelerated failure time hypotheses in the analysis of censored survival data with covariates. Communications in Statistics, A, 14, 651–667.</p>
+<p>Claeskens, G., Nguti, R. and Janssen, P. (2008) One-sided tests in shared frailty models. Test, 17, 69–82.</p>
+<p>Cleveland, W.S. (1979) Robust locally weighted regression and smoothing scatterplots. Journal of the Americal Statistical Association, 74, 829–836.</p>
+<p>Cleves, M., Gould, W. and Marchenko, Y.V. (2016) An Introduction to Survival Analysis Using Stata, revised 3rd ed., Stata Press, Texas.</p>
+<p>Cohen, A. and Barnett, O. (1995) Assessing goodness of fit of parametric regression models for lifetime data–graphical methods. Statistics in Medicine, 14, 1785–1795.</p>
+<p>Collett, D. (2003) Modelling Binary Data, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Commenges, D. (1999) Multi-state models in epidemiology. Lifetime Data Analysis, 5, 315–327.</p>
+<p>Cook, R.D. (1986) Assessment of local influence (with discussion). Journal of the Royal Statistical Society, B, 48, 133–169.</p>
+<p>Cook, R.D. and Weisberg, S. (1982) Residuals and Influence in Regression, Chapman &amp; Hall/CRC, London.</p>
+<p>Cook, R.J. and Lawless, J.F. (2007) The Statistical Analysis of Recurrent Events, Springer, New York.</p>
+<p>Cook, R.J. and Lawless, J.F. (2018) Multistate Models for the Analysis of Life History Data, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Copas, J.B. and Heydari, F. (1997) Estimating the risk of reoffending by using exponential mixture models. Journal of the Royal Statistical Society, A, 160, 237–252.</p>
+<p>Cox, D.R. (1972) Regression models and life tables (with discussion). Journal of the Royal Statistical Society, B, 74, 187–220.</p>
+<p>Cox, D.R. (1975) Partial likelihood. Biometrika, 62, 269–276.</p>
+<p>Cox, D.R. (1979) A note on the graphical analysis of survival data. Biometrika, 66, 188–190.</p>
+<p>Cox, D.R. and Hinkley, D.V. (1974) Theoretical Statistics, Chapman &amp; Hall/CRC, London.</p>
+<p>Cox, D.R. and Oakes, D. (1984) Analysis of Survival Data, Chapman &amp; Hall/CRC, London.</p>
+<p>Cox, D.R. and Snell, E.J. (1968) A general definition of residuals (with discussion). Journal of the Royal Statistical Society, A, 30, 248–275.</p>
+<p>Cox, D.R. and Snell, E.J. (1981) Applied Statistics: Principles and Examples, Chapman &amp; Hall/CRC, London.</p>
+<p>Crawley, M.J. (2013) The R Book, 2nd ed., John Wiley &amp; Sons Ltd, Chichester.</p>
+<p>Crowder, M.J. (2001) Classical Competing Risks, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Crowder, M.J. (2012) Multivariate Survival Analysis and Competing Risks, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Crowder, M.J. and Hand, D.J. (1990) Analysis of repeated measures, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Crowder, M.J., Kimber, A.C., Smith, R.L. and Sweeting, T.J. (1991) Statistical Analysis of Reliability Data, Chapman &amp; Hall/CRC, London.</p>
+<p>Crowley, J. and Hu, M. (1977) Covariance analysis of heart transplant survival data. Journal of the American Statistical Association, 72, 27–36.</p>
+<p>Crowley, J. and Storer, B.E. (1983) Comment on a paper by M. Aitkin et al. Journal of the American Statistical Association, 78, 277–281.</p>
+<p>Crowther, M.J., Abrams, K.R. and Lambert, P.C. (2012) Flexible parametric joint modelling of longitudinal and survival data. Statistics in Medicine, 31, 4456–4471.</p>
+<p>Crowther, M.J., Andersson, T.M.L., Lambert, P.C., Abrams, K.R. and Humphreys, K. (2016) Joint modelling of longitudinal and survival data: incorporating delayed entry and an assessment of model misspecification. Statistics in Medicine, 35, 1193–1209.</p>
+<p>Dalgaard, P. (2008) Introductory Statistics with R, 2nd ed., Springer, New York.</p>
+<p>David, H.A. and Moeschberger, M.L. (1978) The Theory of Competing Risks, Lubrecht &amp; Cramer Ltd, New York.</p>
+<p>Davies, T.M. (2016) The Book of R: A First Course in Programming and Statistics, No Starch Press, Inc., San Francisco, California.</p>
+<p>Davis, H. and Feldstein, M. (1979) The generalized Pareto law as a model for progressively censored survival data. Biometrika, 66, 299–306.</p>
+<p>Day, L. (1985) Residual analysis for Cox’s proportional hazards model. In: Proceedings of STATCOM-MEDSTAT ‘85’, MacQuarie University, Sydney.</p>
+<p>de Boor, C. (2001) A Practical Guide to Splines, Springer-Verlag, New York.</p>
+<p>Demidenko, E. (2013) Mixed Models: Theory and Applications with R, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Dempster, A.P., Laird, N.M. and Rubin, D.B. (1977) Maximum likelihood from incomplete data via the EM Algorithm. Journal of the Royal Statistical Society, B, 39, 1–38.</p>
+<p>de Vries, A. and Meys, J. (2015) R for Dummies, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Diggle, P.J., Heagerty, P., Liang, K.-Y. and Zeger, S. (2002) Analysis of Longitudinal Data, 2nd ed., Oxford University Press, New York.</p>
+<p>Dinse, G.E. (1991) Constant risk differences in the analysis of animal tumourigenicity data. Biometrics, 47, 681–700.</p>
+<p>Draper, N.R. and Smith, H. (1998) Applied Regression Analysis, 3rd ed., Wiley, New York.</p>
+<p>Duchateau, L. and Janssen, P. (2008) The Frailty Model, Springer, New York.</p>
+<p>Durrleman, S. and Simon, R. (1989) Flexible regression models with cubic splines. Statistics in Medicine, 8, 551–561.</p>
+<p>Edmunson, J.H., Fleming, T.R., Decker, D.G., Malkasian, G.D., Jorgenson, E.O., Jeffries, J.A., Webb, M.J. and Kvols, L.K. (1979) Different chemotherapeutic sensitivities and host factors affecting prognosis in advanced ovarian carcinoma versus minimal residual disease. Cancer Treatment Reports, 63, 241–247.</p>
+<p>Efron, B. (1977) The efficiency of Cox’s likelihood function for censored data. Journal of the American Statistical Association, 72, 557–565.</p>
+<p>Efron, B. (1981) Censored data and the bootstrap. Journal of the American Statistical Association, 76, 312–319.</p>
+<p>Efron, B., Hastie, T., Johnstone, I. and Tibshirani, R. (2004) Least angle regression. Annals of Statistics, 32, 407–451.</p>
+<p>Eilers, P.H.C. and Marx, B.D. (1996) Flexible smoothing with B-splines and penalties. Statistical Science, 11, 89–102.</p>
+<p>Elashoff, J.D. (1983) Surviving proportional hazards. Hepatology, 3, 1031–1035.</p>
+<p>Emerson, J.D. (1982) Nonparametric confidence intervals for the median in the presence of right censoring. Biometrics, 38, 17–27.</p>
+<p>Elashoff, R.M., Li, G. and Li, N. (2017) Joint Modeling of Longitudinal and Time-to-Event Data, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Escobar, L.A. and Meeker, W.Q. (1992) Assessing influence in regression analysis with censored data. Biometrics, 48, 507–528.</p>
+<p>Everitt, B.S. (1987) Introduction to Optimisation Methods, Chapman &amp; Hall/CRC, London.</p>
+<p>Farewell V.T. (1982) The use of mixture models for the analysis of survival data with long-term survivors. Biometrics, 38, 1041–1046.</p>
+<p>Farrington, C.P. (2000) Residuals for proportional hazards models with interval-censored data. Biometrics, 56, 473–482.</p>
+<p>Fay, M.P. (1996) Rank invariant tests for interval censored data under the grouped continuous model. Biometrics, 52, 811–822.</p>
+<p>Fay, M.P. and Shaw, P.A. (2010) Exact and asymptotic weighted logrank tests for interval censored data: the interval R package. Journal of Statistical Software, 36, 1–34.</p>
+<p>Field, A., Miles, J. and Field, Z. (2012) Discovering Statistics Using R, Sage Publications Ltd., London.</p>
+<p>Fine, J.P. and Gray, R.J. (1999) A proportional hazards model for the subdistribution of a competing risk. Journal of the American Statistical Association, 94, 496–509.</p>
+<p>Finkelstein, D.M. (1986) A proportional hazards model for interval-censored failure time data. Biometrics, 42, 845–854.</p>
+<p>Fisher, L.D. (1992) Discussion of a paper by L.J. Wei. Statistics in Medicine, 11, 1881–1885.</p>
+<p>Fitzmaurice, G.M., Laird, N.M. and Ware, J.H. (2011) Applied Longitudinal Analysis, 2nd ed., Wiley, Hoboken, New Jersey.</p>
+<p>Fleming, T.R. and Harrington, D.P. (2005) Counting Processes and Survival Analysis, John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Ford, I., Norrie, J. and Ahmadi, S. (1995) Model inconsistency, illustrated by the Cox proportional hazards model. Statistics in Medicine, 14, 735–746.</p>
+<p>Freedman, L.S. (1982) Tables of the number of patients required in clinical trials using the logrank test. Statistics in Medicine, 1, 121–129.</p>
+<p>Friedman, M. (1982) Piecewise Exponential Models for Survival Data with Covariates. Annals of Statistics, 10, 101–113.</p>
+<p>Friedman, L.M., Furberg, C.D. and DeMets, D.L. (2010) Fundamentals of Clinical Trials, 4th ed., Springer, New York.</p>
+<p>Fyles, A.W., McCready, D.R., Manchul, L.A., Trudeau, M.E., Merante, P., Pintilie, M., Weir, L. and Olivotto, I.A. (2004) Tamoxifen with or without breast irradiation in women 50 years of age or older with early breast cancer. New England Journal of Medicine, 351, 963–970.</p>
+<p>Gail, M.H., Santner, T.J. and Brown, C.C. (1980) An analysis of comparative carcinogenesis experiments based on multiple times to tumor. Biometrics, 36, 255–266.</p>
+<p>Gamerman, D. and Lopes, H.F. (2006) Markov Chain Monte Carlo: Stochastic Simulation for Bayesian Inference, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Gaver, D.P. and Acar, M. (1979) Analytical hazard representations for use in reliability, mortality and simulation studies. Communications in Statistics, 8, 91–111.</p>
+<p>Geerdens, C., Claeskens, G. and Janssen, P. (2013) Goodness-of-fit tests for the frailty distribution in proportional hazards models with shared frailty. Biostatistics, 14, 433–446.</p>
+<p>Gehan, E.A. (1969) Estimating survival functions from the life table. Journal of Chronic Diseases, 21, 629–644.</p>
+<p>Gelfand, A.E. and Smith, A.F.M. (1990) Sampling based approaches to calculating marginal densities. Journal of the American Statistical Association, 85, 398–409.</p>
+<p>Gelman, A., Carlin, J.B., Stern, H.S., Dunson, D.B., Vehtari, A. and Rubin, D.B. (2013) Bayesian Data Analysis, 3rd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Gelman, A., Hwang, J. and Vehtari, A. (2014) Understanding predictive information criteria for Bayesian models. Statistics and Computing, 24, 997–1016.</p>
+<p>Gelman, A. and Rubin, D.B. (1992) Inference from iterative simulation using multiple sequences (with discussion). Statistical Science, 7, 457–511.</p>
+<p>Geman, S. and Geman, D. (1984) Stochastic relaxation, Gibbs distributions and the Bayesian restoration of images. IEEE Transactions on Pattern Analysis and Machine Intelligence, 6, 721–741.</p>
+<p>George, S.L. and Desu, M.M. (1974) Planning the size and duration of a clinical trial studying the time to some critical event. Journal of Chronic Diseases, 27, 15–24.</p>
+<p>Gilks, W.R., Richardson, S. and Spiegelhalter, D. (1996) Markov Chain Monte Carlo in Practice, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Gill, R.D. (1984) Understanding Cox’s regression model: a martingale approach. Journal of the American Statistical Association, 79, 441–447.</p>
+<p>Gill, R.D. and Schumacher, M. (1987) A simple test of the proportional hazards assumption. Biometrika, 74, 289–300.</p>
+<p>Glidden, D.V. (1999) Checking the adequacy of the gamma frailty model for multivariate failure times. Biometrika, 86, 381–393.</p>
+<p>Goeman, J.J. (2010) L1 penalized estimation in the Cox proportional hazards model. Biometrical Journal, 52, 70–84.</p>
+<p>Goeman, J.J., Meijer, R. and Chaturvedi, N. (2022) L1 (lasso and fused lasso) and L2 (ridge) penalized estimation in GLMs and in the Cox model. <a href="https://cran.r-project.org/web/packages/penalized/penalized.pdf" class="uri">https://cran.r-project.org/web/packages/penalized/penalized.pdf</a>.</p>
+<p>Goldstein, H. and Spiegelhalter, D.J. (1996) League tables and their limitations: statistical issues in comparisons of institutional performance, Journal of the Royal Statistical Society, A, 159, 385–443.</p>
+<p>Gómez, G., Calle, M.L., Oller, R. and Langohr, K. (2009) Tutorial on methods for intervalcensored data and their implementation in R. Statistical Modelling, 9, 259–297.</p>
+<p>Gönen, M. and Heller, G. (2005) Concordance probability and discriminatory power in proportional hazards regression. Biometrika, 92, 965–970.</p>
+<p>Goodall, R.L., Dunn, D.T. and Babiker, A.G. (2004) Interval-censored survival time data: confidence intervals for the non-parametric survivor function. Statistics in Medicine, 23, 1131–1145.</p>
+<p>Gore, S.M., Pocock, S.J. and Kerr, G.R. (1984) Regression models and nonproportional hazards in the analysis of breast cancer survival. Applied Statistics, 33, 176–195.</p>
+<p>Grambsch, P.M. and Therneau, T.M. (1994) Proportional hazards tests and diagnostics based on weighted residuals. Biometrika, 81, 515–526.</p>
+<p>Gray, R. (1990) Some diagnostic methods for Cox regression models through hazard smoothing. Biometrics, 46, 93–102.</p>
+<p>Gray, R.J. (1988) A class of k-sample tests for comparing the cumulative incidence of a competing risk. Annals of Statistics, 16, 1141–1154.</p>
+<p>Gray, R.J. (1992) Flexible methods for analyzing survival data using splines, with applications to breast cancer prognosis. Journal of the American Statistical Association, 87, 942–951.</p>
+<p>Greenwood, M. (1926) The errors of sampling of the survivorship tables. Reports on Public Health and Statistical Subjects, number 33, Appendix 1, HMSO, London.</p>
+<p>Groeneboom, P. and Wellner, J.A. (1992) Information Bounds and Nonparametric Maximum Likelihood Estimation, Springer, Basel.</p>
+<p>Grønnesby, J.K. and Borgan, Ø. (1996) A method for checking regression models in survival analysis based on the risk score. Lifetime Data Analysis, 2, 315–328.</p>
+<p>Hall, W.J. and Wellner, J.A. (1980) Confidence bands for a survival curve from censored data. Biometrika, 67, 133–143.</p>
+<p>Hall, W.J., Rogers, W.H. and Pregibon, D. (1982) Outliers matter in survival analysis. Rand Corporation Technical Report P–6761, Santa Monica, California.</p>
+<p>Hanagal, D.D. (2019) Modeling Survival Data Using Frailty Models, 2nd ed., Springer Nature Singapore Pte Ltd.</p>
+<p>Hand, D.J. and Crowder, M.J. (1996) Practical Longitudinal Data Analysis, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Hammer, S.M., Katzenstein, D.A., Hughes, M.D., Gundacker, H., Schooley, R.T., Haubrich, R.H., Henry, W.K., Lederman, M.M., Phair, J.P., Niu, M., Hirsch, M.S. and Merigan, T.C. (1996) A trial comparing nucleoside monotherapy with combination therapy in HIVinfected adults with CD4 cell counts from 200 to 500 per cubic millimeter. New England Journal of Medicine, 335, 1081–1090.</p>
+<p>Hand, D.J., Daly, F., Lunn, A.D., McConway, K.J. and Ostrowski, E. (1994) A Handbook of Small Data Sets, Chapman &amp; Hall/CRC, London.</p>
+<p>Harrell, F.E. (2015) Regression Modeling Strategies: With Applications to Linear Models, Logistic and Ordinal Regression, and Survival Analysis, 2nd ed., Springer, Switzerland.</p>
+<p>Harrell, F.E., Lee, K.L. and Mark, D.B. (1996) Multivariable prognostic models: issues in developing models, evaluating assumptions and adequacy, and measuring and reducing errors. Statistics in Medicine, 15, 361–387.</p>
+<p>Harrington, D.P. and Fleming, T.R. (1982) A class of rank test procedures for censored survival data. Biometrika, 69, 553–566.</p>
+<p>Hastie, T. and Tibshirani, R. (1990) Generalized Additive Models, Chapman &amp; Hall/CRC, London.</p>
+<p>Heagerty, P.J., Lumley, T. and Pepe, M.S. (2000) Time dependent ROC curves for censored survival data and a diagnostic marker. Biometrics, 56, 337–344.</p>
+<p>Hedeker, D. and Gibbons, R.D. (2006) Longitudinal Data Analysis, John Wiley &amp; Sons, Inc., Hoboken, New Jersey.</p>
+<p>Heinzl, H. (2000) Using SAS to calculate the Kent and O’Quigley measure of dependence for Cox proportional hazards regression model. Computer Methods and Programs in Biomedicine, 63, 71–76.</p>
+<p>Henderson, R., Diggle, P.J. and Dobson, A. (2000) Joint modelling of longitudinal measurements and event time data. Biostatistics, 1, 465–480.</p>
+<p>Henderson, R. and Milner, A. (1991) On residual plots for relative risk regression. Biometrika, 78, 631–636.</p>
+<p>Hielscher, T., Zucknick, M., Werft, W. and Benner, A. (2010) On the prognostic value of survival models with application to gene expression signatures. Statistics in Medicine, 30, 818–829.</p>
+<p>Hinchcliffe, S.R. and Lambert, P.C. (2013) Flexible parametric modelling of cause-specific hazards to estimate cumulative incidence functions. BMC Medical Research Methodology, 13, 1–14.</p>
+<p>Hinkley, D.V., Reid, N. and Snell, E.J. (1991) Statistical Theory and Modelling, Chapman &amp; Hall/CRC, London.</p>
+<p>Hjorth, U. (1980) A reliability distribution with increasing, decreasing and bathtub-shaped failure rate. Technometrics, 22, 99–107.</p>
+<p>Hoel, D.G. (1972) A representation of mortality data by competing risks. Biometrics, 28, 475–488.</p>
+<p>Hoff, P.D. (2009) A First Course in Bayesian Statistical Methods, Springer, New York.</p>
+<p>Hollander, M. and Proschan, F. (1979) Testing to determine the underlying distribution using randomly censored data. Biometrics, 35, 393–401.</p>
+<p>Hosmer, D.W., Lemeshow, S. and May, S. (2008) Applied Survival Analysis: Regression Modeling of Time to Event Data, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Hougaard, P. (1995) Frailty models for survival data. Lifetime Data Analysis, 1, 255–273.</p>
+<p>Hougaard, P. (1999) Multi-state models: a review. Lifetime Data Analysis, 5, 239–264.</p>
+<p>Hougaard, P. (2000) Analysis of Multivariate Survival Data, Springer, New York.</p>
+<p>Hougaard, P. and Madsen, E.B. (1985) Dynamic evaluation of short-term prognosis of myocardial infarction. Statistics in Medicine, 4, 29–38.</p>
+<p>Huang, J., Lee, C. and Yu, Q. (2008) A generalized log-rank test for interval-censored failure time data via multiple imputation. Statistics in Medicine, 27, 3217–3226.</p>
+<p>Ibrahim, J.G., Chen, M.-H. and Sinha, D. (2001) Bayesian Survival Analysis, SpringerVerlag, New York.</p>
+<p>Jennison, C. and Turnbull, B.W. (2000) Group Sequential Methods with Applications to Clinical Trials, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Jeong, J.-H. and Fine, J.P. (2007) Parametric regression on cumulative incidence function. Biostatistics, 8, 184–196.</p>
+<p>Jewell, N.P. and van der Laan, M.J. (2004) Current status data: review, recent developments and open problems. In Advances in Survival Analysis, Chapter 35, 625–643 (eds. N.Balakrishnan and C.R. Rao), Handbook of Statistics, Elsevier, North Holland.</p>
+<p>Johnson, N.L., Kotz, S. and Balakrishnan, N. (1994) Distributions in Statistics: Continuous Univariate Distributions, Volume 1, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Johnson, N.L., Kotz, S. and Kemp, A.W. (2005) Univariate Discrete Distributions, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Julious, S.A. (2010) Sample Sizes for Clinical Trials, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Kalbfleisch, J.D. and Prentice, R.L. (1972) Contribution to the discussion of a paper by D.R. Cox. Journal of the Royal Statistical Society, B, 34, 215–216.</p>
+<p>Kalbfleisch, J.D. and Prentice, R.L. (1973) Marginal likelihoods based on Cox’s regression and life model. Biometrika, 60, 267–278.</p>
+<p>Kalbfleisch, J.D. and Prentice, R.L. (2002) The Statistical Analysis of Failure Time Data, 2nd ed., Wiley, New York.</p>
+<p>Kamarudin, A.N., Cox, T. and Kolamunnage-Dona, R. (2017) Time-dependent ROC curve analysis in medical research: current methods and applications. BMC Medical Research Methodology, 17, 53.</p>
+<p>Kaplan, E.L. and Meier, P. (1958) Nonparametric estimation from incomplete observations. Journal of the American Statistical Association, 53, 457–481.</p>
+<p>Kass, R.E. and Raftery, A.E. (1995) Bayes factors. Journal of the American Statistical Association, 90, 773–795.</p>
+<p>Kay, R. (1977) Proportional hazard regression models and the analysis of censored survival data. Applied Statistics, 26, 227–237.</p>
+<p>Kay, R. (1984) Goodness of fit methods for the proportional hazards model. Revue Epidemiologie et de Sant´e Publique, 32, 185–198.</p>
+<p>Keiding, N., Klein, J.P. and Horowitz, M.M. (2001) Multistate models and outcome prediction in bone marrow transplantation. Statistics in Medicine, 20, 1871–1885.</p>
+<p>Kelly, P.J. and Lim, L.L.-Y. (2000) Survival analysis for recurrent event data: an application to childhood infectious diseases. Statistics in Medicine, 19, 13–33.</p>
+<p>Kent, J.T. and O’Quigley, J. (1988) Measures of dependence for censored survival data. Biometrika, 75, 525–534.</p>
+<p>Khmaladze, E.V. (2013) Statistical Methods with Applications to Demography and Life Insurance. Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Kirk, A.P., Jain, S., Pocock, S., Thomas, H.C. and Sherlock, S. (1980) Late results of the Royal Free Hospital prospective controlled trial of prednisolone therapy in hepatitis B surface antigen negative chronic active hepatitis. Gut, 21, 78–83.</p>
+<p>Klein, J.P. (1991) Small-sample moments of some estimators of the variance of the KaplanMeier and Nelson-Aalen estimators. Scandinavian Journal of Statistics, 18, 333–340.</p>
+<p>Klein, J.P. (1992) Semiparametric estimation of random effects using the Cox model based on the EM algorithm. Biometrics, 48, 795–806.</p>
+<p>Klein, J.P. and Moeschberger, M.L. (1988) Bounds on net survival probabilities for dependent competing risks. Biometrics, 44, 529–538.</p>
+<p>Klein, J.P. and Moeschberger, M.L. (2005) Survival Analysis: Techniques for Censored and Truncated Data, 2nd ed., Springer, New York.</p>
+<p>Klein, J.P. and Shu, Y. (2002) Multi-state models for bone marrow transplantation studies. Statistical Methods in Medical Research, 11, 117–139.</p>
+<p>Klein, J.P., Gerster, M., Andersen, P.K., Tarima, S. and Perme, M.P. (2008) SAS and R functions to compute pseudo-values for censored data regression. Computer Methods and Programs in Biomedicine, 89, 289–300.</p>
+<p>Kleinbaum, D.G. and Klein, J.P. (2012) Survival Analysis: A Self-Learning Text, 3rd ed., Springer, New York.</p>
+<p>Kodell, R.L. and Nelson, C.J. (1980) An illness-death model for the study of the carcinogenic process using survival/sacrifice data. Biometrics, 36, 267–277.</p>
+<p>Kohler, U. and Kreuter, F. (2012) Data Analysis Using Stata, 3rd ed., Stata Press, Texas.</p>
+<p>Krall, J.M., Uthoff, V.A. and Harley, J.B. (1975) A step-up procedure for selecting variables associated with survival. Biometrics, 31, 49–57.</p>
+<p>Kuk, A.Y.C. and Chen, C. (1992) A mixture model combining logistic regression with proportional hazards regression. Biometrika, 79, 531–541.</p>
+<p>Lachin, J.M. (1981) Introduction to sample size determination and power analysis for clinical trials. Controlled Clinical Trials, 2, 93–113.</p>
+<p>Lachin, J.M. and Foulkes, M.A. (1986) Evaluation of sample size and power for analyses of survival with allowance for nonuniform patient entry, losses to follow-up, noncompliance, and stratification. Biometrics, 42, 507–519.</p>
+<p>Lagakos, S.W. (1981) The graphical evaluation of explanatory variables in proportional hazards models. Biometrika, 68, 93–98.</p>
+<p>Lakatos, E. (1988) Sample sizes based on the log-rank statistic in complex clinical trials. Biometrics, 44, 229–241.</p>
+<p>Lakatos, E. and Lan, K.K.G. (1992) A comparison of sample size methods for the log-rank statistic. Statistics in Medicine, 11, 179–191.</p>
+<p>Lambert, B. (2018) A Student’s Guide to Bayesian Statistics, SAGE publications Ltd., London.</p>
+<p>Lambert, P., Collett, D., Kimber, A. and Johnson, R. (2004) Parametric accelerated failure time models with random effects and an application to kidney transplant survival. Statistics in Medicine, 23, 3177–3192.</p>
+<p>Latouche, A., Beyersmann, J. and Fine, J.P. (2007) Letter to the editor: Comments on ‘Analysing and interpreting competing risk data’ by M. Pintilie. Statistics in Medicine, 26, 3676–3680.</p>
+<p>Latouche, A., Porcher, R. and Chevret, S. (2004) Sample size formula for proportional hazards modelling of competing risks. Statistics in Medicine, 23, 3263–3274.</p>
+<p>Lawless, J.F. (2002) Statistical Models and Methods for Lifetime Data, 2nd ed., Wiley, New York.</p>
+<p>Leathem, A.J. and Brooks, S.A. (1987) Predictive value of lectin binding on breast-cancer recurrence and survival. The Lancet, 329, 1054–1056.</p>
+<p>Lee, E.T. and Wang, J.W. (2013) Statistical Methods for Survival Data Analysis, 4th ed., Wiley, New York.</p>
+<p>Lesaffre, E., Kom´arek, A. and Declerck, D. (2005) An overview of methods for intervalcensored data with an emphasis on applications in dentistry. Statistical Methods in Medical Research, 14, 539–552.</p>
+<p>Lim, E., Ali, A., Theodorou, P., Sousa, I., Ashrafian, H., Chamageorgakis, T., Duncan, M., Diggle, P. and Pepper, J. (2008) Longitudinal study of the profile and predictors of left ventricular mass regression after stentless aortic valve replacement. The Annals of Thoracic Surgery, 85, 2026–2029.</p>
+<p>Lin, D.Y. (1997) Non-parametric inference for cumulative incidence functions in competing risks studies. Statistics in Medicine, 16, 901–910.</p>
+<p>Lin, D.Y. and Wei, L.J. (1989) The robust inference for the Cox proportional hazards model. Journal of the American Statistical Association, 84, 1074–1078.</p>
+<p>Lin, D.Y. and Wei, L.J. (1991) Goodness-of-fit tests for the general Cox regression model. Statistica Sinica, 1, 1–17.</p>
+<p>Lin, D.Y., Wei, L.J. and Ying, Z. (1993) Checking the Cox model with cumulative sums of martingale-based residuals. Biometrika, 80, 557–572.</p>
+<p>Lindley, D.V. and Scott, W.F. (1984) New Cambridge Elementary Statistical Tables, Cambridge University Press, Cambridge.</p>
+<p>Lindsey, J.C. and Ryan, L.M. (1993) A three state multiplicative model for rodent tumourigenicity experiments. Applied Statistics, 42, 283–300.</p>
+<p>Lindsey, J.C. and Ryan, L.M. (1998) Methods for interval-censored data. Statistics in Medicine, 17, 219–238.</p>
+<p>Lindsey, J.K. (1998) A study of interval censoring in parametric regression models. Lifetime Data Analysis, 4, 329–354.</p>
+<p>Long, J.D. and Mills, J.A. (2018) Joint modeling of multivariate longitudinal data and survival data in several observational studies of Huntington’s disease. BMC Medical Research Methodology, 18, 138.</p>
+<p>Lunn, D., Jackson, C., Best, N., Thomas, A. and Spiegelhalter, D. (2012) The BUGS Book: A Practical Introduction to Bayesian Analysis, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Machin, D., Campbell, M.J., Tan, S.B. and Tan, S.H. (2009) Sample Sizes for Clinical Trials, 3rd ed., John Wiley &amp; Sons Ltd, Chichester.</p>
+<p>Machin, D., Cheung, Y.B. and Parmar, M.K.B. (2006) Survival Analysis: A Practical Approach, Wiley, New York.</p>
+<p>Maller, R.A. and Zhao, X. (2002) Analysis of parametric models for competing risks. Statistica Sinica, 12, 725–750.</p>
+<p>Mantel, N. (1966) Evaluation of survival data and two new rank order statistics arising in its consideration. Cancer Chemotherapy Reports, 50, 163–170.</p>
+<p>Mantel, N. and Haenszel, W. (1959) Statistical aspects of the analysis of data from retrospective studies of disease. Journal of the National Cancer Institute, 22, 719–748.</p>
+<p>Marubini, E. and Valsecchi, M.G. (1995) Analysing Survival Data from Clinical Trials and Observational Studies, Wiley, New York.</p>
+<p>Matthews, J.N.S. (2006) Introduction to Randomized Controlled Clinical Trials, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>May, S. and Hosmer, D.W. (1998) A simplified method of calculating an overall goodnessof-fit test for the Cox proportional hazards model. Lifetime Data Analysis, 4, 109–120.</p>
+<p>McCrink, L.M., Marshall, A.H. and Cairns, K.J. (2013) Advances in joint modelling: a review of recent developments with application to the survival of end stage renal disease patients. International Statistical Review, 81, 249–269.</p>
+<p>McCullagh, P. and Nelder, J.A. (1989) Generalized Linear Models, 2nd ed., Chapman &amp; Hall/CRC, London.</p>
+<p>McCulloch, C.E., Searle, S.R. and Neuhaus, J.M. (2008) Generalized, Linear, and Mixed Models, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>McGilchrist, C.A. and Aisbett, C.W. (1991) Regression with frailty in survival analysis. Biometrics, 47, 461–466.</p>
+<p>McKnight, B. and Crowley, J. (1984) Tests for differences in tumour incidence based on animal carcinogenesis experiments. Journal of the American Statistical Association, 79, 639–648.</p>
+<p>McElreath, R. (2020) Statistical Rethinking: A Bayesian Course with Examples in R and STAN, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Meeker, W.Q., Escobar, L.A. and Pascual, F.G. (2022) Statistical Methods for Reliability Data, 2nd ed., John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Meier, P. (1975) Estimation of a distribution function from incomplete observations. In: Perspectives in Probability and Statistics (ed. J. Gani), Academic Press, London, 67–87.</p>
+<p>Meira-Machado, L., de Uña-Alvarez, J., Cadarso-Suárez, C. and Andersen, P.K. (2009) Multi-state models for the analysis of time-to-event data. Statistical Methods in Medical Research, 18, 195–222.</p>
+<p>Metcalfe, C.R. and Thompson, S.G. (2007) Wei, Lin and Weissfeld’s marginal analysis of multivariate failure time data: should it be applied to a recurrent events outcome?</p>
+<p>Statistical Methods in Medical Research, 16, 103–122. Miller, A.J. (2002) Subset Selection in Regression, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Mills, M. (2010) Introducing Survival and Event History Analysis. SAGE Publications Ltd, London.</p>
+<p>Moeschberger, M.L. and Klein, J.P. (1995) Statistical methods for dependent competing risks. Lifetime Data Analysis, 1, 195–204.</p>
+<p>Molenberghs, G. and Verbeke, G. (2005) Models for Discrete Longitudinal Data, SpringerVerlag, New York.</p>
+<p>Montgomery, D.C., Peck, E.A. and Vining, G. (2021) Introduction to Linear Regression Analysis, 6th ed., Wiley, New York.</p>
+<p>Moore, D.F. (2016) Applied Survival Analysis Using R, Springer, Switzerland.</p>
+<p>Moreau, T., O’Quigley, J. and Mesbah, M. (1985) A global goodness-of-fit statistic for the proportional hazards model. Applied Statistics, 34, 212–218.</p>
+<p>Munda, M., Rotolo, F. and Legrand, C. (2012) parfm: Parametric frailty models in R.</p>
+<p>Journal of Statistical Software, 51, 1–20. Munda, M., Rotolo, F. and Legrand, C. (2017) parfm: Parametric frailty models in R. <a href="https://cran.r-project.org/web/packages/parfm/vignettes/parfm.pdf" class="uri">https://cran.r-project.org/web/packages/parfm/vignettes/parfm.pdf</a>.</p>
+<p>Nagelkerke, N.J.D. (1991). A note on a general definition of the coefficient of determination. Biometrika 78, 691—692.</p>
+<p>Nagelkerke, N.J.D., Oosting, J. and Hart, A.A.M. (1984) A simple test for goodness of fit of Cox’s proportional hazards model. Biometrics, 40, 483–486.</p>
+<p>Nair, V.N. (1984) Confidence bands for survival functions with censored data: a comparative study. Technometrics, 26, 265–275.</p>
+<p>Nardi, A. and Schemper, M. (1999) New residuals for Cox regression and their application to outlier screening. Biometrics, 55, 523–529.</p>
+<p>Nelder, J.A. (1977) A reformulation of linear models (with discussion). Journal of the Royal Statistical Society, A, 140, 48–77.</p>
+<p>Nelson, K.P., Lipsitz, S.R., Fitzmaurice, G.M., Ibrahim, J., Parzen, M. and Strawderman, R. (2006) Use of the probability integral transformation to fit nonlinear mixed-effects models with nonnormal random effects. Journal of Computational and Graphical Statistics, 15, 39–57.</p>
+<p>Nelson, W. (1972) Theory and applications of hazard plotting for censored failure data. Technometrics, 14, 945–965.</p>
+<p>Neuberger, J., Altman, D.G., Christensen, E., Tygstrup, N. and Williams, R. (1986) Use of a prognostic index in evaluation of liver transplantation for primary biliary cirrhosis. Transplantation, 4, 713–716.</p>
+<p>Nieto, F.J. and Coresh, J. (1996) Adjusting survival curves for confounders: a review and a new method. American Journal of Epidemiology, 143, 1059–1068.</p>
+<p>O’Hagan, A. and Forster, J.J. (2004) Kendall’s Advanced Theory of Statistics, volume 2B: Bayesian Inference, 2nd ed., Arnold, London.</p>
+<p>O’Quigley, J. and Pessione, F. (1989) Score tests for homogeneity of regression effect in the proportional hazards model. Biometrics, 45, 135–144.</p>
+<p>Ohlssen, D., Sharples, L.D. and Spiegelhalter, D.J. (2007) A hierarchical modelling framework for identifying unusual performance in health care providers. Journal of the Royal Statistical Society, A, 170, 865–890.</p>
+<p>Pan, W. (1999) Extending the iterative convex minorant algorithm to the Cox model for interval-censored data. Journal of Computational and Graphical Statistics, 8, 109–120.</p>
+<p>Park, M.Y. and Hastie, T. (2007) L1-regularization path algorithm for generalized linear models. Journal of the Royal Statistical Society, B, 69, 659–677.</p>
+<p>Peng, Y. and Dear, K.B.G. (2000) A nonparametric mixture model for cure rate estimation. Biometrics, 56, 237–243.</p>
+<p>Pepe, M.S., Leisenring, W. and Rutter, C. (1999) Evaluating diagnostic tests in public health. In Handbook of Biostatistics, Volume 18, (eds. C.R. Rau and P.K. Sen), Elsevier Scientific, New York, 397–422.</p>
+<p>Pepe, M.S., Longton, G. and Janes, H. (2009) Estimation and comparison of receiver operating characteristic curves. Stata Journal, 9, 1–16.</p>
+<p>Pepe, M.S. and Mori, M. (1993) Kaplan-Meier, marginal or conditional probability curves in summarizing competing risks failure time data? Statistics in Medicine, 12, 737–751.</p>
+<p>Perperoglou, A., Sauerbrei, W., Abrahamowicz, M. and Schmid, M. (2019) A review of spline function procedures in R. BMC Medical Research Methodology, 19, 46.</p>
+<p>Petersen, T. (1986) Fitting parametric survival models with time-dependent covariates. Applied Statistics, 35, 281–288.</p>
+<p>Peterson, A.V. (1976) Bounds for a joint distribution function with fixed sub-distribution functions: application to competing risks. Proceedings of the National Academy of Sciences, 73, 11–13.</p>
+<p>Peto, R. (1972) Contribution to the discussion of a paper by D.R. Cox. Journal of the Royal Statistical Society, B, 34, 205–207.</p>
+<p>Peto, R. and Peto, J. (1972) Asymptotically efficient rank invariant test procedures (with discussion). Journal of the Royal Statistical Society, A, 135, 185–206.</p>
+<p>Peto, R., Pike, M.C., Armitage, P., Breslow, N.E., Cox, D.R., Howard, S.V., Mantel, N., McPherson, K., Peto, J. and Smith, P.G. (1977) Design and analysis of randomized clinical trials requiring prolonged observation of each patient. II. Analysis and examples. British Journal of Cancer, 35, 1–39.</p>
+<p>Pettitt, A.N. and Bin Daud, I. (1989) Case-weighted measures of influence for proportional hazards regression. Applied Statistics, 38, 51–67.</p>
+<p>Pettitt, A.N. and Bin Daud, I. (1990) Investigating time dependence in Cox’s proportional hazards model. Applied Statistics, 39, 313–329.</p>
+<p>Pintilie, M. (2006) Competing Risks: A Practical Perspective, John Wiley &amp; Sons, Chichester.</p>
+<p>Pintilie, M. (2007a) Analysing and interpreting competing risk data. Statistics in Medicine, 26, 1360–1367.</p>
+<p>Pintilie, M. (2007b) Authors reply to letter to the editor from A. Latouche, J. Beyersmann and J.P. Fine. Statistics in Medicine, 26, 3679–3680.</p>
+<p>Pocock, S.J. (1983) Clinical Trials: A Practical Approach, Wiley, Chichester.</p>
+<p>Prentice, R. and Marek, P. (1979) A qualitative discrepancy between censored data rank tests. Biometrics, 35, 861–867.</p>
+<p>Prentice, R.L. and Kalbfleisch, J.D. (1979) Hazard rate models with covariates. Biometrics, 35, 25–39.</p>
+<p>Prentice, R.L., Williams, B.J. and Peterson, A.V. (1981) On the regression analysis of multivariate failure time data. Biometrika, 68, 373–379.</p>
+<p>Putter, H. (2011) Special issue about competing risks and multi-state models. Journal of Statistical Software, 38, 1–4.</p>
+<p>Putter, H., Fiocco, M. and Geskus, R.B. (2007) Tutorial in biostatistics: competing risks and multi-state models. Statistics in Medicine, 26, 2389–2430.</p>
+<p>Quantin, C., Moreau, T., Asselain, B., Maccario, J. and Lellouch, J. (1996) A regression survival model for testing the proportional hazards hypothesis. Biometrics, 52, 874–885.</p>
+<p>R Core Team (2021) R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. <a href="http://www.R-project.org/" class="uri">http://www.R-project.org/</a>.</p>
+<p>Racine, J.S. (2021) A primer on regression splines. <a href="https://cran.r-project.org/web/packages/crs/vignettes/spline_primer.pdf" class="uri">https://cran.r-project.org/web/packages/crs/vignettes/spline_primer.pdf</a>.</p>
+<p>Raftery, A.E. (1995) Bayesian model selection in social research. Sociological Methodology,25, 111–163.</p>
+<p>Raftery, A.E. and Lewis, S. (1992) How many iterations in the Gibbs sampler? In Bayesian Statistics (eds. J.M. Bernardo, J. Berger, A.P. Dawid and A.F.M. Smith), Oxford University Press, Oxford, 763–773.</p>
+<p>Ramlau-Hansen, H. (1983) Smoothing counting process intensities by means of kernel functions. Annals of Statistics, 11, 453–466.</p>
+<p>Rancel, M.M.S. and Sierra, M.A.G. (2001) Regression diagnostic using local influence: a review. Communications in Statistics–Theory and Methods, 30, 799–813.</p>
+<p>Reid, N. and Crépeau, H. (1985) Influence functions for proportional hazards regression. Biometrika, 72, 1–9.</p>
+<p>Ripatti, S. and Palmgren, J. (2000) Estimation of multivariate frailty models using penalised partial likelihood. Biometrics, 56, 1016–1022.</p>
+<p>Ritchie, A. Ö., Kalra, P.A. and Diggle, P.J. (2015) Joint modelling of repeated measurement and time-to-event data: an introductory tutorial. International Journal of Epidemiology, 44, 334–344.</p>
+<p>Rizopoulos D. (2010) JM: an R package for the joint modelling of longitudinal and timeto-event data. Journal of Statistical Software, 35, 1—33.</p>
+<p>Rizopoulos, D. (2012) Joint Models for Longitudinal and Time-to-Event Data: with Applications in R, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Robins, J.M. (1993) Information recovery and bias adjustment in proportional hazards regression analysis of randomized trials using surrogate markers. In Proceedings of the Biopharmaceutical Section, American Statistical Association, Virginia, 24–33.</p>
+<p>Robins, J.M. and Finkelstein, D.M. (2000) Correcting for non-compliance and dependent censoring in an AIDS clinical trial with inverse probability of censoring weighted (IPCW) log rank tests. Biometrika, 56, 779–788.</p>
+<p>Robins, J.M. and Rotnitzky, A. (1992) Recovery of information and adjustment for dependent censoring using surrogate markers. In AIDS Epidemiology–Methodological Issues (eds. N. Jewell, K. Dietz and V.T. Farewell), Birkhäuser, Boston, 297–331.</p>
+<p>Rosenberg, P.S. (1995) Hazard function estimation using B-splines. Biometrics, 51, 874–887.</p>
+<p>Royston, P. (2006) Explained variation for survival models. The Stata Journal, 6, 83–96.</p>
+<p>Royston, P. and Altman, D.G. (1994) Regression using fractional polynomials of continuous covariates: parsimonious parametric modelling (with discussion). Applied Statistics, 43, 429–467.</p>
+<p>Royston, P. and Lambert, P.C. (2011) Flexible Parametric Survival Analysis Using Stata: Beyond the Cox Model, Stata Press, Texas.</p>
+<p>Royston, P. and Parmar, M.K.B. (2002) Flexible proportional-hazards and proportionalodds models for censored survival data, with application to prognostic modelling and estimation of treatment effects. Statistics in Medicine, 21, 2175–2197.</p>
+<p>Royston, P. and Parmar, M.K.B. (2011) The use of restricted mean survival time to estimate the treatment effect in randomized clinical trials when the proportional hazards assumption is in doubt. Statistics in Medicine, 30, 2409–2421.</p>
+<p>Royston, P. and Sauerbrei, W. (2004) A new measure of prognostic separation in survival data. Statistics in Medicine, 23, 723–748.</p>
+<p>Rubinstein, L.V., Gail, M.H. and Santner, T.J. (1981) Planning the duration of a comparative clinical trial with loss to follow-up and a period of continued observation. Journal of Chronic Diseases, 34, 469–479.</p>
+<p>Sahu, S. (2022) Bayesian Modeling of Spatio-Temporal Data with R, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Samet, J.H., Larson, M.J., Horton, N.J., Doyle, K., Winter, M. and Saitz, R. (2003) Linking alcohol and drug-dependent adults to primary medical care: a randomized controlled trial of a multi-disciplinary health intervention in a detoxification unit. Addiction, 98, 509–516.</p>
+<p>Satten, G.A., Datta, S. and Robins, J.M. (2001) Estimating the marginal survival function in the presence of time dependent covariates. Statistics and Probability Letters, 54, 397–403.</p>
+<p>Sauerbrei, W. and Royston, P. (1999) Building multivariate prognostic and diagnostic models: transformations of the predictors by using fractional polynomials. Journal of the Royal Statistical Society, A, 162, 71–94.</p>
+<p>Scharfstein, D.O. and Robins, J.M. (2002). Estimation of the failure time distribution in the presence of informative censoring. Biometrika, 89, 617–634.</p>
+<p>Schemper, M. (1992) Cox analysis of survival data with non-proportional hazard functions. The Statistician, 41, 455–465.</p>
+<p>Schemper, M. and Stare, J. (1996) Explained variation in survival analysis. Statistics in Medicine, 15, 1999–2012.</p>
+<p>Schemper, M., Wakounig, S. and Heinze, G. (2009) The estimation of average hazard ratios by weighted Cox regression. Statistics in Medicine, 28, 2473–2489.</p>
+<p>Schlucter, M.D. (1992) Methods for the analysis of informatively censored longitudinal data. Statistics in Medicine, 11, 1861–1870.</p>
+<p>Schmuller, J. (2017) Statistical Analysis with R for Dummies, John Wiley &amp; Sons, Inc., Hoboken, New Jersey.</p>
+<p>Schoenfeld, D.A. (1980) Chi-squared goodness of fit tests for the proportional hazards regression model. Biometrika, 67, 145–153.</p>
+<p>Schoenfeld, D.A. (1981) The asymptotic properties of comparative tests for comparing survival distributions. Biometrika, 68, 316–319.</p>
+<p>Schoenfeld, D.A. (1982) Partial residuals for the proportional hazards regression model. Biometrika, 69, 239–241.</p>
+<p>Schoenfeld, D.A. (1983) Sample-size formula for the proportional-hazards regression model. Biometrics, 39, 499–503.</p>
+<p>Schoenfeld, D.A. and Richter, J.R. (1982) Nomograms for calculating the number of patients needed for a clinical trial with survival as an endpoint. Biometrics, 38, 163–170.</p>
+<p>Schumacher, M., Bastert, G., Bojar, H., H¨ubner, K., Olschewski, M., Sauerbrei, W., Schmoor, C., Beyerle, C., Neumann, R.L.A. and Rauschecker, H.F. (1994) Randomized 2 × 2 trial evaluating hormonal treatment and the duration of chemotherapy in node-positive breast cancer patients. Journal of Clinical Oncology, 12, 2086–2093.</p>
+<p>Searle, S.R., Casella, G. and McCulloch, C.E. (2006) Variance Components, John Wiley &amp; Sons, Hoboken, New Jersey.</p>
+<p>Sellke, T. and Siegmund, D. (1983) Sequential analysis of the proportional hazards model. Biometrika, 70, 315–326.</p>
+<p>Shih, J.H. (1998) A goodness-of-fit test for association in a bivariate survival model. Biometrika, 85, 189–200.</p>
+<p>Shih, J.H. and Louis, T.A. (1995) Inferences on the association parameter in copula models for bivariate survival data. Biometrics, 51, 1384–1399.</p>
+<p>Siannis, F. (2004) Applications of a parametric model for informative censoring. Biometrics, 60, 704–714.</p>
+<p>Siannis, F. (2011) Sensitivity analysis for multiple right censoring processes: investigating mortality in psoriatic arthritis. Statistics in Medicine, 30, 356–367.</p>
+<p>Siannis, F., Copas, J. and Lu, G. (2005) Sensitivity analysis for informative censoring in parametric survival models. Biostatistics, 6, 77–91.</p>
+<p>Simon, R. (1986) Confidence intervals for reporting results of clinical trials. Annals of Internal Medicine, 105, 429–435.</p>
+<p>Simon, R. and Lee, Y.J. (1982) Nonparametric confidence limits for survival probabilities and median survival time. Cancer Treatment Reports, 66, 37–42.</p>
+<p>Sleeper, L.A. and Harrington, D.P. (1990) Regression splines in the Cox model with application to covariate effects in liver disease. Journal of the American Statistical Association, 85, 941–949.</p>
+<p>Slud, E.V. and Rubinstein, L.V. (1983) Dependent competing risks and summary survival curves. Biometrika, 70, 643–649.</p>
+<p>Slud, E.V., Byar, D.P. and Green, S.B. (1984) A comparison of reflected versus test-based confidence intervals for the median survival time based on censored data. Biometrics, 40, 587–600.</p>
+<p>Spiegelhalter, D.J. (2005) Funnel plots for comparing institutional performance. Statistics in Medicine, 24, 1185–1202.</p>
+<p>Spiegelhalter, D.J., Aylin, P., Best, N.G., Evans, S.J.W. and Murray, G.D. (2002) Commissioned analysis of surgical performance using routine data: lessons from the Bristol inquiry (with discussion). Journal of the Royal Statistical Society, A, 162, 191–231.</p>
+<p>Spiegelhalter, D.J., Best, N.G., Carlin, B.P. and Van Der Linde, A. (2002). Bayesian measures of model complexity and fit (with discussion). Journal of the Royal Statistical Society, B, 64, 583–639.</p>
+<p>Spiegelhalter, D.J., Best, N.G., Carlin, B.P. and Van Der Linde, A. (2014). The deviance information criterion: 12 years on (with discussion). Journal of the Royal Statistical Society, B, 76, 485–493.</p>
+<p>Spiegelhalter, D.J., Sherlaw-Johnson, C., Bardsley, M., Blunt, I., Wood, C. and Grigg, O. (2012) Statistical methods for healthcare regulation: rating, screening and surveillance (with discussion). Journal of the Royal Statistical Society, A, 175, 1–47.</p>
+<p>Stablein, D.M. and Koutrouvelis, I.A. (1985) A two-sample test sensitive to crossing hazards in uncensored and singly censored data. Biometrics, 41, 643–652.</p>
+<p>Stablein, D.M., Carter, W.H., Jr. and Novak, J.W. (1981) Analysis of survival data with nonproportional hazard functions. Controlled Clinical Trials, 2, 148–159.</p>
+<p>Stare, J., Perme, M.P. and Henderson, R. (2011) A measure of explained variation for event history data. Biometrics, 67, 750–759.</p>
+<p>Storer, B.E. and Crowley, J. (1985) A diagnostic for Cox regression and general conditional likelihoods. Journal of the American Statistical Association, 80, 139–147.</p>
+<p>Stroup, W. (2013) Generalized Linear Mixed Models: Modern Concepts, Methods and Applications, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Sun, J. (1996) A nonparametric test for interval-censored failure time data with application to AIDS studies. Statistics in Medicine, 15, 1387–1395.</p>
+<p>Sun, J. (2001). Variance estimation of a survival function for interval-censored survival data, Statistics in Medicine, 20, 1249–1257.</p>
+<p>Sun, J. (2006) The Statistical Analysis of Interval-Censored Failure Time Data, Springer, New York.</p>
+<p>Sun, J., Ono, Y. and Takeuchi, Y. (1996) A simple method for calculating the exact confidence interval of the standardized mortality ratio with an SAS function. Journal of Occupational Health, 38, 196–197.</p>
+<p>Sun, L., Liu, J., Sun, J. and Zhang, M.-J. (2006) Modeling the subdistribution of a competing risk. Statistica Sinica, 16, 1367–1385.</p>
+<p>Sy, J.P. and Taylor, J.M.G. (2000) Estimation in a Cox proportional hazards cure model. Biometrics, 56, 227–236.</p>
+<p>Tableman, M. and Kim, J.S. (2004) Survival Analysis Using S: Analysis of Time-to-Event Data, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Tai, B.-C., Machin, D., White, I. and Gebski, V. (2001) Competing risks analysis of patients with osteosarcoma: a comparison of four different approaches. Statistics in Medicine, 20, 661–684.</p>
+<p>Taylor, J.M.G. (1995) Semi-parametric estimation in failure time mixture models. Biometrics, 51, 899–907.</p>
+<p>Therneau, T.M. (1986) The COXREGR Procedure. In: SAS SUGI Supplemental Library
+User’s Guide, version 5 ed., SAS Institute Inc., Cary, North Carolina.</p>
+<p>Therneau, T. (2022) A package for survival analysis in R. <a href="https://cran.r-project.org/web/packages/survival/vignettes/survival.pdf" class="uri">https://cran.r-project.org/web/packages/survival/vignettes/survival.pdf</a>.</p>
+<p>Therneau, T., Crowson, C. and Atkinson, E. (2022a) Using time dependent covariates and time dependent coefficients in the Cox model. <a href="https://cran.r-project.org/web/packages/survival/vignettes/timedep.pdf" class="uri">https://cran.r-project.org/web/packages/survival/vignettes/timedep.pdf</a>.</p>
+<p>Therneau, T., Crowson, C. and Atkinson, E. (2022b) Multi-state models and competing risks. <a href="https://cran.r-project.org/web/packages/survival/vignettes/compete.pdf" class="uri">https://cran.r-project.org/web/packages/survival/vignettes/compete.pdf</a>.</p>
+<p>Therneau, T.M. and Grambsch, P.M. (2000) Modelling Survival Data: Extending the Cox Model, Springer, New York.</p>
+<p>Therneau, T.M., Grambsch, P.M. and Fleming, T.R. (1990) Martingale-based residuals for survival models. Biometrika, 77, 147–160.</p>
+<p>Therneau, T.M., Grambsch, P.M. and Pankratz, V.S. (2003) Penalized survival models and frailty. Journal of Computational and Graphical Statistics, 12, 156–175.</p>
+<p>Thisted, R.A. (1988) Elements of Statistical Computing, Chapman &amp; Hall/CRC, London.</p>
+<p>Thomas, N., Longford, N.T. and Rolph, J.E. (1994) Empirical Bayes methods for estimating hospital-specific mortality rates. Statistics in Medicine, 13, 889–903.</p>
+<p>Thomsen, B.L., Keiding, N. and Altman, D.G. (1991) A note on the calculation of expected survival, illustrated by the survival of liver transplant patients. Statistics in Medicine, 10, 733–738.</p>
+<p>Tibshirani, R. (1982) A plain man’s guide to the proportional hazards model. Clinical and Investigative Medicine, 5, 63–68.</p>
+<p>Tibshirani, R. (1996) Regression shrinkage and selection via the lasso. Journal of the Royal Statistical Society, B, 58, 267–288.</p>
+<p>Tibshirani, R. (1997) The lasso method for variable selection in the Cox model. Statistics in Medicine, 16, 385–395.</p>
+<p>Tierney, L. (1994) Markov chains for exploring posterior distributions (with discussion). Annals of Statistics, 22, 1701–1762.</p>
+<p>Tseng, Y.K., Hsieh, F. and Wang J.-L. (2005) Joint modeling of accelerated failure time and longitudinal data. Biometrika, 92, 587–603.</p>
+<p>Tsiatis, A.A. (1975) A nonidentifiability aspect of the problem of competing risks. Proceedings of the National Academy of Sciences, 72, 20–22.</p>
+<p>Tsiatis, A.A. and Davidian, M. (2004) Joint modeling of longitudinal and time-to-event data: an overview. Statistica Sinica, 14, 809–834.</p>
+<p>Turnbull, B.W. (1976) The empirical distribution function with arbitrarily grouped, censored, and truncated data, Journal of the Royal Statistical Society, B, 38, 290–295.</p>
+<p>Venables, W.N. and Ripley, B.D. (2002) Modern Applied Statistics with S, 4th ed., Springer, New York.</p>
+<p>Verbeke, G. and Molenberghs, G. (2000). Linear Mixed Models for Longitudinal Data, Springer-Verlag, New York.</p>
+<p>Verweij, P.J.M., van Houwelingen, H.C. and Stijnen, T. (1998) A goodness-of-fit test for Cox’s proportional hazards model based on martingale residuals. Biometrics, 54, 1517–1526.</p>
+<p>Verzani, J. (2014) Using R for Introductory Statistics, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Volinsky, C.T. and Raftery, A.E. (2000) Bayesian information criterion for censored survival models. Biometrics, 56, 256–262.</p>
+<p>WHO Special Programme of Research, Development and Research Training in Human
+Reproduction (1987) Vaginal bleeding patterns–the problem and an example data set. Applied Stochastic Models and Data Analysis, 3, 27–35.</p>
+<p>Wang, L., McMahan, C.S., Hudgens, M.G. and Qureshi, Z.P. (2016) A flexible, computationally efficient method for fitting the proportional hazards model to interval-censored data. Biometrics, 72, 222–231.</p>
+<p>Watanabe, S. (2010) Asymptotic equivalence of Bayes cross validation and widely applicable information criterion in singular learning theory. Journal of Machine Learning Research, 11, 3571–3594.</p>
+<p>Watanabe, S. (2013) A widely applicable Bayesian information criterion. Journal of Machine Learning Research, 14, 867–897.</p>
+<p>Wei, L.J. (1992) The accelerated failure time model: a useful alternative to the Cox regression model in survival analysis. Statistics in Medicine, 11, 1871–1879.</p>
+<p>Wei, L.J. and Glidden, D.V. (1997) An overview of statistical methods for multiple failure time data in clinical trials. Statistics in Medicine, 16, 833–839.</p>
+<p>Wei, L.J., Lin, D.Y. and Weissfeld, L. (1989) Regression-analysis of multivariate incomplete failure time data by modeling marginal distributions. Journal of the American Statistical Association, 84, 1065–1073.</p>
+<p>Weiss, R.E. (2010) Modeling Longitudinal Data, Springer, New York.</p>
+<p>Weissfeld, L.A. (1990) Influence diagnostics for the proportional hazards model. Statistics and Probability Letters, 10, 411–417.</p>
+<p>Weissfeld, L.A. and Schneider, H. (1990) Influence diagnostics for the Weibull model fit to censored data. Statistics and Probability Letters, 9, 67–73.</p>
+<p>Weissfeld, L.A. and Schneider, H. (1994) Residual analysis for parametric models fit to censored data. Communications in Statistics–Theory and Methods, 23, 2283–2297.</p>
+<p>Wellner, J.A. and Zahn, Y. (1997) A hybrid algorithm for computation of the nonparametric maximum likelihood estimator from censored data. Journal of the American Statistical Association, 92, 945–959.</p>
+<p>West, B.T., Welch, K.B. and Galecki, A.T. (2007) Linear Mixed Models: A Practical Guide Using Statistical Software, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>White, I.R., Royston, P. and Wood, A.M. (2011) Multiple imputation using chained equations: issues and guidance for practice. Statistics in Medicine, 30, 377–399.</p>
+<p>Whitehead, J.R. (1989) The analysis of relapse clinical trials, with application to a comparison of two ulcer treatments. Statistics in Medicine, 8, 1439–1454.</p>
+<p>Whitehead, J.R. (1997) The Design and Analysis of Sequential Clinical Trials, 2nd ed., Wiley, Chichester.</p>
+<p>Wickham, H. (2019) Advanced R, 2nd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Wienke, A. (2011) Frailty Models in Survival Analysis, Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Wolbers, M. and Koller, M.T. (2007) Letter to the editor: Comments on ‘Analysing and interpreting competing risk data’ by M. Pintilie (original article and author’s reply). Statistics in Medicine, 26, 3521–3523.</p>
+<p>Wolbers, M., Koller, M.T., Witteman, J.C.M. and Steyerberg, E.W. (2009) Prognostic models with competing risks: methods and application to coronary risk prediction. Epidemiology, 20, 555–561.</p>
+<p>Wolf, A., Hulmes, J. and Hopkins, S. (2021) Lateral flow device specificity in phase 4 (post marketing) surveillance. Department of Health and Social Care, <a href="https://www.gov.uk/government/publications/lateral-flow-device-specificity-in-phase-4-postmarketing-surveillance" class="uri">https://www.gov.uk/government/publications/lateral-flow-device-specificity-in-phase-4-postmarketing-surveillance</a>.</p>
+<p>Woodward, M. (2014) Epidemiology: Study Design and Data Analysis, 3rd ed., Chapman &amp; Hall/CRC, Boca Raton, Florida.</p>
+<p>Wu, M.C. and Carroll, R.J. (1988) Estimation and comparison of changes in the presence of informative right censoring by modelling the censoring process. Biometrics, 44, 175–188.</p>
+<p>Yang, S. and Prentice, R.L. (1999) Semiparametric inference in the proportional odds regression model. Journal of the American Statistical Association, 94, 124–136.</p>
+<p>Yuan, M. and Lin, Y. (2006) Model selection and estimation in regression with grouped variables. Journal of the Royal Statistical Society, B, 68, 49–67.</p>
+<p>Zahl, P.H. (1997) Letter to the editor: Comments on ‘Adjusting survival curves for confounders: a review and a new method’ by F.J. Nieto and J. Coresh. American Journal of Epidemiology, 146, 605.</p>
+<p>Zeng, D., Mao, L. and Lin, D.Y. (2016) Maximum likelihood estimation for semiparametric transformation models with interval-censored data. Biometrika, 103, 253–271.</p>
+<p>Zhang, X., Loberiza, F.R., Klein, J.P. and Zhang, M.-J. (2007) A SAS macro for estimation of direct adjusted survival curves based on a stratified Cox regression model. Computer Methods and Programs in Biomedicine, 88, 95–101.</p>
+<p>Zhang, Z. and Sun, J. (2010) Interval censoring. Statistical Methods in Medical Research, 19, 53–70.</p>
+<p>Zhang, Z., Sun, L., Sun, J. and Finkelstein, D.M. (2007) Regression analysis of failure time data with informative interval censoring. Statistics in Medicine, 26, 2533–2546.</p>
+<p>Zhao, Q. and Sun, J. (2004) Generalized log-rank test for mixed interval-censored failure time data. Statistics in Medicine, 23, 1621–1629.</p>
+
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="B.html"><span class="header-section-number">B</span> 额外数据集</a></div>
+<div class="next"><a href="exm.html">示例索引</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav"><li><a class="nav-link" href="#bib">参考书目</a></li></ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

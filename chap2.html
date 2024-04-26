@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 2 章 一些非参数程序 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="分析一组生存数据的第一步是呈现特定总体中个体生存时间的数字或图形总结。这些总结本身可能令人感兴趣，或作为对数据进行更详细分析的前奏。通过生存函数和风险函数的估计，可以方便地总结生存数据。第 2.1 节和第 2.3 节描述了从单个生存数据样本估计这些函数的方法。这些方法被认为是非参数的或无分布的 (distribution-free)，因为它们不需要对生存时间的分布做出特定的假设。...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 2 章 一些非参数程序 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="分析一组生存数据的第一步是呈现特定总体中个体生存时间的数字或图形总结。这些总结本身可能令人感兴趣，或作为对数据进行更详细分析的前奏。通过生存函数和风险函数的估计，可以方便地总结生存数据。第 2.1 节和第 2.3 节描述了从单个生存数据样本估计这些函数的方法。这些方法被认为是非参数的或无分布的 (distribution-free)，因为它们不需要对生存时间的分布做出特定的假设。...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 2 章 一些非参数程序 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="分析一组生存数据的第一步是呈现特定总体中个体生存时间的数字或图形总结。这些总结本身可能令人感兴趣，或作为对数据进行更详细分析的前奏。通过生存函数和风险函数的估计，可以方便地总结生存数据。第 2.1 节和第 2.3 节描述了从单个生存数据样本估计这些函数的方法。这些方法被认为是非参数的或无分布的 (distribution-free)，因为它们不需要对生存时间的分布做出特定的假设。...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="active" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap2" class="section level1" number="2">
+<h1>
+<span class="header-section-number">第 2 章</span> 一些非参数程序<a class="anchor" aria-label="anchor" href="#chap2"><i class="fas fa-link"></i></a>
+</h1>
+<p>分析一组生存数据的第一步是呈现特定总体中个体生存时间的数字或图形总结。这些总结本身可能令人感兴趣，或作为对数据进行更详细分析的前奏。通过生存函数和风险函数的估计，可以方便地总结生存数据。第 <a href="chap2.html#sec2-1">2.1</a> 节和第 <a href="chap2.html#sec2-3">2.3</a> 节描述了从单个生存数据样本估计这些函数的方法。这些方法被认为是非参数的或无分布的 (distribution-free)，因为它们不需要对生存时间的分布做出特定的假设。</p>
+<p>一旦找到生存函数的估计，就可以估计生存时间分布的中位数和其他百分位数，如第 <a href="chap2.html#sec2-4">2.4</a> 节所示。数据的数字总结，基于对数据的概率分布假设得出，将在第 <a href="chap5.html#chap5">5</a> 章考虑。</p>
+<p>当比较两组患者的生存时间时，可以使用生存函数估计对每组个体的生存经历进行非正式比较。然而，有更正式的程序可以比较两组生存数据。第 <a href="chap2.html#sec2-6">2.6</a> 节描述了用于比较两组或多组生存时间的三种非参数程序，即 log-rank, Wilcoxon 和 Peto-Peto 检验。</p>
+<div id="sec2-1" class="section level2" number="2.1">
+<h2>
+<span class="header-section-number">2.1</span> 估计生存函数<a class="anchor" aria-label="anchor" href="#sec2-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>首先假设我们有一个生存时间样本，其中没有任何删失的观测。生存函数 <span class="math inline">\(S(t)\)</span> 由式 <a href="chap1.html#eq:1-2">(1.2)</a> 定义，是个体生存时间大于等于 <span class="math inline">\(t\)</span> 的概率。该函数可以通过<strong>经验生存函数</strong> (empirical survival function) 来估计，由下式给出</p>
+<p><span class="math display" id="eq:2-1">\[\begin{equation}
+\hat S(t)=\frac{\text{生存时间 }\ge t \text{ 的个体数量}}{\text{数据集中的个体数量}}
+\tag{2.1}
+\end{equation}\]</span></p>
+<p>等价地，<span class="math inline">\(\hat S(t)=1 − \hat F(t)\)</span>，其中 <span class="math inline">\(\hat F(t)\)</span> 是经验分布函数 (empirical distribution function)，即研究中在 <span class="math inline">\(t\)</span> 时刻生存的个体总数与该组个体总数的比值。请注意，经验生存函数在第一个死亡时间 <span class="math inline">\(t\)</span> 之前等于 1，在最终死亡时间之后等于 0.</p>
+<p>假设生存函数估计 <span class="math inline">\(\hat S(t)\)</span> 在两个相邻死亡时间之间是恒定的，因此 <span class="math inline">\(\hat S(t)\)</span> 关于 <span class="math inline">\(t\)</span> 的图像是阶跃函数 (step function). 在每个生存时间之后，函数立即下降。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-1" class="example"><strong>示例 2.1  (肺转移) </strong></span><br></p>
+<p>恶性骨肿瘤或骨肉瘤患者治疗中的一项并发症是肿瘤经常扩散到肺部。这种肺部转移会危及生命。在一项有关治疗骨肉瘤引起的肺转移的研究中，Burdette and Gehan (1970) 给出了 11 名男性患者的以下生存时间（以月为单位）：11 13 13 13 13 13 14 14 15 15 17. 使用式 <a href="chap2.html#eq:2-1">(2.1)</a>，生存函数在第 11, 13, 14, 15 和 17 个月时的估计值为 1.000, 0.909, 0.455, 0.273 和 0.091. 生存函数的估计值从时间起点到 11 个月为 1，在 17 个月后为 0. 图 2.1 给出了生存函数估计的图示。</p>
+<details><summary><font color="#8B2232">图 2.1</font>
+</summary><img src="figure/figure%202.1.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>当存在删失观测时，上述示例中所示的估计生存函数的方法无法使用。原因是该方法不允许将在时间 <span class="math inline">\(t\)</span> 之前生存时间删失的个体的信息用于计算时间 <span class="math inline">\(t\)</span> 处的生存函数估计。以下部分描述了可用于存在删失生存时间情况下估计 <span class="math inline">\(S(t)\)</span> 的非参数方法。</p>
+<div id="sec2-1-1" class="section level3" number="2.1.1">
+<h3>
+<span class="header-section-number">2.1.1</span> 生存函数的生命表估计<a class="anchor" aria-label="anchor" href="#sec2-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>生存函数的<strong>生命表估计</strong> (life-table estimate)，也称为生存函数的<strong>精算估计</strong> (actuarial estimate)，是通过首先将观察期划分为一系列时间区间而获得的。这些区间不一定是等长的，尽管它们通常是等长的。使用的区间数量取决于研究中的人数，但通常在 5 到 15 之间。假设有 <span class="math inline">\(m\)</span> 个这样的区间，第 <span class="math inline">\(j(=1,2,\cdots,m)\)</span> 个区间的时间范围为 <span class="math inline">\([t^\prime_{j-1},t^\prime_j)\)</span>，我们取 <span class="math inline">\(t_0 = 0\)</span> 且 <span class="math inline">\(t_m = \infty\)</span>。另外，令 <span class="math inline">\(d_j\)</span> 和 <span class="math inline">\(c_j\)</span> 分别表示该时间区间内的死亡人数和删失生存时间数，令 <span class="math inline">\(n_j\)</span> 为在第 <span class="math inline">\(j\)</span> 个区间开始时存活且面临死亡风险的个体数量。我们现在假设删失程序是这样的，即删失生存时间在第 <span class="math inline">\(j\)</span> 个时间区间内均匀出现，因此在该时间区间内处于风险的平均人数为</p>
+<p><span class="math display" id="eq:2-2">\[\begin{equation}
+n'_j=n_j-c_j/2
+\tag{2.2}
+\end{equation}\]</span></p>
+<p>该假设有时称为<strong>精算假设</strong> (actuarial assumption).</p>
+<p>在第 <span class="math inline">\(j\)</span> 个区间内，死亡概率可以通过 <span class="math inline">\(d_{j}/n_{j}^{\prime}\)</span> 来估计，因此对应的生存概率为 <span class="math inline">\((n'_j-d_j)/n'_j\)</span> 。现考虑个体在时间 <span class="math inline">\(t_{j-1}^{\prime},j=2,3,\ldots,m\)</span> 之后生存的概率，即生存到第 <span class="math inline">\(j\)</span> 个区间开始后的某个时间。这将是个体在前 <span class="math inline">\(j − 1\)</span> 个区间中生存的概率的乘积，因此生存函数的生命表估计由下式给出</p>
+<p><span class="math display" id="eq:2-3">\[\begin{equation}
+S^*(t)=\prod_{i=1}^{j-1}\left(\frac{n_i'-d_i}{n_i'}\right)
+\tag{2.3}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t'_{j-1}\leqslant t&lt;t'_j,j=2,3,\ldots,m\)</span>. 在第一个区间 <span class="math inline">\(t'_0\)</span> 开始之后的生存概率估计当然是 1，而在 <span class="math inline">\(t'_m\)</span> 之外的生存概率估计为 0. 生存函数的图形估计将是一个阶跃函数，在每个时间区间内函数值恒定。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-2" class="example"><strong>示例 2.2  (多发性骨髓瘤患者的生存情况) </strong></span><br></p>
+<p>为了说明生命表估计值的计算，请考虑表 1.3 中给出的 48 名多发性骨髓瘤患者的生存时间数据。在此示例中，将忽略为每个个体收集的关于其他解释变量的信息。</p>
+<p>首先对生存时间进行分组，得出研究前五年和随后三年的死亡患者人数 <span class="math inline">\(d_j\)</span> 和删失人数 <span class="math inline">\(c_j\)</span>. 然后计算每个区间开始时处于死亡风险的人数 <span class="math inline">\(n_j\)</span>，以及调整后的处于风险数 <span class="math inline">\(n′_j\)</span>. 最后，估计每个区间的生存概率，使用式 <a href="chap2.html#eq:2-3">(2.3)</a> 获得生存函数估计。计算如表 2.1 所示，其中时间段以月为单位。第 <span class="math inline">\(j\)</span> 个区间从时间 <span class="math inline">\(t^\prime_{j−1}\)</span> 开始，在时间 <span class="math inline">\(t^\prime_{j}\)</span> 之前结束，表示为 <span class="math inline">\(t_{j−1}^{\prime}-\)</span>，其中 <span class="math inline">\(j=1,2,\cdots,m\)</span>。</p>
+<details><summary><font color="#8B2232">表 2.1</font>
+</summary><img src="figure/table%202.1.png#center" style="width:80.0%"></details><p><br>
+生存函数的生命表估计图如图 2.2 所示。</p>
+<details><summary><font color="#8B2232">图 2.2</font>
+</summary><img src="figure/figure%202.2.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>使用这种方法得到的生存函数估计的形式对其构造中使用的区间选择很敏感，正如直方图的形状取决于类别区间的选择一样。另一方面，生命表估计特别适用于实际死亡时间未知的情况，这时唯一可用的信息是在一系列连续时间区间内发生的死亡数和删失观测数。在实践中，这种区间删失的生存数据相当常见。</p>
+<p>当实际生存时间已知时，仍然可以使用生命表估计，如例 2.2 所示，但生存时间的分组确实会导致一些信息丢失。使用其他方法来估计生存函数会更为合适，例如生存函数的 Kaplan-Meier 估计。</p>
+</div>
+<div id="sec2-1-2" class="section level3" number="2.1.2">
+<h3>
+<span class="header-section-number">2.1.2</span> 生存函数的 Kaplan-Meier 估计<a class="anchor" aria-label="anchor" href="#sec2-1-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>分析未分组的删失生存数据的第一步通常是获得生存函数的 <strong>Kaplan-Meier 估计</strong>。因此，这一估计是经过详细考虑的。为了获得 Kaplan-Meier 估计，需要构建一系列时间区间，就像生命表估计一样。然而，每个这样的区间都被设计成只包含一个死亡时间，且这个死亡时间被认为发生在该区间的开始时刻。</p>
+<p>作为说明，假设 <span class="math inline">\(t_{(1)},t_{(2)}, t_{(3)}\)</span> 是按秩次 (rank order) 排列的三个生存时间，即 <span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;t_{(3)}\)</span>，并且 <span class="math inline">\(c\)</span> 是介于 <span class="math inline">\(t_{(2)}\)</span> 和 <span class="math inline">\(t_{(3)}\)</span> 之间的删失生存时间。然后，构建的区间从时间 <span class="math inline">\(t_{(1)},t_{(2)}\)</span> 和 <span class="math inline">\(t_{(3)}\)</span> 开始，每个区间包含一个死亡时间，尽管在任何特定死亡时间可能有多个个体死亡。请注意，没有区间从删失时间 <span class="math inline">\(c\)</span> 开始。现在假设有 2 个人在 <span class="math inline">\(t_{(1)}\)</span> 死亡，1 个人在 <span class="math inline">\(t_{(2)}\)</span> 死亡，3 个人在 <span class="math inline">\(t_{(3)}\)</span> 死亡。如图 2.3 所示，其中 D 代表死亡，C 代表删失生存时间。</p>
+<details><summary><font color="#8B2232">图 2.3</font>
+</summary><img src="figure/figure%202.3.png#center" style="width:80.0%"></details><p><br>
+时间起点用 <span class="math inline">\(t_0\)</span> 表示，因此有一个从 <span class="math inline">\(t_0\)</span> 开始的初始时间段，在 <span class="math inline">\(t_{(1)}\)</span>（第一次死亡时间）之前结束。这意味着从 <span class="math inline">\(t_0\)</span> 到 <span class="math inline">\(t_{(1)}\)</span> 的区间将不包括死亡时间。第一个构造的区间的范围从 <span class="math inline">\(t_{(1)}\)</span> 延伸到 <span class="math inline">\(t_{(2)}\)</span> 之前，并且由于第二次死亡时间为 <span class="math inline">\(t_{(2)}\)</span>，因此该区间包括 <span class="math inline">\(t_{(1)}\)</span> 处的单个死亡时间。第二个区间从时间 <span class="math inline">\(t_{(2)}\)</span> 开始，在 <span class="math inline">\(t_{(3)}\)</span> 之前结束，包括 <span class="math inline">\(t_{(2)}\)</span> 处的死亡时间和删失时间 <span class="math inline">\(c\)</span>。还有从 <span class="math inline">\(t_{(3)}\)</span> 开始的第三个区间，其中包含最长的生存时间 <span class="math inline">\(t_{(3)}\)</span>。</p>
+<p>一般来说，假设有 <span class="math inline">\(n\)</span> 个个体，生存时间为 <span class="math inline">\(t_1, t_2,...,t_n\)</span>。其中一些观测可能是右删失的，并且也可能有多个个体具有相同的生存时间。因此，我们假设个体中有 <span class="math inline">\(r\)</span> 个死亡时间，其中 <span class="math inline">\(r \le n\)</span>。将这些死亡时间按升序排列后，第 <span class="math inline">\(j\)</span> 个死亡时间记为 <span class="math inline">\(t_{(j)}\)</span>，其中 <span class="math inline">\(j = 1, 2,...,r\)</span>，因此 <span class="math inline">\(r\)</span> 个死亡时间依次为 <span class="math inline">\(t_{(1)} &lt; t_{(2)} &lt; \cdots &lt; t_{(r)}\)</span>。在时间 <span class="math inline">\(t_{(j)}\)</span> 之前还存活的个体数量，包括此时即将死亡的个体数量，表示为 <span class="math inline">\(n_j\)</span>，并且 <span class="math inline">\(d_j\)</span> 表示此时死亡的数量，其中 <span class="math inline">\(j = 1, 2,...,r\)</span>。从 <span class="math inline">\(t_{(j)} − \delta\)</span> 到 <span class="math inline">\(t_{(j)}\)</span> 的时间区间（其中 <span class="math inline">\(\delta\)</span> 是无穷小的时间区间）包含一次死亡时间。由于在 <span class="math inline">\(t_{(j)}\)</span> 之前有 <span class="math inline">\(n_j\)</span> 个个体还存活，并且在 <span class="math inline">\(t_{(j)}\)</span> 时有 <span class="math inline">\(d_j\)</span> 个个体死亡，因此个体在 <span class="math inline">\(t_{(j)} − \delta\)</span> 到 <span class="math inline">\(t_{(j)}\)</span> 的时间区间内死亡的概率估计为 <span class="math inline">\(d_j/n_j\)</span>。在该时间区间内相应的生存概率估计为 <span class="math inline">\((n_j − d_j )/n_j\)</span>。</p>
+<p>有时删失生存时间与一个或多个死亡时间同时出现的情况，导致死亡时间和删失生存时间看似同时发生。在这种情况下计算 <span class="math inline">\(n_j\)</span> 值时，删失生存时间视为在死亡时间之后立即发生。</p>
+<p>从构建时间区间的方式来看，从 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)} − \delta\)</span>（下一次死亡时间之前）的区间不包含任何死亡。因此，从 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)} − \delta\)</span> 的生存概率为 1，并且从 <span class="math inline">\(t_{(j)}-\delta\)</span> 到 <span class="math inline">\(t_{(j)}\)</span> 以及从 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)} − \delta\)</span> 的联合生存概率可估计为 <span class="math inline">\((n_j − d_j )/n_j\)</span>。当 <span class="math inline">\(\delta\)</span> 趋于零时，<span class="math inline">\((n_j − d_j )/n_j\)</span> 就是 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)}\)</span> 区间的生存概率估计。</p>
+<p>我们现在假设样本中个体的死亡是相互独立发生的。那么，在构造的第 <span class="math inline">\(k\)</span> 个时间区间 <span class="math inline">\([t_{(k)}, t_{(k+1)})\)</span>（其中 <span class="math inline">\(k=1, 2,...,r\)</span>，且 <span class="math inline">\(t_{(r+1)}\)</span> 定义为 <span class="math inline">\(\infty\)</span>）中的任意时间 <span class="math inline">\(t\)</span> 处生存函数的估计将是生存到 <span class="math inline">\(t_{(k)}\)</span> 之后的概率的估计。这实际上是生存到 <span class="math inline">\([t_{(k)}, t_{(k+1)})\)</span> 这个区间以及所有之前区间的概率，并由此得到 Kaplan-Meier 生存函数估计，其表达式为：</p>
+<p><span class="math display" id="eq:2-4">\[\begin{equation}
+\hat{S}(t)=\prod_{j=1}^k\left(\frac{n_j-d_j}{n_j}\right)
+\tag{2.4}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r\)</span>，对于 <span class="math inline">\(t&lt;t_{(1)}\)</span> 有 <span class="math inline">\(\hat S(t)=1\)</span>，且 <span class="math inline">\(t_{(r+1)}\)</span> 取 <span class="math inline">\(\infty\)</span>。如果最大的观测是删失生存时间 <span class="math inline">\(t ^*\)</span>，则对于 <span class="math inline">\(t &gt; t^*\)</span>，<span class="math inline">\(\hat S(t)\)</span> 是未定义的。另一方面，如果最大生存时间 <span class="math inline">\(t_{(r)}\)</span> 是右删失观测，则 <span class="math inline">\(n_r = d_r\)</span>，对于 <span class="math inline">\(t \ge t_{(r)}\)</span>，<span class="math inline">\(\hat S(t)\)</span> 为 0. 生存函数的 Kaplan-Meier 估计图是一个阶跃函数，其中生存概率估计在相邻死亡时间之间保持恒定，并在每个死亡时间减少。</p>
+<p>式 <a href="chap2.html#eq:2-4">(2.4)</a> 表明，对于式 <a href="chap2.html#eq:2-3">(2.3)</a> 中生存函数的生命表估计，Kaplan-Meier 估计是由一系列概率估计的乘积得到的。事实上，Kaplan-Meier 估计是式 <a href="chap2.html#eq:2-3">(2.3)</a> 中生命表估计的极限值，因为区间数量趋于无穷大且宽度趋于零。因此，Kaplan-Meier 估计也称为生存函数的<strong>乘积极限估计</strong> (product-limit estimate).</p>
+<p>请注意，如果数据集中没有删失生存时间，则式 <a href="chap2.html#eq:2-4">(2.4)</a> 中的 <span class="math inline">\(n_j − d_j = n_{j+1}, j = 1, 2,...,k\)</span>，并且展开乘积可以得到</p>
+<p><span class="math display">\[\hat{S}(t)=\frac{n_2}{n_1}\times\frac{n_3}{n_2}\times\cdots\times\frac{n_{k+1}}{n_k}\]</span></p>
+<p>对于 <span class="math inline">\(k = 1, 2,...,r − 1\)</span>，这可简化为 <span class="math inline">\(n_{k+1}/n_1\)</span>。对于 <span class="math inline">\(t&lt;t_{(1)}\)</span> 有 <span class="math inline">\(\hat S(t) = 1\)</span>；对于 <span class="math inline">\(t \ge t_{(r)}\)</span> 有 <span class="math inline">\(\hat S(t) = 0\)</span>。现在，<span class="math inline">\(n_1\)</span> 是在第一次死亡时间之前处于风险中的个体数量，即样本的个体数量，<span class="math inline">\(n_{k+1}\)</span> 是生存时间大于等于 <span class="math inline">\(t_{(k+1)}\)</span> 的个体数量。因此，在没有删失的情况下，<span class="math inline">\(\hat S(t)\)</span> 只是式 <a href="chap2.html#eq:2-1">(2.1)</a> 中定义的经验生存函数。因此，Kaplan-Meier 估计是经验生存函数的推广，该函数用于适应删失观测。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-3" class="example"><strong>示例 2.3  (停用宫内节育器的时间) </strong></span><br></p>
+<p>表 1.1 给出了 18 名妇女停用宫内节育器的时间数据。对于这些数据，生存函数 <span class="math inline">\(S(t)\)</span> 表示妇女在任何时间 <span class="math inline">\(t\)</span> 后停用避孕装置的概率。使用式 <a href="chap2.html#eq:2-4">(2.4)</a> 可以很容易地获得生存函数的 Kaplan-Meier 估计，所需的计算如表 2.2 所示。</p>
+<details><summary><font color="#8B2232">表 2.2</font>
+</summary><img src="figure/table%202.2.png#center" style="width:80.0%"></details><p><br>
+生存函数估计如图 2.4 所示。请注意，由于最大停用时间 107 天是删失的，因此在 <span class="math inline">\(t=107\)</span> 之后无法定义 <span class="math inline">\(\hat S(t)\)</span>。</p>
+<details><summary><font color="#8B2232">图 2.4</font>
+</summary><img src="figure/figure%202.4.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec2-1-3" class="section level3" number="2.1.3">
+<h3>
+<span class="header-section-number">2.1.3</span> 生存函数的 Nelson-Aalen 估计<a class="anchor" aria-label="anchor" href="#sec2-1-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>基于单个事件时间生存函数的另一种估计是 <strong>Nelson-Aalen 估计</strong>，由下式给出</p>
+<p><span class="math display" id="eq:2-5">\[\begin{equation}
+\tilde{S}(t)=\prod_{j=1}^k\exp(-d_j/n_j)
+\tag{2.5}
+\end{equation}\]</span></p>
+<p>如第 <a href="chap2.html#sec2-3-3">2.3.3</a> 节所示，可以从累积风险函数估计中获得该估计。此外，生存函数的 Kaplan-Meier 估计可以看作是 Nelson-Aalen 估计的近似。为了证明这一点，利用如下结果</p>
+<p><span class="math display">\[\begin{aligned}e^{-x}&amp;=1-x+\frac{x^2}{2}-\frac{x^3}{6}+\cdots\end{aligned}\]</span></p>
+<p>当 <span class="math inline">\(x\)</span> 很小时，该式近似于 <span class="math inline">\(1−x\)</span>。因此只要 <span class="math inline">\(d+j\)</span> 相对于 <span class="math inline">\(n_j\)</span> 很小（除非在最长的生存时间），就有 <span class="math inline">\(\exp ({-d_j/n_j})\approx1-(d_j/n_j)=(n_j-d_j)/n_j\)</span>。因此，式 <a href="chap2.html#eq:2-4">(2.4)</a> 中的 Kaplan-Meier 估计 <span class="math inline">\(\hat S(t)\)</span> 近似于式 <a href="chap2.html#eq:2-5">(2.5)</a> 中的 Nelson-Aalen 估计 <span class="math inline">\(\tilde S(t)\)</span>。</p>
+<p>生存函数的 Nelson-Aalen 估计，也称为 <strong>Altshuler 估计</strong>，在任何给定时间都始终大于 Kaplan-Meier 估计，因为对于 <span class="math inline">\(x\)</span> 的所有值，<span class="math inline">\(e−x\ge 1−x\)</span>。尽管已证明 Nelson-Allen 估计在小样本中比 Kaplan-Meiser 估计表现更好，但在许多情况下，估计值将非常相似，特别是在较早的生存时间。由于 Kaplan-Meier 估计是经验生存函数的一般形式，因此具有许多值得推荐的地方。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-4" class="example"><strong>示例 2.4  (停用宫内节育器的时间) </strong></span><br></p>
+<p>表 2.2 所示的值给出了停用宫内节育器数据的生存函数的 Kaplan-Meier 估计，可用于计算 Nelson-Aalen 估计。这一估计如表 2.3 所示。</p>
+<details><summary><font color="#8B2232">表 2.3</font>
+</summary><img src="figure/table%202.3.png#center" style="width:80.0%"></details><p><br>
+从该表中我们可以看出，Kaplan-Meier 和 Nelson-Aalen 对生存函数的估计相差小于 0.04。然而，当我们在第 <a href="chap2.html#sec2-2">2.2</a> 节中考虑这些估计的精度时，我们发现 0.04 的差异没有实际意义。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec2-2" class="section level2" number="2.2">
+<h2>
+<span class="header-section-number">2.2</span> 生存函数估计的标准误<a class="anchor" aria-label="anchor" href="#sec2-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>解释任何量的估计的重要辅助手段是估计的精度，这反映在估计的标准误中。其定义为估计的方差估计的平方根，并且可用于构造感兴趣的量的区间估计。本节给出了生存函数估计的标准误。</p>
+<p>由于 Kaplan-Meier 估计是生存函数最重要和最广泛使用的估计，因此本节将详细介绍 <span class="math inline">\(\hat S(t)\)</span> 标准误的推导。这种推导的细节可以在第一次阅读时省略。</p>
+<div id="sec2-2-1" class="section level3" number="2.2.1">
+<h3>
+<span class="header-section-number">2.2.1</span> Kaplan-Meier 估计的标准误<a class="anchor" aria-label="anchor" href="#sec2-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>对于 <span class="math inline">\([t_{(k)},t_{(k+1)})\)</span> 区间中的任何 <span class="math inline">\(t\)</span> 值，生存函数的 Kaplan-Meier 估计可以写为</p>
+<p><span class="math display">\[\begin{aligned}\hat{S}(t)=\prod_{j=1}^k\hat{p}_j\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(k=1,2,\cdots,r\)</span>，<span class="math inline">\(\hat p_j=(n_j−d_j)/n_j\)</span> 是个体在开始于 <span class="math inline">\(t_{(j)}\)</span> 的时间区间内生存的概率估计，<span class="math inline">\(j=1,2,\cdots,r\)</span>。取对数</p>
+<p><span class="math display">\[\log\hat{S}(t)=\sum_{j=1}^k\log\hat{p}_j\]</span></p>
+<p>因此 <span class="math inline">\(\log \hat S(t)\)</span> 的方差由下式给出</p>
+<p><span class="math display" id="eq:2-6">\[\begin{equation}
+\text{var }\left\{\log\hat{S}(t)\right\}=\sum_{j=1}^k\text{ var }\left\{\log\hat{p}_j\right\}
+\tag{2.6}
+\end{equation}\]</span></p>
+<p>现在，可以假设在开始于 <span class="math inline">\(t_{(j)}\)</span> 的区间中生存的个体数量服从参数为 <span class="math inline">\(n_j\)</span> 和 <span class="math inline">\(p_j\)</span> 的二项分布 (binomial distribution)，其中 <span class="math inline">\(p_j\)</span> 是在该区间中生存的真实概率。生存数为 <span class="math inline">\(n_j−d_j\)</span>，利用参数为 <span class="math inline">\(n,p\)</span> 的二项随机变量的方差为 <span class="math inline">\(np(1−p)\)</span> 这一结果，<span class="math inline">\(n_j−d_j\)</span> 的方差由下式给出</p>
+<p><span class="math display">\[\text{var}\,\,(n_j-d_j)=n_jp_j(1-p_j)\]</span></p>
+<p>由于 <span class="math inline">\(\hat p_j=(n_j-d_j)/n_j\)</span>，<span class="math inline">\(\hat p_j\)</span> 的方差为 <span class="math inline">\(\text{var}\,(n_j-d_j)/n_j^2\)</span>，即 <span class="math inline">\(p_j(1-p_j)/n_j\)</span>。那么 <span class="math inline">\(\hat p_j\)</span> 的方差可估计为</p>
+<p><span class="math display" id="eq:2-7">\[\begin{equation}
+\hat p_j(1-\hat p_j)/n_j
+\tag{2.7}
+\end{equation}\]</span></p>
+<p>为了获得 <span class="math inline">\(\log \hat p_j\)</span> 的方差，我们需利用随机变量函数近似方差的一般结果。根据这个结果，随机变量 <span class="math inline">\(X\)</span> 的函数 <span class="math inline">\(g(X)\)</span> 的方差由下式给出</p>
+<p><span class="math display" id="eq:2-8">\[\begin{equation}
+\text{var }\{g(X)\}\approx\left\{\frac{\text{d}g(X)}{\text{d}X}\right\}^2\text{ var}\left(X\right)
+\tag{2.8}
+\end{equation}\]</span></p>
+<p>这称为随机变量函数方差的泰勒级数近似 (Taylor series approximation). 使用式 <a href="chap2.html#eq:2-8">(2.8)</a>，<span class="math inline">\(\log \hat p_j\)</span> 的近似方差为 <span class="math inline">\(\mathrm{var}\left(\hat{p}_j\right)/\hat{p}_j^2\)</span>，再使用式 <a href="chap2.html#eq:2-7">(2.7)</a>，<span class="math inline">\(\log \hat p_j\)</span> 的近似方差为 <span class="math inline">\(\left(1-\hat{p}_j\right)/\left(n_j\hat{p}_j\right)\)</span>，替换 <span class="math inline">\(\hat p_j\)</span> 后简化为</p>
+<p><span class="math display" id="eq:2-9">\[\begin{equation}
+\frac{d_j}{n_j(n_j-d_j)}
+\tag{2.9}
+\end{equation}\]</span></p>
+<p>那么，根据式 <a href="chap2.html#eq:2-6">(2.6)</a></p>
+<p><span class="math display" id="eq:2-10">\[\begin{equation}
+\text{var }\left\{\log\hat{S}(t)\right\}\approx\sum_{j=1}^k\frac{d_j}{n_j(n_j-d_j)}
+\tag{2.10}
+\end{equation}\]</span></p>
+<p>再次应用式 <a href="chap2.html#eq:2-8">(2.8)</a> 中的结果，给出</p>
+<p><span class="math display">\[\text{var }\left\{\log\hat{S}(t)\right\}\approx\frac{1}{[\hat{S}(t)]^2}\text{var }\left\{\hat{S}(t)\right\}\]</span></p>
+<p>因此</p>
+<p><span class="math display" id="eq:2-11">\[\begin{equation}
+\text{var }\left\{\hat{S}(t)\right\}\approx[\hat{S}(t)]^2\sum_{j=1}^k\frac{d_j}{n_j(n_j-d_j)}
+\tag{2.11}
+\end{equation}\]</span></p>
+<p>最后，生存函数的 Kaplan-Meier 估计的标准误，定义为估计的方差估计的平方根，由下式给出</p>
+<p><span class="math display" id="eq:2-12">\[\begin{equation}
+\text{se }\left\{\hat{S}(t)\right\}\approx\hat{S}(t)\left\{\sum_{j=1}^k\frac{d_j}{n_j(n_j-d_j)}\right\}^{\frac{1}{2}}
+\tag{2.12}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\le t&lt;t_{(k+1)}\)</span>。这个结果称为 <strong>Greenwood 公式</strong>。</p>
+<p>如果没有删失生存时间，则 <span class="math inline">\(n_j-d_j=n_{j+1}\)</span>，式 <a href="chap2.html#eq:2-9">(2.9)</a> 成为 <span class="math inline">\((n_j-n_{j+1})/n_jn_{j+1}\)</span>。现在</p>
+<p><span class="math display">\[\begin{aligned}\sum_{j=1}^k\frac{n_j-n_{j+1}}{n_jn_{j+1}}&amp;=\sum_{j=1}^k\left(\frac{1}{n_{j+1}}-\frac{1}{n_j}\right)=\frac{n_1-n_{k+1}}{n_1n_{k+1}}\end{aligned}\]</span></p>
+<p>在无删失时，对于 <span class="math inline">\(t_{(k)}\le t&lt;t_{(k+1)},k=1,2,\cdots,r-1\)</span> 有 <span class="math inline">\(\hat S(t)=n_{k+1}/n_1\)</span>，因此上式可写作</p>
+<p><span class="math display">\[\frac{1-\hat S(t)}{n_1\hat S(t)}\]</span></p>
+<p>因此，根据式 <a href="chap2.html#eq:2-11">(2.11)</a>，<span class="math inline">\(\hat S(t)\)</span> 的方差估计为 <span class="math inline">\(\hat{S}(t)[1-\hat{S}(t)]/n_1\)</span>。这是式 <a href="chap2.html#eq:2-1">(2.1)</a> 中给出的经验生存函数方差的估计，其假设在时间 <span class="math inline">\(t\)</span> 处于风险中的个体数量服从参数为 <span class="math inline">\(n_1,S(t)\)</span> 的二项分布。</p>
+</div>
+<div id="sec2-2-2" class="section level3" number="2.2.2">
+<h3>
+<span class="header-section-number">2.2.2</span> 其他估计的标准误<a class="anchor" aria-label="anchor" href="#sec2-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>生存函数的生命表估计在形式上类似于 Kaplan-Meier 估计，因此该估计的标准误是以类似的方式获得的。沿用 <a href="chap2.html#sec2-1-1">2.1.1</a> 节的记号，生命表估计的标准误由下式给出</p>
+<p><span class="math display">\[\text{se }\left\{S^*(t)\right\}\approx S^*(t)\left\{\sum_{j=1}^k\frac{d_j}{n_j^\prime(n_j^\prime-d_j)}\right\}^{\frac{1}{2}}\]</span></p>
+<p>Nelson-Aalen 估计的标准误为</p>
+<p><span class="math display">\[\text{se }\left\{\tilde{S}(t)\right\}\approx\tilde{S}(t)\left\{\sum_{j=1}^k\frac{d_j}{n_j^2}\right\}^{\frac12}\]</span></p>
+<p>但也存在其他表达式。</p>
+</div>
+<div id="sec2-2-3" class="section level3" number="2.2.3">
+<h3>
+<span class="header-section-number">2.2.3</span> 生存函数的置信区间<a class="anchor" aria-label="anchor" href="#sec2-2-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>一旦计算出生存函数的标准误估计，就可以找到生存函数在给定时间 <span class="math inline">\(t\)</span> 处的置信区间。置信区间是生存函数的区间估计，其以预设的概率包含真实生存函数值。以这种方式构建的区间有时称为<strong>逐点置信区间</strong> (pointwise confidence intervals)，因为它们适用于特定的生存时间。</p>
+<p>通过在给定时间 <span class="math inline">\(t\)</span> 假设生存函数的估计服从均值为 <span class="math inline">\(S(t)\)</span>，方差由式 <a href="chap2.html#eq:2-11">(2.11)</a> 给出的正态分布，我们可以获得生存函数在 <span class="math inline">\(t\)</span> 时刻真实值的置信区间。该区间是根据标准正态分布的百分位点计算得出的。因此，如果 <span class="math inline">\(Z\)</span> 是一个具有标准正态分布的随机变量，则该分布的上（单侧）<span class="math inline">\(\alpha/2\)</span> 分位点或双侧 <span class="math inline">\(\alpha\)</span> 分位点为 <span class="math inline">\(z_{\alpha/2}\)</span>，满足 <span class="math inline">\(\text P(Z&gt;z_{\alpha/2})=\alpha/2\)</span>。该概率是标准正态曲线在下 <span class="math inline">\(z_{\alpha/2}\)</span> 右侧的面积，如图 2.5 所示。例如，标准正态分布的双侧 5% 和 1% 分位点 <span class="math inline">\(z_{0.025}\)</span> 和 <span class="math inline">\(z_{0.005}\)</span> 分别为 1.96 和 2.58.</p>
+<details><summary><font color="#8B2232">图 2.5</font>
+</summary><img src="figure/figure%202.5.png#center" style="width:80.0%"></details><p><br>
+对于给定的 <span class="math inline">\(t\)</span> 值，<span class="math inline">\(S(t)\)</span> 的 <span class="math inline">\(100(1−\alpha)\%\)</span> 置信区间为 <span class="math inline">\(\left[\hat S(t)-z_{\alpha/2}\,\text{se}\,\{\hat S(t)\},\,\,\hat S(t)+z_{\alpha/2}\,\text{se}\,\{\hat S(t)\}\right]\)</span>，其中，<span class="math inline">\(\text{se}\,\{\hat S(t)\}\)</span> 可根据式 <a href="chap2.html#eq:2-12">(2.12)</a> 得出。<span class="math inline">\(S(t)\)</span> 的这些区间可以叠加在生存函数估计的图中，如<a href="chap2.html#exm:ex2-5">示例 2.5</a> 所示。</p>
+<p>该方法的问题在于其置信区间是对称的。当生存函数估计接近 0 或 1 时，对称区间是不合适的，因为它们可能导致生存函数的置信区间超出 (0, 1) 区间。一个务实的解决方案是将任何大于 1 的上限替换为 1.0，将任何小于 0 的下限替换为 0.0.</p>
+<p>另一种方法是先将 <span class="math inline">\(\hat S(t)\)</span> 转换为 <span class="math inline">\((−\infty, \infty)\)</span> 范围内的一个值，然后为转换后的值获得一个置信区间。接着，将得到的置信区间反向转换，以给出 <span class="math inline">\(S(t)\)</span> 本身的置信区间。可能的转换方法包括 logistic 转换，即 <span class="math inline">\(\log[S(t)/\{1 − S(t)\}]\)</span>，以及互补双对数 (complementary log-log) 转换，即 <span class="math inline">\(\log\{− \log S(t)\}\)</span>。注意到，根据式 <a href="chap1.html#eq:1-8">(1.8)</a>，后一个量是累积风险函数的对数。在任何情况下，都可以使用式 <a href="chap2.html#eq:2-8">(2.8)</a> 中的近似来获得 <span class="math inline">\(\hat S(t)\)</span> 转换值的标准误。</p>
+<p>例如，<span class="math inline">\(\log\{-\log\hat{S}(t)\}\)</span> 的方差是从式 <a href="chap2.html#eq:2-10">(2.10)</a> 中 <span class="math inline">\(\text{var}\left\{\log\hat{S}(t)\right\}\)</span> 的表达式获得的。使用式 <a href="chap2.html#eq:2-8">(2.8)</a> 中的一般结果，</p>
+<p><span class="math display">\[\mathrm{var}\left\{\log(-X)\right\}\approx\frac1{X^2}\operatorname{var}\left(X\right)\]</span></p>
+<p>令 <span class="math inline">\(X=\log\hat{S}(t)\)</span> 得到</p>
+<p><span class="math display">\[\begin{aligned}\text{var }\left[\log\{-\log\hat{S}(t)\}\right]\approx\frac1{\{\log\hat{S}(t)\}^2}\sum_{j=1}^k\frac{d_j}{n_j(n_j-d_j)}\end{aligned}\]</span></p>
+<p><span class="math inline">\(\log\{-\log\hat{S}(t)\}\)</span> 的标准误为此量的平方根，得到如下形式的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信限</p>
+<p><span class="math display">\[\hat{S}(t)^{\exp[\pm z_{\alpha/2}\operatorname{se}\{\log[-\log\hat{S}(t)]\}]}\]</span></p>
+<p>其中 <span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点。</p>
+<p>进一步的问题是，在生存时间分布的尾部，即当 <span class="math inline">\(\hat S(t)\)</span> 接近于 0 或 1 时，使用 Greenwood 公式获得的 <span class="math inline">\(\hat S(t)\)</span> 的方差可能会低估实际方差。在这些情况下，可以使用 <span class="math inline">\(\hat S(t)\)</span> 标准误的替代表达式。Peto et al. (1977) 提出 <span class="math inline">\(\hat S(t)\)</span> 的标准误应根据下式获得</p>
+<p><span class="math display">\[\text{se}\left\{\hat{S}(t)\right\}=\frac{\hat{S}(t)√\{1-\hat{S}(t)\}}{√(n_k)}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r,\hat S(t)\)</span> 为 <span class="math inline">\(S(t)\)</span> 的 Kaplan-Meier 估计，<span class="math inline">\(n_k\)</span> 为在 <span class="math inline">\(t_{(k)}\)</span> 处于风险的个体数，<span class="math inline">\(t_{(k)}\)</span> 为第 <span class="math inline">\(k\)</span> 个构造区间的起点。</p>
+<p><span class="math inline">\(\hat S(t)\)</span> 标准误的这种表达式是保守的，因为获得的标准误往往会大于应有的值。因此，建议一般使用 Greenwood 估计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-5" class="example"><strong>示例 2.5  (停用宫内节育器的时间) </strong></span><br></p>
+<p>表 2.4 给出了例 1.1 中关于停用宫内节育器时间数据的生存函数估计的标准误以及该函数相应真值的 95% 置信限。在此表中，位于范围 (0, 1) 之外的置信限已替换为 0 或 1.</p>
+<details><summary><font color="#8B2232">表 2.4</font>
+</summary><img src="figure/table%202.4.png#center" style="width:80.0%"></details><p><br>
+从该表中我们可以看出，一般来说，生存函数估计的标准误随着停止时间的增加而增加。这是因为晚期生存函数是基于较少个体来估计的。图 2.6 给出了生存函数估计图，其中 95% 置信限显示为虚线。</p>
+<details><summary><font color="#8B2232">图 2.6</font>
+</summary><img src="figure/figure%202.6.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>需要注意的是，图 2.6 中所示生存函数的置信限仅对给定时间有效。需要不同的方法来生成置信带 (confidence bands)，使得生存函数对于所有 <span class="math inline">\(t\)</span> 值以给定概率（例如 0.95）包含在带中。这些置信带通常会比由逐点置信限形成的带更宽。不再赘述细节，但本章最后一节会给出这些方法的参考文献。还要注意，这些区间的宽度远大于生存函数的 Kaplan-Meier 和 Nelson-Aalen 估计之间的差异，如表 2.2 和 2.3 所示。基于生命表和生存函数 Nelson-Aalen 估计的置信限可通过类似计算获得。</p>
+</div>
+</div>
+<div id="sec2-3" class="section level2" number="2.3">
+<h2>
+<span class="header-section-number">2.3</span> 估计风险函数<a class="anchor" aria-label="anchor" href="#sec2-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>单个生存数据样本也可使用风险函数进行总结，该函数显示了瞬时死亡风险与时间之间的依赖关系。有多种方法可以估计该函数，本节将描述其中的两种方法。</p>
+<div id="sec2-3-1" class="section level3" number="2.3.1">
+<h3>
+<span class="header-section-number">2.3.1</span> 风险函数的生命表估计<a class="anchor" aria-label="anchor" href="#sec2-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设生存时间已被划分成一系列 <span class="math inline">\(m\)</span> 个区间，就像在构建生存函数生命表估计时那样。在每个区间内，单位时间内平均死亡风险合适的估计是该区间内死亡人数除以该区间内平均生存时间。后者是区间内平均风险人数的乘积，再乘以区间的长度。设第 <span class="math inline">\(j\)</span> 个时间区间内的死亡人数为 <span class="math inline">\(d_j,j=1,2,\cdots,m\)</span>，并假设 <span class="math inline">\(n^\prime_j\)</span> 是该时间区间内面临死亡风险的平均人数，其中 <span class="math inline">\(n^\prime_j\)</span> 由式 <a href="chap2.html#eq:2-2">(2.2)</a> 给出。假设第 <span class="math inline">\(j\)</span> 个时间区间内死亡率恒定，则该时间区间内的平均生存时间为 <span class="math inline">\((n^\prime_j-d_j/2)\tau_j\)</span>，其中 <span class="math inline">\(\tau_j\)</span> 是第 <span class="math inline">\(j\)</span> 个时间区间的长度。第 <span class="math inline">\(j\)</span> 个时间区间内风险函数的生命表估计由下式给出</p>
+<p><span class="math display">\[\begin{aligned}h^*(t)&amp;=\frac{d_j}{(n_j^\prime-d_j/2)\tau_j}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(t'_{j-1}\leqslant t&lt;t'_j,j=1,2,\ldots,m\)</span>，因此 <span class="math inline">\(h^*(t)\)</span> 是阶跃函数。</p>
+<p>Gehan (1969) 表明该估计的渐近标准误为</p>
+<p><span class="math display">\[\begin{aligned}\text{se}\left\{h^*(t)\right\}&amp;=\frac{h^*(t)\surd\{1-[h^*(t)\tau_j/2]^2\}}{\surd(d_j)}\end{aligned}\]</span></p>
+<p><span class="math inline">\(m\)</span> 个时间区间中每个时间区间内相应真实风险的置信区间可以按照 <a href="chap2.html#sec2-2-3">2.2.3</a> 节中描述的方式获得。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-6" class="example"><strong>示例 2.6  (多发性骨髓瘤患者的生存) </strong></span><br></p>
+<p>表 2.1 给出了<a href="chap1.html#exm:ex1-3">示例 1.3</a> 中 48 名多发性骨髓瘤患者生存时间数据生存函数的生命表估计。使用与<a href="chap2.html#exm:ex2-2">示例 2.2</a> 中相同的时间区间，表 2.5 中给出了风险函数生命表估计的计算结果。</p>
+<details><summary><font color="#8B2232">表 2.5</font>
+</summary><img src="figure/table%202.5.png#center" style="width:80.0%"></details><p><br>
+风险函数估计如图 2.7 所示，为阶跃函数。一般的模式是，在确诊后的头两年内，风险大致保持不变，之后风险会下降，然后逐渐增加。然而，在解释这一估计时需要谨慎，因为确诊两年后很少有人死亡。</p>
+<details><summary><font color="#8B2232">图 2.7</font>
+</summary><img src="figure/figure%202.7.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec2-3-2" class="section level3" number="2.3.2">
+<h3>
+<span class="header-section-number">2.3.2</span> Kaplan-Meier 型估计<a class="anchor" aria-label="anchor" href="#sec2-3-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>对于未分组的生存数据，估计风险函数的一种自然方法是，将给定死亡时间的死亡人数与该时间点处于风险的人数之比作为风险函数的估计。如果假设相邻死亡时间之间的风险函数是恒定的，那么可进一步通过将风险值除以时间区间的长度来找到单位时间的风险。因此，如果在第 <span class="math inline">\(j\)</span> 个死亡时间 <span class="math inline">\(t_{(j)}\)</span> 有 <span class="math inline">\(d_j\)</span> 人死亡，<span class="math inline">\(j=1,2,...,r\)</span>，且在时间 <span class="math inline">\(t_{(j)}\)</span> 处于风险的人数为 <span class="math inline">\(n_j\)</span>，那么区间 <span class="math inline">\([t_j,t_{(j+1)})\)</span> 内的风险函数的估计为：</p>
+<p><span class="math display" id="eq:2-13">\[\begin{equation}
+\hat{h}(t)=\frac{d_j}{n_j\tau_j}
+\tag{2.13}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t_j\le t&lt;t_{(j+1)},\tau_j=t_{(j+1)}-t_j\)</span>。请注意，无法使用式 <a href="chap2.html#eq:2-13">(2.13)</a> 来估计以最终死亡时间为起点的区间的风险，因为该区间是开的 (open-ended)。</p>
+<p>式 <a href="chap2.html#eq:2-13">(2.13)</a> 中的估计称为 Kaplan-Meier 型估计，因为从中得出的生存函数估计为 Kaplan-Meier 估计。为了证明这一点，请注意，由于 <span class="math inline">\(\hat{h}(t),t_{(j)}\leqslant t&lt;t_{(j+1)}\)</span> 是对第 <span class="math inline">\(j\)</span> 个区间中每单位时间的死亡风险的估计，因此该区间中的死亡概率为 <span class="math inline">\(\hat{h}(t)\tau_j\)</span>，即 <span class="math inline">\(d_j/n_j\)</span>。因此，该区间中相应生存概率的估计为 <span class="math inline">\(1−(d_j/n_j)\)</span>，生存函数估计如式 <a href="chap2.html#eq:2-4">(2.4)</a> 所示。</p>
+<p>可以根据 <span class="math inline">\(d_j\)</span> 的方差得到 <span class="math inline">\(\hat h(t)\)</span> 的近似标准误，根据 <a href="chap2.html#sec2-2-1">2.2.1</a> 节，可以假设 <span class="math inline">\(d_j\)</span> 服从参数为 <span class="math inline">\(n_j,p_j\)</span> 的二项分布，其中 <span class="math inline">\(p_j\)</span> 是长度为 <span class="math inline">\(\tau\)</span> 的区间内的死亡概率。因此 <span class="math inline">\(\text{var}\left(d_j\right)=n_jp_j\left(1-p_j\right)\)</span>，使用 <span class="math inline">\(d_j/n_j\)</span> 估计 <span class="math inline">\(p_j\)</span>，从而给出</p>
+<p><span class="math display">\[\text{se}\left\{\hat{h}(t)\right\}=\hat{h}(t)\sqrt{\frac{n_j-d_j}{n_jd_j}}\]</span></p>
+<p>然而当 <span class="math inline">\(d_j\)</span> 很小时，使用该标准误构建的置信区间太宽，实际无法使用。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-7" class="example"><strong>示例 2.7  (停用宫内节育器的时间) </strong></span><br></p>
+<p>再次考虑<a href="chap1.html#exm:ex1-1">示例 1.1</a> 中给出的 18 名妇女停用宫内节育器的时间数据。表 2.2 给出了这些数据的生存函数的 Kaplan-Meier 估计，表 2.6 给出了根据式 <a href="chap2.html#eq:2-13">(2.13)</a> 计算的风险函数的相应 Kaplan-Meier 型估计。还给出了 <span class="math inline">\(\hat h(t)\)</span> 的近似标准误。</p>
+<details><summary><font color="#8B2232">表 2.6</font>
+</summary><img src="figure/table%202.6.png#center" style="width:80.0%"></details><p><br>
+图 2.8 显示了风险函数估计图。从这个图像来看，有一些证据表明，宫内节育器使用的时间越长，停用的风险就越大，但情况并不十分清楚。风险函数估计在不同时间的近似标准误对解释该图几乎没有帮助。</p>
+<details><summary><font color="#8B2232">图 2.8</font>
+</summary><img src="figure/figure%202.8.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>在实践中，通过这种方式获得的风险函数估计往往会相当不规则。因此，可以对风险函数图进行“平滑” (smoothed) 处理，以便更清楚地看到任何模式。有多种方法可以平滑风险函数，这些方法会得到在 <span class="math inline">\(t\)</span> 邻域内的死亡时间点上估计风险函数 <span class="math inline">\(\hat h(t)\)</span> 的加权平均值。例如，基于 <span class="math inline">\(r\)</span> 个有序的死亡时间 <span class="math inline">\(t_{(1)}, t_{(2)},...,t_{(r)}\)</span>，在时间 <span class="math inline">\(t_{(j)}\)</span> 有 <span class="math inline">\(d_j\)</span> 人死亡以及 <span class="math inline">\(n_j\)</span> 人处于风险中，可以通过以下方式找到基于核函数平滑的风险函数估计：</p>
+<p><span class="math display">\[h^\dagger(t)=b^{-1}\sum_{j=1}^r0.75\left\{1-\left(\frac{t-t_{(j)}}{b}\right)^2\right\}\frac{d_j}{n_j}\]</span></p>
+<p>其中 <span class="math inline">\(b\)</span> 的值需要选择。函数 <span class="math inline">\(h^\dagger (t)\)</span> 定义在从 <span class="math inline">\(b\)</span> 到 <span class="math inline">\(t_{(r)}−b\)</span> 区间所有的 <span class="math inline">\(t\)</span> 值上，其中 <span class="math inline">\(t_{(r)}\)</span> 是最大的死亡时间。对于这个区间内的任何 <span class="math inline">\(t\)</span> 值，区间 <span class="math inline">\((t−b,t+b)\)</span> 内的死亡时间都会对该加权平均值有所贡献。参数 <span class="math inline">\(b\)</span> 称为<strong>带宽</strong> (bandwidth)，其值控制着图形的形状；<span class="math inline">\(b\)</span> 的值越大，平滑程度就越高。有公式可以导出“最优”的 <span class="math inline">\(b\)</span> 值，但这些公式往往相当繁琐。有关详情可以在本章最后一节提供的参考文献中找到。在本书中，我们提倡使用建模方法分析生存数据，因此，后续章节将考虑基于模型的风险函数估计。</p>
+</div>
+<div id="sec2-3-3" class="section level3" number="2.3.3">
+<h3>
+<span class="header-section-number">2.3.3</span> 估计累积风险函数<a class="anchor" aria-label="anchor" href="#sec2-3-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>如第 1 章 <a href="chap1.html#sec1-4-3">1.4.3</a> 节所述，根据在给定时间内发生的预期事件数对累积风险函数进行解释，该函数在识别生存数据模型方面很重要，这将在 <a href="chap4.html#sec4-4">4.4</a> 节和 <a href="chap5.html#sec5-2">5.2</a> 节中看到。此外，由于累积风险函数的导数是风险函数本身，因此累积风险函数斜率提供了有关潜在风险函数形状的信息。例如，在某个时间区间内的线性累积风险函数表明，风险在该时间区间内是恒定的。现在描述可用于估计该函数的方法。</p>
+<p>时间 <span class="math inline">\(t\)</span> 的累积风险 <span class="math inline">\(H(t)\)</span> 在式 <a href="chap1.html#eq:1-7">(1.7)</a> 中定义为风险函数的积分，但使用式 <a href="chap1.html#eq:1-8">(1.8)</a> 来求解更为简便。根据这一结果，我们有 <span class="math inline">\(H(t) = -\log S(t)\)</span>，其中 <span class="math inline">\(S(t)\)</span> 表示生存函数，即在时间 <span class="math inline">\(t\)</span> 仍然生存的概率。</p>
+<p>现在使用式 <a href="chap2.html#eq:2-4">(2.4)</a></p>
+<p><span class="math display">\[\begin{aligned}\hat{H}(t)&amp;=-\sum_{j=1}^k\log\left(\frac{n_j-d_j}{n_j}\right)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r\)</span> 且 <span class="math inline">\(t_{(1)},t_{(2)},\ldots,t_{(r)}\)</span> 为 <span class="math inline">\(t\)</span> 个有序的死亡时间且 <span class="math inline">\(t_{(r+1)}=\infty\)</span>。</p>
+<p>若使用风险函数的 Nelson-Aalen 估计，则累积风险函数估计 <span class="math inline">\(\tilde{H}(t)=-\log\tilde{S}(t)\)</span> 由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\tilde{H}(t)=\sum_{j=1}^k\frac{d_j}{n_j}\end{aligned}\]</span></p>
+<p>这是从第一个时间区间到第 <span class="math inline">\(k\)</span> 个时间区间的死亡概率估计的累积和，<span class="math inline">\(k=1,2,\ldots r\)</span>。 因此，这个量作为累积风险的估计是直观的。</p>
+<p>如果数据中最长的生存时间是右删失的，则生存函数的 Kaplan-Meier 估计在该时间之后为 0，并且无法确定 <span class="math inline">\(\hat{H}(t)=-\operatorname{log}\hat{S}(t)\)</span> 的值。然而，当使用 Nelson-Aalen 估计 <span class="math inline">\(\tilde H(t)\)</span> 时，可以在最晚的事件时间估计累积风险函数。</p>
+<p>对累积风险函数的估计也可以推导出相应风险函数的估计，因为将估计的累积风险函数相邻值之差除以时间区间长度后，就能得到风险估计。具体来说，Nelson-Aalen 累积风险估计相邻值之差可以直接推导出 <a href="chap2.html#sec2-3-2">2.3.2</a> 节中风险函数的估计。</p>
+</div>
+</div>
+<div id="sec2-4" class="section level2" number="2.4">
+<h2>
+<span class="header-section-number">2.4</span> 估计生存时间的中位数和百分位数<a class="anchor" aria-label="anchor" href="#sec2-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>由于生存时间的分布往往呈正偏态，因此中位数是分布位置首选的总结性度量。一旦估计了生存函数，就可以直接获得中位生存时间的估计。这是所研究总体中 50% 的个体预期生存的时间，由值 <span class="math inline">\(t{(50)}\)</span> 给出，即 <span class="math inline">\(S\{t(50)\} = 0.5\)</span>。</p>
+<p>因为 <span class="math inline">\(S(t)\)</span> 的非参数估计是阶跃函数，所以通常无法得到使生存函数恰好等于 0.5 的生存时间估计。相反，中位生存时间估计 <span class="math inline">\(\hat t (50)\)</span> 定义为生存函数估计小于 0.5 的最小观测生存时间。</p>
+<p>在数学形式上</p>
+<p><span class="math display">\[\begin{aligned}\hat{t}(50)=\min\{t_i\mid\hat{S}(t_i)&lt;0.5\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(t_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的生存时间，<span class="math inline">\(i=1,2,\ldots,n\)</span>。由于生存函数估计只在死亡时发生变化，这相当于定义</p>
+<p><span class="math display">\[\begin{aligned}\hat{t}(50)=\min\{t_{(j)}\mid\hat{S}(t_{(j)})&lt;0.5\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(j)}\)</span> 为第 <span class="math inline">\(j\)</span> 个死亡时间，<span class="math inline">\(j=1,2,\ldots,r\)</span>。</p>
+<p>在特定情况下，当生存函数估计在 <span class="math inline">\(t_{(j)}\)</span> 到 <span class="math inline">\(t_{(j+1)}\)</span> 的区间内的值恰好等于 0.5 时，中位数取该区间的中点，即 <span class="math inline">\((t_{(j)} + t_{(j+1)})/2\)</span>。当不存在删失生存时间时，中位生存时间估计将是样本中超过 50% 的个体能够生存的最短时间。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-8" class="example"><strong>示例 2.8  (停用宫内节育器的时间) </strong></span><br></p>
+<p>表 2.2 中给出了<a href="chap1.html#exm:ex1-1">示例 1.1</a> 中关于停用宫内节育器时间数据生存函数的 Kaplan-Meier 估计。这些数据的生存函数估计，<span class="math inline">\(\hat S(t)\)</span>，示于图 2.4 中。根据生存函数估计，停用概率估计小于 0.5 的最小停用时间为 93 周。因此，这是该研究中停用宫内节育器的中位时间估计。</p>
+<details><summary><font color="#8B2232">图 2.4</font>
+</summary><img src="figure/figure%202.4.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>可以使用与上述描述类似的方法来估计生存时间分布的其他百分位数。生存时间分布的第 <span class="math inline">\(p\)</span> 个百分位数定义为值 <span class="math inline">\(t(p)\)</span>，使得对于 0 到 100 之间的任何 <span class="math inline">\(p\)</span> 值有 <span class="math inline">\(F\{t(p)\} = p/100\)</span>。就生存函数而言，<span class="math inline">\(t(p)\)</span> 是使得 <span class="math inline">\(S\{t(p)\} = 1 − (p/100)\)</span> 的值，因此第 10 和第 90 百分位数由下式给出：</p>
+<p><span class="math display">\[\begin{aligned}S\{t(10)\}=0.9,\quad S\{t(90)\}=0.1\end{aligned}\]</span></p>
+<p>利用生存函数估计，第 <span class="math inline">\(p\)</span> 个百分位数的估计是最小的观测生存时间 <span class="math inline">\(\hat t (p)\)</span>，其满足 <span class="math inline">\(\hat S\{\hat t(p)\} &lt; 1 − (p/100)\)</span>。</p>
+<p>有时，对于所有的 <span class="math inline">\(t\)</span> 值，生存函数估计都大于 0.5，此时无法估计中位生存时间，因此自然会用生存时间分布的其他百分位数或特定时间点的生存概率估计来总结数据。</p>
+<p>生存数据样本离散 (dispersion) 的估计并未广泛使用，但若需要这样的估计，则可以计算半四分位距 (semi-interquartile range, SIQR)。这定义为生存时间分布的第 75 百分位数和第 25 百分位数之差的一半。即</p>
+<p><span class="math display">\[\begin{aligned}SIQR=\frac{1}{2}\left\{t(75)-t(25)\right\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(t(25)\)</span> 和 <span class="math inline">\(t(75)\)</span> 是生存时间分布的第 25 个和第 75 个百分位数。这两个百分位数也分别称为第一个和第三个四分位数。相应的基于样本的 <span class="math inline">\(SIQR\)</span> 估计为 <span class="math inline">\(\{\hat{t}(75)-\hat{t}(25)\}/2\)</span>。与方差一样，<span class="math inline">\(SIQR\)</span> 值越大，生存时间分布离散程度越大。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-9" class="example"><strong>示例 2.9  (停用宫内节育器的时间) </strong></span><br></p>
+<p>根据表 2.2 中给出的<a href="chap1.html#exm:ex1-1">示例 1.1</a> 数据生存函数的 Kaplan-Meier 估计，停止时间分布的第 25 和第 75 百分位数分别为 36 周和 107 周。因此，分布的 <span class="math inline">\(SIQR\)</span> 估计为 35.5 周。</p>
+<details><summary><font color="#8B2232">表 2.2</font>
+</summary><img src="figure/table%202.2.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec2-5" class="section level2" number="2.5">
+<h2>
+<span class="header-section-number">2.5</span> 中位数和百分位数的置信区间<a class="anchor" aria-label="anchor" href="#sec2-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>一旦获得百分位数估计的方差，就可以得到生存时间分布的中位数和其他百分位数的近似置信区间。百分位数近似方差的表达式可以通过直接应用式 <a href="chap2.html#eq:2-8">(2.8)</a> 中随机变量函数方差的一般结果来导出。使用这个结果</p>
+<p><span class="math display" id="eq:2-14">\[\begin{equation}
+\mathrm{var}\left[\hat{S}\{t(p)\}\right]=\left(\frac{\mathrm{d}\hat{S}\{t(p)\}}{\mathrm{d}t(p)}\right)^2\mathrm{var}\left\{t(p)\right\}
+\tag{2.14}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(t(p)\)</span> 是分布的第 <span class="math inline">\(p\)</span> 个百分位数，<span class="math inline">\(\hat{S}\{t(p)\}\)</span> 是生存函数在 <span class="math inline">\(t(p)\)</span> 处的 Kaplan-Meier 估计。现在</p>
+<p><span class="math display">\[-\frac{\mathrm{d}\hat{S}\{t(p)\}}{\mathrm{d}t(p)}=\hat{f}\{t(p)\}\]</span></p>
+<p>为 <span class="math inline">\(t(p)\)</span> 时生存时间的概率密度函数的估计，将其代入式 <a href="chap2.html#eq:2-14">(2.14)</a> 并整理后，我们得到</p>
+<p><span class="math display">\[\mathrm{var}\left\{t(p)\right\}=\left(\frac1{\hat{f}\{t(p)\}}\right)^2\mathrm{var}\left[\hat{S}\{t(p)\}\right]\]</span></p>
+<p>因此，估计的第 <span class="math inline">\(p\)</span> 个百分位数 <span class="math inline">\(\hat t(p)\)</span> 的标准误由下式给出</p>
+<p><span class="math display" id="eq:2-15">\[\begin{equation}
+\mathrm{se}\left\{\hat{t}(p)\right\}=\frac1{\hat{f}\{\hat{t}(p)\}}\operatorname{se}\left[\hat{S}\{\hat{t}(p)\}\right]
+\tag{2.15}
+\end{equation}\]</span></p>
+<p>使用式 <a href="chap2.html#eq:2-12">(2.12)</a> 中给出的生存函数 Kaplan-Meier 估计的标准误的 Greenwood 公式，可以得到 <span class="math inline">\(\hat{S}\{t(p)\}\)</span> 的标准误，而 <span class="math inline">\(\hat t(p)\)</span> 的概率密度函数的估计为</p>
+<p><span class="math display">\[\hat{f}\{\hat{t}(p)\}=\frac{\hat{S}\{\hat{u}(p)\}-\hat{S}\{\hat{l}(p)\}}{\hat{l}(p)-\hat{u}(p)}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\hat{u}(p)&amp;=\max\left\{t_{(j)}\mid\hat{S}(t_{(j)})\geqslant1-\frac p{100}+\epsilon\right\}\\\hat{l}(p)&amp;=\min\left\{t_{(j)}\mid\hat{S}(t_{(j)})\leqslant1-\frac p{100}-\epsilon\right\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,r\)</span> 和较小的 <span class="math inline">\(\varepsilon\)</span> 值。在许多情况下，取 <span class="math inline">\(\varepsilon=0.05\)</span> 可满足要求，但如果事实证明 <span class="math inline">\(\hat u(p)\)</span> 和 <span class="math inline">\(\hat l(p)\)</span> 相等，则需要更大的 <span class="math inline">\(\varepsilon\)</span> 值。特别地，根据式 <a href="chap2.html#eq:2-15">(2.15)</a>，中位生存时间的标准误由下式给出</p>
+<p><span class="math display" id="eq:2-16">\[\begin{equation}
+\operatorname{se}\left\{\hat{t}(50)\right\}=\frac1{\hat{f}\{\hat{t}(50)\}}\operatorname{se}\left[\hat{S}\{\hat{t}(50)\}\right]
+\tag{2.16}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{f}\{\hat{t}(50)\}\)</span> 为</p>
+<p><span class="math display" id="eq:2-17">\[\begin{equation}
+\hat{f}\{\hat{t}(50)\}=\frac{\hat{S}\{\hat{u}(50)\}-\hat{S}\{\hat{l}(50)\}}{\hat{l}(50)-\hat{u}(50)}
+\tag{2.17}
+\end{equation}\]</span></p>
+<p>在此表达式中，<span class="math inline">\(\hat u(50)\)</span> 是生存函数的 Kaplan-Meier 估计超过 0.55 的最大生存时间，<span class="math inline">\(\hat l(50)\)</span> 是生存函数小于等于 0.45 的最小生存时间。</p>
+<p>一旦得到第 <span class="math inline">\(p\)</span> 个百分位数的标准误估计，<span class="math inline">\(t(p)\)</span> 的 <span class="math inline">\(100(1 − \alpha)\%\)</span> 置信限为</p>
+<p><span class="math display">\[\begin{aligned}\hat{t}(p)\pm z_{\alpha/2}\text{se}\{\hat{t}(p)\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(z_{\alpha/2}\)</span> 是标准正态分布的上（单侧）<span class="math inline">\(\alpha/2\)</span> 分位点。</p>
+<p>此区间估计只是近似值，因为该区间包含真实百分位数的概率不会恰好为 <span class="math inline">\(1 − \alpha\)</span>。虽然有许多其他方法来构建具有优良特性的中位置信区间，但这些方法比本节考虑的区间估计更难计算。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-10" class="example"><strong>示例 2.10  (停用宫内节育器的时间) </strong></span><br></p>
+<p>使用<a href="chap1.html#exm:ex1-1">示例 1.1</a> 中给出的宫内节育器使用者停用时间的数据来说明中位停用时间置信区间的计算。根据<a href="chap2.html#exm:ex2-8">示例 2.8</a>，该组女性中位停用时间估计为 <span class="math inline">\(\hat t(50) = 93\)</span> 周。另外，从表 2.4 可以看出，此时生存函数的 Kaplan-Meier 估计的标准误为 <span class="math inline">\([\hat{S}\{\hat{t}(50)\}]=0.1452\)</span>。</p>
+<p>为了使用式 <a href="chap2.html#eq:2-16">(2.16)</a> 获得 <span class="math inline">\(\hat t(50)\)</span> 的标准误，我们需要估计中位停止时间处的密度函数。这是从式 <a href="chap2.html#eq:2-16">(2.16)</a> 获得的。该方程中所需的量 <span class="math inline">\(\hat u(50),\hat l(50)\)</span> 为：</p>
+<p><span class="math display">\[\begin{aligned}\hat{u}(50)&amp;=\max\{t_{(j)}\mid\hat{S}(t_{(j)})\geqslant0.55\}\\\hat{l}(50)&amp;=\min\{t_{(j)}\mid\hat{S}(t_{(j)})\leqslant0.45\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(j)}\)</span> 为第 <span class="math inline">\(j\)</span> 个停用时间，<span class="math inline">\(j=1,2,\ldots,9\)</span>。使用表 2.4，<span class="math inline">\(\hat u(50)=75,\hat l(50)=97\)</span>，因此</p>
+<p><span class="math display">\[\hat{f}\{\hat{t}(50)\}=\frac{\hat{S}(75)-\hat{S}(97)}{97-75}=\frac{0.5594-0.3729}{22}=0.0085\]</span></p>
+<p>那么中位数的标准误由下式给出</p>
+<p><span class="math display">\[\mathrm{se}\left\{\hat{t}(50)\right\}=\frac1{0.0085}\times0.1452=17.13\]</span></p>
+<p>中位停用时间的 95% 置信限为</p>
+<p><span class="math display">\[93\pm1.96\times17.13\]</span></p>
+<p>因此中位数区间估计范围为 59 到 127 天。</p>
+</div>
+</div>
+</div>
+<div id="sec2-6" class="section level2" number="2.6">
+<h2>
+<span class="header-section-number">2.6</span> 两组生存数据的比较<a class="anchor" aria-label="anchor" href="#sec2-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>比较根据两组个体获得的生存时间的最简单方法是将两个生存函数的相应估计绘制在同一张图中。生成的图像可以提供非常丰富的信息，如下例所示。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-11" class="example"><strong>示例 2.11  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p><a href="chap1.html#exm:ex1-2">示例 1.2</a> 给出了乳腺癌妇女的生存时间数据，根据肿瘤切片是否被 HPA 阳性染色分组。图 2.9 显示了两组生存时间的 Kaplan-Meier 生存函数估计。注意，在该图中，Kaplan-Meier 估计延伸至每组最大删失观测的时间。</p>
+<p>该图显示，肿瘤染色阴性的女性的生存函数估计总是大于肿瘤染色阳性的女性。这意味着在任何时间 <span class="math inline">\(t\)</span>，肿瘤染色阴性的女性在 <span class="math inline">\(t\)</span> 后的生存概率估计都更大，这表明 HPA 染色程序的结果可能是一个有用的预后指标：那些肿瘤阳性染色的妇女的预后似乎比那些肿瘤阴性染色的妇女的预后差。</p>
+<details><summary><font color="#8B2232">图 2.9</font>
+</summary><img src="figure/figure%202.9.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>对于两个生存函数估计之间的差异有两种可能的解释，如<a href="chap2.html#exm:ex2-11">示例 2.11</a>。一种解释是两组个体的生存时间之间存在真实的差异，所以一组人的生存经历与另一组人不同。另一种解释是，每组的生存时间之间没有真正的差异，差异只是偶然的变异导致的。我们使用了一种称为假设检验 (hypothesis test) 的程序。 由于假设检验的概念在生存数据的分析中起着核心作用，因此在以下部分中详细描述了该程序的底层逻辑。</p>
+<div id="sec2-6-1" class="section level3" number="2.6.1">
+<h3>
+<span class="header-section-number">2.6.1</span> 假设检验<a class="anchor" aria-label="anchor" href="#sec2-6-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设检验是一个程序，使我们能够评估数据集与特定假设（称为工作假设或原假设, working or null hypothesis）一致的程度。原假设通常代表数据生成过程的简化视图 (simplified view)，其代表指定两组生存数据之间没有差异的假设，或者生存时间与年龄或血清胆固醇水平等解释变量之间没有关系的假设，诸如此类。原假设就是将被采用并随后采取行动的假设，除非数据表明它是站不住脚的。</p>
+<p>下一步是制定检验统计量 (test statistic)，衡量数据偏离原假设的程度。一般来说，检验统计量的构造使得统计量的值越大，与原假设的偏离就越大。因此，如果原假设是两组之间没有差异，则检验统计量的相对较大值将成为反对原假设的证据。</p>
+<p>一旦从观测数据中获得了检验统计量的值，当原假设成立时，我们计算获得与观测一样极端或比观测更极端的值的概率。该量总结了样本数据反对原假设的证据的强度，简称为概率值或 <span class="math inline">\(P\)</span> 值。如果 <span class="math inline">\(P\)</span> 值很大，我们会得出结论，数据很可能是在原假设成立时获得的，并且没有证据拒绝原假设。另一方面，如果 <span class="math inline">\(P\)</span> 值很小，这成为反对原假设的证据；<span class="math inline">\(P\)</span> 值越小，证据就越有力。</p>
+<p>为了获得假设检验的 <span class="math inline">\(P\)</span> 值，当原假设为真时，检验统计量必须具有已知或至少近似已知的概率分布。这种概率分布称为检验统计量的原分布 (null distribution)。更确切地说，考虑一个检验统计量 <span class="math inline">\(W\)</span>，它使得检验统计量的观测值 <span class="math inline">\(w\)</span> 越大，观测数据与原假设下预期数据的偏差就越大。如果 <span class="math inline">\(W\)</span> 具有连续概率分布，则 <span class="math inline">\(P\)</span> 值为 <span class="math inline">\(\text{P}(W\ge w)=1−F(w)\)</span>，其中 <span class="math inline">\(F(w)\)</span> 为在原假设成立的情况下 <span class="math inline">\(W\)</span> 的分布函数在 <span class="math inline">\(w\)</span> 处的值。</p>
+<p>在一些应用中，最自然的检验统计量为：大的正值对应于在一个方向上偏离原假设，而小的负值对应于在相反方向上的偏离。例如，假设患有特定疾病的患者被随机分配接受标准疗法或新疗法，并记录他们的生存时间。在这种情况下，一个令人感兴趣的原假设是，两组患者的生存经历没有差异。数据与该原假设一致的程度可以通过检统计量来总结，其中正值表示新疗法优于标准疗法，而负值表示标准疗法优于新疗法。当在任何一个方向上偏离原假设都同等重要时，称原假设具有双侧备择 (two-sided alternative)，而该假设检验称为双侧检验 (two-sided test).</p>
+<p>若 <span class="math inline">\(W\)</span> 是这样的检验统计量：大的正观测值或小的负观测值将拒绝原假设，则可以定义新的检验统计量，例如 <span class="math inline">\(|W|\)</span> 或 <span class="math inline">\(W^2\)</span>，使得只有大的新统计量的正值具有拒绝原假设的证据。例如，假设 <span class="math inline">\(W\)</span> 是一个检验统计量，在原假设下服从标准正态分布。如果 <span class="math inline">\(w\)</span> 是 <span class="math inline">\(W\)</span> 的观测值，则适当的 <span class="math inline">\(P\)</span> 值是 <span class="math inline">\(\text{P}(W\leqslant-|w|)+\text{P}(W\geqslant|w|)\)</span>。或者，我们可以利用这样的结果：若 <span class="math inline">\(W\)</span> 服从标准正态分布，则 <span class="math inline">\(W^2\)</span> 服从自由度为 <span class="math inline">\(1\)</span> 的卡方分布，记为 <span class="math inline">\(\chi^2_1\)</span>。因此，基于统计量 <span class="math inline">\(W\)</span> 的双侧假设检验的 <span class="math inline">\(P\)</span> 值是随机变量 <span class="math inline">\(\chi^2_1\)</span> 超过 <span class="math inline">\(w^2\)</span> 的概率。因此可从标准正态分布函数或卡方分布函数得到所需的 <span class="math inline">\(P\)</span> 值。</p>
+<p>当兴趣集中在特定方向的偏离上时，假设检验是单侧的 (one-sided). 例如，在比较两组患者的生存时间时，其中一组接受标准疗法，另一组接受新疗法，可能会认为新疗法不劣于标准疗法。那么，对于声称没有治疗差异的原假设，唯一相关的备择假设是新疗法优于标准疗法。如果检验统计量 <span class="math inline">\(W\)</span> 的正值反映了新疗法的优效性，则 <span class="math inline">\(P\)</span> 值为 <span class="math inline">\(\text P(W\ge w)\)</span>。如果 <span class="math inline">\(W\)</span> 服从标准正态分布，则该 <span class="math inline">\(P\)</span> 值是相应双侧备择假设所得 <span class="math inline">\(P\)</span> 值的一半。</p>
+<p>单侧假设检验只在如下情况下适用：对与单侧备择假设指定方向相反的原假设没有任何兴趣。例如，再次考虑新疗法与标准疗法的比较，并假设检验统计量的观测值为正或为负，具体取决于新疗法是优于还是劣于标准疗法。如果声称无治疗差异的原假设的备择是新疗法更优，那么检验统计量小的负值将无法成为拒绝原假设的证据。相反，可以假设这个小的负值只是偶然变异的结果。一般来说，在医学研究中很少有理由使用单侧检验，因此本书将使用双侧检验。</p>
+<p>如果 <span class="math inline">\(P\)</span> 值小于某个值 <span class="math inline">\(\alpha\)</span>，我们就说假设在 <span class="math inline">\(100\alpha\%\)</span> 显著性水平上被拒绝。检验统计量的观测值在此水平上认为是显著的。但是我们如何根据 <span class="math inline">\(P\)</span> 值决定是否应该真正拒绝原假设呢？传统上，<span class="math inline">\(0.05\)</span> 或 <span class="math inline">\(0.01\)</span> 的 <span class="math inline">\(P\)</span> 值用于决定是否应拒绝原假设，因此，例如，若 <span class="math inline">\(P &lt; 0.05\)</span>，则在 <span class="math inline">\(5\%\)</span> 显着性水平下拒绝原假设。诸如此类的指导方针并不是硬性规定，不应严格解释。例如，<span class="math inline">\(0.046\)</span> 和 <span class="math inline">\(0.056\)</span> 的 <span class="math inline">\(P\)</span> 值之间实际上没有差异，尽管只有前者表明检验统计量的观测值在 <span class="math inline">\(5\%\)</span> 的水平上显著。</p>
+<p>更令人满意的策略是报告实际 <span class="math inline">\(P\)</span> 的值，而不是报告在某个指定的显著性水平上拒绝或无法拒绝原假设。可以使用取决于 <span class="math inline">\(P\)</span> 值所在范围的词汇，将此 <span class="math inline">\(P\)</span> 值解释为反对原假设的证据强度的度量。因此，如果 <span class="math inline">\(P &gt; 0.1\)</span>，则表示没有证据拒绝原假设；如果 <span class="math inline">\(0.05 &lt; P ⩽ 0.1\)</span>，则有轻微证据反对原假设；如果 <span class="math inline">\(0.01 &lt; P ⩽ 0.05\)</span>，则有中等证据反对原假设；如果 <span class="math inline">\(0.001 &lt; P ≤ 0.01\)</span>，则有强有力的证据反对原假设；如果 <span class="math inline">\(P ≤ 0.001\)</span>，则反对原假设的证据是压倒性的。</p>
+<p>除了引用与假设检验相关的确切 <span class="math inline">\(P\)</span> 值外，另一种方法是当原假设为真时，将检验统计量的观测值与对应于特定 <span class="math inline">\(P\)</span> 值的那些值进行比较。在特定显著性水平下导致拒绝原假设的检验统计量的值可以从该统计量的原分布的分位点中找到。例如，如果 <span class="math inline">\(W\)</span> 是一个具有标准正态分布的检验统计量，对于双侧检验，分布的上 <span class="math inline">\(\alpha/2\)</span> 分位点（如图 2.5 所示）是检验统计量的值，其 <span class="math inline">\(P\)</span> 值为 <span class="math inline">\(\alpha\)</span>。例如，检验统计量的值 1.96, 2.58 和 3.29 分别对应于 0.05, 0.01 和 0.001 的 <span class="math inline">\(P\)</span> 值。因此，如果 <span class="math inline">\(W\)</span> 的观测值在 1.96 和 2.58 之间，我们会声称在 0.01 的显著性水平下，结果是有意义的，但不足以拒绝原假设。</p>
+<details><summary><font color="#8B2232">图 2.5</font>
+</summary><img src="figure/figure%202.5.png#center" style="width:80.0%"></details><p><br>
+对于常见的概率分布，例如正态分布和卡方分布，其百分位点在很多统计学入门教科书中都有表格列出，或者在 Lindley and Scott (1984) 的统计表中也可以找到。用于基于计算机的生存数据统计分析的统计软件包通常会提供与假设检验相关的精确 <span class="math inline">\(P\)</span> 值。请注意，当这些 <span class="math inline">\(P\)</span> 值被四舍五入到小数点后三位时，应将 0.000 的 <span class="math inline">\(P\)</span> 值解释为 <span class="math inline">\(P &lt; 0.001\)</span>。</p>
+<p>在决定采取行动时，例如是否拒绝两种疗法之间没有差异的假设，假设检验 <span class="math inline">\(P\)</span> 值中总结的统计证据只是决策过程的一个部分。除了统计证据外，还需要考虑科学证据。例如，这可能涉及治疗效应的大小是否具有临床意义。特别是在大型试验中，当治疗效应很小并不能表明重大科学突破时，也可能会发现两种疗法之间的显著差异（例如在 <span class="math inline">\(5\%\)</span> 的水平下）。另一方面，可能有新的疗法将寿命延长两倍，但由于研究中使用的样本量较小，因此可能与标准疗法没有显著差异。</p>
+<p>与其根据假设检验程序的结果来报告发现，不如提供任何治疗差异大小的估计，并由该差异的置信区间来支持，这更具信息性。不幸的是，本章中考虑的生存数据分析的非参数方法不适用于这种方法。因此，当我们考虑生存数据的模型时，我们将在随后的章节中考虑这个主题。</p>
+<p>在两组生存时间的比较中，有许多方法可以用来量化组间差异的程度。现在将考虑三种非参数程序，即 <strong>log-rank 检验</strong>、<strong>Wilcoxon 检验</strong>和 <strong>Peto-Peto 检验</strong>。</p>
+</div>
+<div id="sec2-6-2" class="section level3" number="2.6.2">
+<h3>
+<span class="header-section-number">2.6.2</span> log-rank 检验<a class="anchor" aria-label="anchor" href="#sec2-6-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>为了构建 log-rank 检验，我们首先分别考虑两组生存数据中的每个死亡时间。组别记为 Group I 和 Group II。假设在两组中有 <span class="math inline">\(r\)</span> 个不同的死亡时间，记为 <span class="math inline">\(t(1)&lt;t(2)&lt;\cdots&lt;t(r)\)</span>，并且在时间 <span class="math inline">\(t(j)\)</span>，Group I 中有 <span class="math inline">\(d_{1j}\)</span> 个个体、Group I 中有 <span class="math inline">\(d_{2j}\)</span> 个个体死亡，其中 <span class="math inline">\(j=1,2,\ldots,r\)</span>。除非一组中有两个或两个以上的个体具有相同的记录死亡时间，<span class="math inline">\(d_{1j}\)</span> 和 <span class="math inline">\(d_{2j}\)</span> 的值要么为 0，要么为 1。进一步假设，在时间 <span class="math inline">\(t_{(j)}\)</span> 之前，Group I 中有 <span class="math inline">\(n_{1j}\)</span> 个个体面临死亡风险，Group II 中有 <span class="math inline">\(n_{2j}\)</span> 个个体面临死亡风险。因此，在时间 <span class="math inline">\(t_{(j)}\)</span>，总共有 <span class="math inline">\(d_j = d_{1j} + d_{2j}\)</span> 个死亡个体，而处于风险的个体总数为 <span class="math inline">\(n_j = n_{1j} + n_{2j}\)</span>。表 2.7 总结了这一情况。</p>
+<details><summary><font color="#8B2232">表 2.7</font>
+</summary><img src="figure/table%202.7.png#center" style="width:80.0%"></details><p><br>
+现在考虑一个原假设，即两组个体的生存经历没有差异。评估这一假设有效性的一个方法是考虑在每个死亡时间点上，两组中死亡个体数量与在原假设下预期的数量之间的差异程度。然后，可以将这些差异程度的信息在每个死亡时间点上进行合并。</p>
+<p>如果表 2.7 中的边际总数被视为固定的，并且生存率与分组无关的原假设为真，则该表中的四个条目仅由 <span class="math inline">\(d_{1j}\)</span> 的值决定。因此，我们可以将 <span class="math inline">\(d_{1j}\)</span> 视为一个随机变量，它可以取从 <span class="math inline">\(0\)</span> 到 <span class="math inline">\(d_j\)</span> 和 <span class="math inline">\(n_{1j}\)</span> 的最小值中的任何值。事实上，<span class="math inline">\(d_{1j}\)</span> 服从超几何分布 (hypergeometric distribution)，根据该分布，与第一组死亡人数相关的随机变量取值 <span class="math inline">\(d_{1j}\)</span> 的概率为</p>
+<p><span class="math display" id="eq:2-18">\[\begin{equation}
+\frac{\left(\begin{array}{c}d_j\\d_{1j}\end{array}\right)\left(\begin{array}{c}n_j-d_j\\n_{1j}-d_{1j}\end{array}\right)}{\left(\begin{array}{c}n_j\\n_{1j}\end{array}\right)}
+\tag{2.18}
+\end{equation}\]</span></p>
+<p>在这个公式中，表达式</p>
+<p><span class="math display">\[\left.\left(\begin{array}{c}d_j\\d_{1j}\end{array}\right.\right)\]</span></p>
+<p>表示可以从 <span class="math inline">\(d_j\)</span> 个时间中选择 <span class="math inline">\(d_{1j}\)</span> 个时间的不同方式的数量，读作 “<span class="math inline">\(d_j \,C\, d_{1j}\)</span>”，它的值为</p>
+<p><span class="math display">\[\left.\left(\begin{array}{c}d_j\\d_{1j}\end{array}\right.\right)=\frac{d_j!}{d_{1j}!(d_j-d_{1j})!}\]</span></p>
+<p>其中 <span class="math inline">\(d_j!\)</span> 读作 “<span class="math inline">\(d_j\)</span> 的阶乘”，有</p>
+<p><span class="math display">\[\begin{aligned}d_j!=d_j\times(d_j-1)\times\cdots\times2\times1\end{aligned}\]</span></p>
+<p>式 <a href="chap2.html#eq:2-18">(2.18)</a> 中的其他两项是类似的。</p>
+<p>超几何随机变量 <span class="math inline">\(d_{1j}\)</span> 的均值由下式给出</p>
+<p><span class="math display" id="eq:2-19">\[\begin{equation}
+e_{1j}=n_{1j}d_j/n_j
+\tag{2.19}
+\end{equation}\]</span></p>
+<p><span class="math inline">\(e_{1j}\)</span> 是在 Group I 在时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的个体的预期数量。该值在直观上很有吸引力，因为在原假设下在时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的概率不取决于个体所在的组别，其中在时间 <span class="math inline">\(t_{(j)}\)</span> 死亡的概率为 <span class="math inline">\(d_j/n_j\)</span>。将其乘以 <span class="math inline">\(n_{1j}\)</span>，得到的 <span class="math inline">\(e_{1j}\)</span> 为时间 <span class="math inline">\(t_{(j)}\)</span> 时 Group I 的预期死亡人数。</p>
+<p>下一步是将每个死亡时间的 2 × 2 表格中的信息组合起来，给出 <span class="math inline">\(d_{1j}\)</span> 观测值与其预期值偏差的总体度量。最简单的方法是在两组中将差值 <span class="math inline">\(d_{1j}−e_{1j}\)</span> 关于两组死亡时间总数 <span class="math inline">\(r\)</span> 相加。得出的统计量由下式给出</p>
+<p><span class="math display" id="eq:2-20">\[\begin{equation}
+U_L=\sum_{j=1}^r(d_{1j}-e_{1j})
+\tag{2.20}
+\end{equation}\]</span></p>
+<p>注意到这等于 <span class="math inline">\(\sum d_{1j}-\sum e_{1j}\)</span>，也就是 Group I 总死亡人数和预期死亡人数之差。此统计量的均值为 0，因为 <span class="math inline">\(\mathrm{E}\left(d_{1j}\right)=e_{1j}\)</span>。此外，由于死亡时间彼此独立，<span class="math inline">\(U_L\)</span> 的方差就是 <span class="math inline">\(d_{1j}\)</span> 的方差之和。现在，由于 <span class="math inline">\(d_{1j}\)</span> 服从超几何分布，<span class="math inline">\(d_{1j}\)</span> 的方差由下式给出</p>
+<p><span class="math display" id="eq:2-21">\[\begin{equation}
+v_{1j}=\frac{n_{1j}n_{2j}d_j(n_j-d_j)}{n_j^2(n_j-1)}
+\tag{2.21}
+\end{equation}\]</span></p>
+<p>因此 <span class="math inline">\(U_L\)</span> 的方差为</p>
+<p><span class="math display" id="eq:2-22">\[\begin{equation}
+\operatorname{var}\left(U_L\right)=\sum_{j=1}^rv_{1j}=V_L
+\tag{2.22}
+\end{equation}\]</span></p>
+<p>此外可以表明，当死亡时间数不太小时，<span class="math inline">\(U_L\)</span> 近似服从正态分布。因此，<span class="math inline">\(U_L/√V_L\)</span> 具有零均值和单位方差的正态分布，记作 <span class="math inline">\(N(0,1)\)</span>。因此我们写</p>
+<p><span class="math display">\[\begin{aligned}\frac{U_L}{\sqrt{V_L}}\sim N(0,1)\end{aligned}\]</span></p>
+<p>符号 “<span class="math inline">\(\sim\)</span>” 读作“分布于” (distributed as) 。标准正态随机变量的平方服从自由度为一的卡方分布，记作 <span class="math inline">\(\chi^2_1\)</span>，因此我们有</p>
+<p><span class="math display" id="eq:2-23">\[\begin{equation}
+\frac{U_L^2}{V_L}\sim\chi_1^2
+\tag{2.23}
+\end{equation}\]</span></p>
+<p>这种在多个 <span class="math inline">\(2 × 2\)</span> 表中组合信息的方法是由 Mantel and Haenszel (1959) 提出的，称为 Mantel-Haenszel 程序。事实上，基于这一统计量的检验有各种各样的名字，包括 Mantel Cox 和 Peto Mantel Haenszel，但最为人所知的是 log-rank 检验。之所以取这个名字，是因为检验统计量可以从两组生存时间的秩中推导出来，而得到的秩检验统计量是基于生存函数 Nelson-Aalen 估计的对数。</p>
+<p>统计量 <span class="math inline">\(W_L = U^2_L/V_L\)</span> 总结了两组数据中生存时间与无组间差异原假设下预期生存时间的偏离程度。该统计量的值越大，反对原假设的证据就越多。由于 W 的原分布近似为一个自由度的卡方，因此可以从卡方随机变量的分布函数获得与检验统计量相关的 <span class="math inline">\(P\)</span> 值。或者，可以使用卡方分布的百分位点来确定 <span class="math inline">\(P\)</span> 值所在的范围。下面的<a href="#exm:exm:ex2-12">示例 2.12</a> 给出了 log-rank 检验的说明。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-12" class="example"><strong>示例 2.12  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在此示例中，我们回到有关乳腺癌妇女生存时间的数据，根据肿瘤染色呈阳性还是阴性进行分组。我们将使用 log-rank 检验来检验两组的生存经历无差异的原假设。所需的计算列于表 2.8。</p>
+<details><summary><font color="#8B2232">表 2.8</font>
+</summary><img src="figure/table%202.8.png#center" style="width:80.0%"></details><p><br>
+我们首先对两组女性的死亡时间进行排序；这些时间在表 2.8 的第 1 列中给出。然后计算每组在每个死亡时间下死亡的女性人数以及每个时间处于风险的人数。<span class="math inline">\(d_{1j},n_{1j},d_{2j}\)</span> 和 <span class="math inline">\(n_{2j}\)</span> 的值在表中第 2 至 5 列给出。第 6 列和第 7 列包含在每个死亡时间的死亡总数和处于风险的人数的总数。最后两列给出 <span class="math inline">\(e_{1j}\)</span> 和 <span class="math inline">\(v_{1j}\)</span> 的值，分别根据式 <a href="chap2.html#eq:2-19">(2.19)</a> 和 <a href="chap2.html#eq:2-21">(2.21)</a> 计算。将第 2 列和第 8 列中的条目相加得出 <span class="math inline">\(d_{1j}\)</span> 和 <span class="math inline">\(e_{1j}\)</span>，可以根据 <span class="math inline">\(U_L = d_{1j} − e_{1j}\)</span> 计算 log-rank 统计量。值 <span class="math inline">\(V_L = v_{1j}\)</span> 可以通过对最后一列中的条目求和来获得。我们发现 <span class="math inline">\(U_L = 5 − 9.565 = −4.565\)</span> 且 <span class="math inline">\(V_L = 5.929\)</span>，因此 log-rank 检验统计量的值为 <span class="math inline">\(W_L = (−4.565)^2/5.929 = 3.515\)</span>。相应的 <span class="math inline">\(P\)</span> 值是根据自由度为一的卡方变量大于等于 3.515 的概率来计算的，结果 0.061，记作 <span class="math inline">\(P = 0.061\)</span>。该 <span class="math inline">\(P\)</span> 值足够小，足以对两组女性生存函数没有差异的原假设产生怀疑。事实上，反对原假设的证据在 6% 的水平上几乎是显著的。因此，我们得出结论，这些数据确实提供了一些证据，表明乳腺癌患者的预后取决于染色程序的结果。</p>
+</div>
+</div>
+</div>
+<div id="sec2-6-3" class="section level3" number="2.6.3">
+<h3>
+<span class="header-section-number">2.6.3</span> Wilcoxon 检验<a class="anchor" aria-label="anchor" href="#sec2-6-3"><i class="fas fa-link"></i></a>
+</h3>
+<p><strong>Wilcoxon 检验</strong>，有时称为 <strong>Breslow 检验</strong>或 <strong>Gehan-Breslow 检验</strong>，也用于检验两组生存数据的生存函数没有差异的原假设。Wilcoxon 检验基于统计量</p>
+<p><span class="math display">\[\begin{aligned}U_W=\sum_{j=1}^rn_j(d_{1j}-e_{1j})\end{aligned}\]</span></p>
+<p>其中，如上一节所述，<span class="math inline">\(d_{1j}\)</span> 是第一组中时间 <span class="math inline">\(t_{(j)}\)</span> 的死亡人数，<span class="math inline">\(e_{1j}\)</span> 如式 <a href="chap2.html#eq:2-19">(2.19)</a> 定义。<span class="math inline">\(U_W\)</span> 和 <span class="math inline">\(U_L\)</span> 之间的区别在于，在 Wilcoxon 检验中，每个差异 <span class="math inline">\(d_{1j} − e_{1j}\)</span> 的权重均为 <span class="math inline">\(n_j\)</span>（时间 <span class="math inline">\(t_{(j)}\)</span> 时处于风险的个体总数）。这样做的效果是，在仍然生存的个体总数较小时，即在最长生存时间时，对 <span class="math inline">\(d_{1j}\)</span> 与 <span class="math inline">\(e_{1j}\)</span> 之差给予较小的权重。因此，与 log-rank 统计量相比，该统计量对生存时间分布尾部的 <span class="math inline">\(d_{1j}\)</span> 与 <span class="math inline">\(e_{1j}\)</span> 的偏差不太敏感。</p>
+<p>Wilcoxon 统计量 <span class="math inline">\(U_W\)</span> 的方差由下式给出</p>
+<p><span class="math display">\[V_W=\sum_{j=1}^rn_j^2v_{1j}\]</span></p>
+<p>其中 <span class="math inline">\(v_{1j}\)</span> 由式 <a href="chap2.html#eq:2-21">(2.21)</a> 给出，因此 Wilcoxon 检验统计量为</p>
+<p><span class="math display">\[\begin{aligned}W_W=U_W^2/V_W\end{aligned}\]</span></p>
+<p>当原假设为真时，它服从自由度为一的卡方分布。因此，Wilcoxon 检验进行的方式与 log-rank 检验相同。</p>
+</div>
+<div id="sec2-6-4" class="section level3" number="2.6.4">
+<h3>
+<span class="header-section-number">2.6.4</span> Peto-Peto 检验<a class="anchor" aria-label="anchor" href="#sec2-6-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>当两组生存时间的删失模式不同时，Wilcoxon 检验表现不佳。如果将 Wilcoxon 统计量中的权重 <span class="math inline">\(n_j\)</span>（即在时间 <span class="math inline">\(t_{(j)}\)</span> 时处于风险的个体总数）替换为在时间 <span class="math inline">\(t_{(j)}\)</span> 时生存函数的估计，则可以缓解这个问题。由于检验统计量是在原假设下计算的，即每组的生存函数之间没有差异，因此使用的是基于两组数据的合并数据的 Kaplan-Meier 生存函数估计。以 <span class="math inline">\(\hat S_{KM}(t)\)</span> 表示该估计，则 <strong>Peto-Peto 统计量</strong>为</p>
+<p><span class="math display">\[\begin{aligned}U_P=\sum_{j=1}^r\hat{S}_{KM}(t_{(j)})(d_{1j}-e_{1j})\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(d_{1j}\)</span> 和 <span class="math inline">\(e_{1j}\)</span> 是第一组中在时间 <span class="math inline">\(t_{(j)}\)</span> 观察到的和预期的死亡人数。与 Wilcoxon 检验一样，这样做的效果是在最长生存时间（当 <span class="math inline">\(\hat S_{KM}(t)\)</span> 很小时），对 <span class="math inline">\(d_{1j}\)</span> 与 <span class="math inline">\(e_{1j}\)</span> 之差给予较小的权重。</p>
+<p>Peto-Peto 统计量 <span class="math inline">\(U_P\)</span> 的方差由下式给出</p>
+<p><span class="math display">\[V_P=\sum_{j=1}^r\hat{S}_{KM}(t_{(j)})^2v_{1j}\]</span></p>
+<p>其中 <span class="math inline">\(v_{1j}\)</span> 由式 <a href="chap2.html#eq:2-21">(2.21)</a> 给出，因此 Peto-Peto 检验统计量为</p>
+<p><span class="math display">\[W_P=U_P^2/V_P\]</span></p>
+<p>在声称无总体差异的原假设下，它服从自由度为一的卡方分布。Peto-Peto 检验统计量 <span class="math inline">\(W_P\)</span> 通常与 Wilcoxon 检验统计量非常相近。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-13" class="example"><strong>示例 2.13  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>对于阳性或阴性染色的肿瘤女性的生存时间数据，Wilcoxon 统计量的值为 <span class="math inline">\(U_W = -159\)</span>，统计量的方差为 <span class="math inline">\(V_W = 6048.136\)</span>。卡方统计量 <span class="math inline">\(U^2_W /V_W\)</span> 的值为 4.180，相应的 <span class="math inline">\(P\)</span> 值为 0.041。这略小于 log-rank 检验的 <span class="math inline">\(P\)</span> 值，根据该结果，我们可以声明两组之间的差异在 5% 的水平上显著。对于 Peto-Peto 检验，<span class="math inline">\(U_P = 3.603,V_P = 3.155\)</span>，因此 <span class="math inline">\(W_P = U^2_P /V_P = 4.115\)</span>，<span class="math inline">\(P\)</span> 值 0.043 ，这与 Wilcoxon 检验发现的结果相同。</p>
+</div>
+</div>
+</div>
+<div id="sec2-6-5" class="section level3" number="2.6.5">
+<h3>
+<span class="header-section-number">2.6.5</span> log-rank 检验、Wilcoxon 检验和 Peto-Peto 检验的比较<a class="anchor" aria-label="anchor" href="#sec2-6-5"><i class="fas fa-link"></i></a>
+</h3>
+<p>在这三种检验中，当备择假设为某一组个体在任何给定时间的死亡风险与另一组相似个体的风险成比例时，log-rank 检验更适合。这是比例风险 (proportional hazards) 假设，是许多分析生存数据方法的基础。对于偏离原假设的其他类型，Wilcoxon 检验比 log-rank 检验更适合用于比较两个生存函数。然而，当组间删失模式不同时，Peto-Peto 检验确实表现得更好，并且在其他情况下与 Wilcoxon 检验的结果非常相似。因此，当比例风险假设存疑时，Peto-Peto 检验是 log-rank 检验的首选替代方案。</p>
+<p>为了确定在给定情况下哪种检验方法更适用，我们利用以下结果：<strong>如果风险函数成比例，则两组生存数据的生存函数不会相互交叉</strong>。为了证明这一点，假设 <span class="math inline">\(h_1(t)\)</span> 是 Group I 中个体在时间 <span class="math inline">\(t\)</span> 的死亡风险，<span class="math inline">\(h_2(t)\)</span> 是 Group II 中个体在同一时间的死亡风险。如果这两个风险成比例，那么我们可以有 <span class="math inline">\(h_1(t) = \psi h_2(t)\)</span>，其中 <span class="math inline">\(\psi\)</span> 是一个不依赖于时间 <span class="math inline">\(t\)</span> 的常数。对这个表达式的两边进行积分，乘以 -1 并取指数，得到</p>
+<p><span class="math display" id="eq:2-24">\[\begin{equation}
+\exp\left\{-\int_0^th_1(u)\mathrm{d}u\right\}=\exp\left\{-\int_0^t\psi h_2(u)\mathrm{d}u\right\}
+\tag{2.24}
+\end{equation}\]</span></p>
+<p>根据式 <a href="chap1.html#eq:1-6">(1.6)</a></p>
+<p><span class="math display">\[S(t)=\exp\left\{-\int_0^th(u)\mathrm{d}u\right\}\]</span></p>
+<p>因此，如果 <span class="math inline">\(S_1(T)\)</span> 和 <span class="math inline">\(S_2(T)\)</span> 是两组生存数据的生存函数，则根据式 <a href="chap2.html#eq:2-24">(2.24)</a></p>
+<p><span class="math display">\[S_1(t)=\left\{S_2(t)\right\}^\psi \]</span></p>
+<p>由于生存函数的取值范围在 0 到 1 之间，这一结果表明，在任何时间 <span class="math inline">\(t\)</span>，<span class="math inline">\(S_1(t)\)</span> 大于还是小于 <span class="math inline">\(S_2(t)\)</span> 取决于 <span class="math inline">\(\psi\)</span> 是小于还是大于 1。这意味着如果两个风险函数成比例，那么真实的生存函数不会交叉。<strong>这是比例风险的必要条件，但不是充分条件</strong>。</p>
+<p>通过绘制两组生存数据的生存函数估计图（如图 2.9 所示），可以对比例风险假设的有效性进行非正式评估。如果两个生存函数估计没有交叉，那么比例风险假设<strong>可能</strong>是合理的，log-rank 检验也是适用的。当然，<strong>即使对应的真实风险函数成比例，基于样本的生存函数估计也可能交叉，因此在解释此类图形时需要谨慎</strong>。第 4 章 <a href="chap4.html#sec4-4-1">4.4.1</a> 节介绍了一种更满意的图形方法，用于评估比例风险假设的有效性。</p>
+<p>总之，应使用 log-rank 检验来检验两个生存函数相等的假设，除非生存函数估计的曲线图或先前的数据表明有充分的理由怀疑比例风险假设。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-14" class="example"><strong>示例 2.14  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>从图 2.9 中的两个生存函数估计的曲线图中，我们可以看到，染色阴性的女性的生存函数始终高于染色阳性的女性的生存函数。这表明比例风险假设是适当的，并且 log-rank 检验比 Wilcoxon 或 Peto-Peto 检验更合适。然而，在这个例子中，三种假设检验的结果差别很小。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec2-7" class="section level2" number="2.7">
+<h2>
+<span class="header-section-number">2.7</span> 三组或更多组生存数据的比较<a class="anchor" aria-label="anchor" href="#sec2-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>log-rank, Wilcoxon 和 Peto-Peto 检验都可以扩展到能够比较三组或更多组生存数据。假设要比较 <span class="math inline">\(g\ge 2\)</span> 组生存数据的生存分布。我们定义类似于 <span class="math inline">\(U\)</span> 的统计量，用于将组 <span class="math inline">\(1,2,\ldots,g−1\)</span> 的观测死亡人数与它们的期望值进行比较。例如，使用 <a href="chap2.html#sec2-6">2.6</a> 节中的记号，log-rank 统计量的一个明显的扩展为</p>
+<p><span class="math display">\[\begin{aligned}U_{Lk}=\sum_{j=1}^r\left(d_{kj}-\frac{n_{kj}d_j}{n_j}\right)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(k=1,2,\ldots,g-1\)</span>。这些量以具有 <span class="math inline">\((g−1)\)</span> 个分量的向量的形式表示，记作 <span class="math inline">\(\boldsymbol U_L\)</span>。</p>
+<p>我们还需要 <span class="math inline">\(U_{LK}\)</span> 的方差和协方差的表达式。其中，<span class="math inline">\(U_{LK}\)</span> 和 <span class="math inline">\(U_{LK^\prime}\)</span> 之间的协方差由下式给出</p>
+<p><span class="math display">\[V_{Lkk'}=\sum_{j=1}^r\frac{n_{kj}d_j(n_j-d_j)}{n_j(n_j-1)}\left(\delta_{kk'}-\frac{n_{k'j}}{n_j}\right)\]</span></p>
+<p>其中 <span class="math inline">\(k,k'=1,2,\ldots,g-1\)</span>，以及</p>
+<p><span class="math display">\[\left.\delta_{kk^{\prime}}=\left\{\begin{array}{l}1\mathrm{~if~}k=k^{\prime},\\0\text{ otherwise.}\end{array}\right.\right.\]</span></p>
+<p>然后将这些项以方差-协方差阵 <span class="math inline">\(\boldsymbol V_L\)</span> 的形式组装，该矩阵是一个对称阵，其中 <span class="math inline">\(U_{Lk}\)</span> 的方差位于对角线，协方差项位于非对角线。例如，在比较三组生存数据时，该矩阵为</p>
+<p><span class="math display">\[\boldsymbol{V}_L=\begin{pmatrix}V_{L11}&amp;V_{L12}\\V_{L12}&amp;V_{L22}\end{pmatrix}\]</span></p>
+<p>其中 <span class="math inline">\(V_{L11}\)</span> 和 <span class="math inline">\(V_{L22}\)</span> 分别是 <span class="math inline">\(U_{L1}\)</span> 和 <span class="math inline">\(U_{L2}\)</span> 的方差，<span class="math inline">\(V_{L12}\)</span> 是它们的协方差。</p>
+<p>类似地，Wilcoxon 统计量的方差-协方差阵是矩阵 <span class="math inline">\(\boldsymbol V_W\)</span> ，其第 <span class="math inline">\((k, k^′)\)</span> 个元素为</p>
+<p><span class="math display">\[V_{Wkk^{\prime}}=\sum_{j=1}^rn_j^2\frac{n_{kj}d_j(n_j-d_j)}{n_j(n_j-1)}\left(\delta_{kk^{\prime}}-\frac{n_{k^{\prime}j}}{n_j}\right)\]</span></p>
+<p>其中 <span class="math inline">\(k,k'=1,2,\ldots,g-1\)</span>。而 Peto-Peto 检验统计量的相应元素为</p>
+<p><span class="math display">\[\begin{aligned}V_{Pkk'}=\sum_{j=1}^r\hat{S}_{KM}(t_j)^2\frac{n_{kj}d_j(n_j-d_j)}{n_j(n_j-1)}\left(\delta_{kk'}-\frac{n_{k'j}}{n_j}\right)\end{aligned}\]</span></p>
+<p>最后，为了检验组间无差异的原假设，我们利用检验统计量 <span class="math inline">\(\boldsymbol{U}_L^{\prime}\boldsymbol{V}_L^{-1}\boldsymbol{U}_L\)</span> 在原假设为真时服从自由度为 <span class="math inline">\(g − 1\)</span> 的卡方分布这一结果。其他两个检验也是如此。</p>
+<p>用于分析生存数据的统计软件通常采用这种方法，并且由于对所得卡方统计量的解释很简单，因此这里不再给出示例。</p>
+</div>
+<div id="sec2-8" class="section level2" number="2.8">
+<h2>
+<span class="header-section-number">2.8</span> 分层检验<a class="anchor" aria-label="anchor" href="#sec2-8"><i class="fas fa-link"></i></a>
+</h2>
+<p>在许多情况下，在考虑到记录在每个个体上的其他变量之后，需要比较两组或多组生存数据。考虑一项多中心临床试验，比较两种化疗对肺癌病人生存时间的影响。每个中心都会提供有关每个治疗组患者生存时间的信息。由此产生的数据称为按中心分层 (stratified by center)。</p>
+<p>基于每个中心数据的单独的 log-rank, Wilcoxon 或 Peto-Peto 检验将提供丰富的信息，但结合了所有中心治疗差异信息的检验可以提供更精确的治疗效果的总结。当根据年龄组、性别、表现状态和所研究疾病的其他潜在风险因素等变量对患者进行分层时，在试图检验治疗差异时，也会出现类似的情况。</p>
+<p>在上述情况下，可以采用 log-rank 的分层版本或其他检验。从本质上讲，这涉及到计算每层的 <span class="math inline">\(U\)</span> 和 <span class="math inline">\(V\)</span> 统计量，然后将这些值跨层合并。本节将描述分层 log-rank 检验，但也可以以类似的方式获得 Wilcoxon 和 Peto-Peto 检验的分层版本。第 11 章 <a href="chap11.html#sec11-2">11.2</a> 节描述了基于生存时间模型的等价分析。</p>
+<p>设 <span class="math inline">\(U_{Lk}\)</span> 是用于比较两个治疗组的 log-rank 统计量的值，这是使用式 <a href="chap2.html#eq:2-20">(2.20)</a> 从第 <span class="math inline">\(k\)</span> 层中计算得出的。此外，用 <span class="math inline">\(V_{Lk}\)</span> 表示第 <span class="math inline">\(k\)</span> 层的统计量的方差，这是使用式 <a href="chap2.html#eq:2-21">(2.21)</a> 计算的。那么分层 log-rank 检验基于统计量</p>
+<p><span class="math display" id="eq:2-25">\[\begin{equation}
+W_S=\frac{\left(\sum_{k=1}^sU_{Lk}\right)^2}{\sum_{k=1}^sV_{Lk}}
+\tag{2.25}
+\end{equation}\]</span></p>
+<p>在无治疗差异的原假设下，它服从自由度为一的卡方分布。将该统计量的观测值与卡方分布的百分位点进行比较，可以检验无总体治疗差异的假设。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-15" class="example"><strong>示例 2.15  (黑色素瘤患者的生存时间) </strong></span><br></p>
+<p>University of Oklahoma Health Sciences Center 进行了一项研究，旨在比较两种免疫疗法延长黑色素瘤患者生存期的能力，黑色素瘤是一种发生于皮肤的高度恶性肿瘤。对于每位患者，在分配卡介苗 (Bacillus Calmette-Gu´erin, BCG) 疫苗或基于短棒状杆菌 (Corynebacterium parvum, C. parvum) 的疫苗之前，均通过手术切除肿瘤。</p>
+<p>各治疗组患者的生存时间根据患者年龄组进一步分类，Lee and Wang (2013) 给出的数据如表 2.9 所示。</p>
+<details><summary><font color="#8B2232">表 2.9</font>
+</summary><img src="figure/table%202.9.png#center" style="width:80.0%"></details><p><br>
+通过首先计算 log-rank 统计量来分析这些数据，以比较两个治疗组中每个年龄组患者的生存时间。使用式 <a href="chap2.html#eq:2-20">(2.20)</a>, <a href="chap2.html#eq:2-22">(2.22)</a> 和 <a href="chap2.html#eq:2-23">(2.23)</a> 得出的 <span class="math inline">\(U,V,W\)</span> 统计量的值总结于表 2.10 中。</p>
+<details><summary><font color="#8B2232">表 2.10</font>
+</summary><img src="figure/table%202.10.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>分层 log-rank 检验可进行扩展以比较两个以上的治疗组。得出的公式不适合手工计算，可以使用计算机软件进行生存分析。然而，这种考虑额外变量的方法不如下一章介绍的基于建模方法的灵活，因此此处不提供更多细节。</p>
+</div>
+<div id="sec2-9" class="section level2" number="2.9">
+<h2>
+<span class="header-section-number">2.9</span> log-rank 趋势检验<a class="anchor" aria-label="anchor" href="#sec2-9"><i class="fas fa-link"></i></a>
+</h2>
+<p>在许多要比较三组或更多组生存数据的应用中，这些组是以某种方式排序的。例如，这些组可以对应于治疗剂量的增加、疾病的阶段或个体的年龄组。在使用前几节中描述的 log-rank 检验对这些组进行比较时，即使各组之间的死亡风险增加或减少，也可能得不到各组之间有显著差异的结果。使用有关组别顺序信息的检验程序比标准的 log-rank 检验更易识别显著的趋势。</p>
+<p>跨 <span class="math inline">\(g\)</span> 个有序组别的 log-rank 趋势检验基于统计量</p>
+<p><span class="math display" id="eq:2-26">\[\begin{equation}
+U_T=\sum_{k=1}^gw_k(d_{k.}-e_{k.})
+\tag{2.26}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(w_k\)</span> 是分配给第 <span class="math inline">\(k\)</span> 组的编码 (code)，<span class="math inline">\(k=1,2,\ldots,g\)</span> 以及</p>
+<p><span class="math display">\[\begin{aligned}d_{k.}=\sum_{j=1}^{r_k}d_{kj},\quad\quad e_{k.}=\sum_{j=1}^{r_k}e_{kj}\end{aligned}\]</span></p>
+<p>是第 <span class="math inline">\(k\)</span> 组观察到的和预期的死亡人数，其中求和是对该组中 <span class="math inline">\(r_k\)</span> 个死亡时间进行的。注意 <span class="math inline">\(d_{k.}\)</span> 和 <span class="math inline">\(e_{k.}\)</span> 中的点下标表示点所替换的下标的总和。编码通常认为是等距的，对应于各组之间的线性趋势。例如，如果有三组，则代码可以取 1, 2 和 3，不过 −1, 0 和 1 这组等价的选择可在一定程度上简化计算。<span class="math inline">\(U_T\)</span> 的方差由下式给出</p>
+<p><span class="math display" id="eq:2-27">\[\begin{equation}
+V_T=\sum_{k=1}^g(w_k-\bar{w})^2e_k.
+\tag{2.27}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(\bar w\)</span> 是量 <span class="math inline">\(w_k\)</span> 的加权和，权重为预期死亡人数，即</p>
+<p><span class="math display">\[\bar{w}=\frac{\sum_{k=1}^gw_ke_{k.}}{\sum_{k=1}^ge_{k.}}\]</span></p>
+<p>统计量 <span class="math inline">\(W_T = U^2_T /V_T\)</span> 在跨 <span class="math inline">\(g\)</span> 组无趋势的原假设下服从自由度为一的卡方分布。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex2-16" class="example"><strong>示例 2.16  (黑色素瘤患者的生存时间) </strong></span><br></p>
+<p>将使用<a href="chap2.html#exm:ex2-15">示例 2.15</a> 中有关黑色素瘤患者生存时间的数据来说明 log-rank 趋势检验。出于说明目的，将仅使用分配了 BCG 疫苗的患者的数据。比较三个年龄组患者生存时间的 log-rank 统计量为 3.739。与自由度为二的卡方分布的百分位点相比，这并不显著 (<span class="math inline">\(P = 0.154\)</span>)。</p>
+<p>现在使用 log-rank 趋势检验来考察随年龄变化是否存在线性趋势。为此，我们将采用等间距的编码 <span class="math inline">\(w_k\)</span>，其值为 -1, 0 和 1。表 2.11 总结了 log-rank 趋势检验所需的计算。</p>
+<details><summary><font color="#8B2232">表 2.11</font>
+</summary><img src="figure/table%202.11.png#center" style="width:80.0%"></details><p><br>
+Log-rank 趋势检验基于式 <a href="chap2.html#eq:2-26">(2.26)</a> 中的统计量，其值为</p>
+<p><span class="math display">\[\begin{aligned}U_T=(d_{3.}-e_{3.})-(d_{1.}-e_{1.})=2.5692\end{aligned}\]</span></p>
+<p>使用表 2.11 中给出的每组的预期死亡人数，编码 <span class="math inline">\(w_k\)</span> 的加权平均值为</p>
+<p><span class="math display">\[\begin{aligned}\bar{w}&amp;=\frac{e_{3.}-e_{1.}}{e_{1.}+e_{2.}+e_{3.}}=-0.5138\end{aligned}\]</span></p>
+<p><span class="math inline">\((w_k-\bar{w})^2\)</span> 的三个值为 0.2364, 0.2640 和 2.2917，并且根据式 <a href="chap2.html#eq:2-27">(2.27)</a>，<span class="math inline">\(V_T = 2.4849\)</span>。最后，检验统计量为</p>
+<p><span class="math display">\[W_T=\frac{U_T^2}{V_T}=2.656\]</span></p>
+<p>根据自由度为一卡方分布进行判断，在 10% 水平上几乎显著 (<span class="math inline">\(P = 0.103\)</span>)。因此，我们得出结论，有轻微证据表明各年龄组之间存在线性趋势。</p>
+</div>
+</div>
+<p>下一章的 <a href="chap3.html#sec3-8-1">3.8.1</a> 节描述了考察有序分类变量的各个水平是否存在趋势的另一种方法，是一种基于生存数据分析的建模方法。</p>
+</div>
+<div id="sec2-10" class="section level2" number="2.10">
+<h2>
+<span class="header-section-number">2.10</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec2-10"><i class="fas fa-link"></i></a>
+</h2>
+<p>生命表是生存函数生命表估计计算的基础，广泛用于流行病学研究和人口学数据分析。更详细的信息可以在 Armitage, Berry and Matthews (2002) 以及有关人口学和流行病学统计方法的书籍中找到，例如 Khmaladze (2013) 和 Woodward (2014).</p>
+<p>生存函数的乘积极限估计自 20 世纪初开始使用。Kaplan and Meier (1958) 使用最大似然法得出了该估计，这就是为什么该估计以他们的名字命名。Breslow and Crowley (1974) 以及 Meier (1975) 进一步探讨了生存函数 Kaplan-Meier 估计的性质。Nelson-Aalen 估计是由 Altshuler (1970), Nelson (1972) 和 Aalen (1978b) 得出的。</p>
+<p>Greenwood (1926) 首先给出了 Kaplan-Meier 估计的标准误表达式，但 Aalen and Johansen (1978) 给出了另一个结果。Klein (1991) 比较了累积风险函数的 Nelson-Aalen 估计的方差表达式。尽管 <a href="chap2.html#sec2-2-3">2.2.3</a> 节显示了如何使用 Greenwood 公式得到生存函数特定时间的置信区间，但需要其他程序来构建完整生存函数的置信区间。Hall and Wellner (1980) 以及 Efron (1981) 展示了如何计算这些带宽。</p>
+<p>Brookmeyer and Crowley (1982), Emerson (1982), Nair (1984), Simon and Lee (1982) 以及 Slud, Byar and Green (1984) 描述了构建中位生存时间置信区间的方法。Simon (1986) 强调了置信区间在报告临床试验结果中的重要性，并举例说明了 Slud, Byar and Green (1984) 中描述的方法。Klein and Moeschberger (2005) 对风险函数的核平滑估计进行了全面的综述。</p>
+<p>在许多统计文本中都涵盖了频率学派推断方法中假设检验程序的制定。例如，在非技术性医学背景下呈现相关思想的著作包括 Altman (1991) 和 Armitage, Berry and Matthews (2002.</p>
+<p>Log-rank 检验源于 Mantel and Haenszel (1959), Mantel (1966) 以及 Peto and Peto (1972) 的工作。关于秩检验制定的细节，请参阅 Lawless (2002)。在 <a href="chap2.html#sec2-6-2">2.6.2</a> 节中推导 log-rank 检验时使用的超几何分布的全面综述，参见 Johnson, Kotz and Kemp (2005).</p>
+<p>Peto-Peto 检验由 Peto and Peto (1972) 提出，而 Prentice and Marek (1979) 给出了一个 Wilcoxon 检验表现不佳的示例。Harrington and Fleming (1982) 介绍了一个用于比较两个或更多组的一系列检验。log-rank 趋势检验源于 Armitage, Berry and Matthews (2002)中给出的 2 × k 列联表趋势检验，并在 Altman (1991) 中也有描述。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></div>
+<div class="next"><a href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap2"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li>
+<a class="nav-link" href="#sec2-1"><span class="header-section-number">2.1</span> 估计生存函数</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec2-1-1"><span class="header-section-number">2.1.1</span> 生存函数的生命表估计</a></li>
+<li><a class="nav-link" href="#sec2-1-2"><span class="header-section-number">2.1.2</span> 生存函数的 Kaplan-Meier 估计</a></li>
+<li><a class="nav-link" href="#sec2-1-3"><span class="header-section-number">2.1.3</span> 生存函数的 Nelson-Aalen 估计</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec2-2"><span class="header-section-number">2.2</span> 生存函数估计的标准误</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec2-2-1"><span class="header-section-number">2.2.1</span> Kaplan-Meier 估计的标准误</a></li>
+<li><a class="nav-link" href="#sec2-2-2"><span class="header-section-number">2.2.2</span> 其他估计的标准误</a></li>
+<li><a class="nav-link" href="#sec2-2-3"><span class="header-section-number">2.2.3</span> 生存函数的置信区间</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec2-3"><span class="header-section-number">2.3</span> 估计风险函数</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec2-3-1"><span class="header-section-number">2.3.1</span> 风险函数的生命表估计</a></li>
+<li><a class="nav-link" href="#sec2-3-2"><span class="header-section-number">2.3.2</span> Kaplan-Meier 型估计</a></li>
+<li><a class="nav-link" href="#sec2-3-3"><span class="header-section-number">2.3.3</span> 估计累积风险函数</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec2-4"><span class="header-section-number">2.4</span> 估计生存时间的中位数和百分位数</a></li>
+<li><a class="nav-link" href="#sec2-5"><span class="header-section-number">2.5</span> 中位数和百分位数的置信区间</a></li>
+<li>
+<a class="nav-link" href="#sec2-6"><span class="header-section-number">2.6</span> 两组生存数据的比较</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec2-6-1"><span class="header-section-number">2.6.1</span> 假设检验</a></li>
+<li><a class="nav-link" href="#sec2-6-2"><span class="header-section-number">2.6.2</span> log-rank 检验</a></li>
+<li><a class="nav-link" href="#sec2-6-3"><span class="header-section-number">2.6.3</span> Wilcoxon 检验</a></li>
+<li><a class="nav-link" href="#sec2-6-4"><span class="header-section-number">2.6.4</span> Peto-Peto 检验</a></li>
+<li><a class="nav-link" href="#sec2-6-5"><span class="header-section-number">2.6.5</span> log-rank 检验、Wilcoxon 检验和 Peto-Peto 检验的比较</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec2-7"><span class="header-section-number">2.7</span> 三组或更多组生存数据的比较</a></li>
+<li><a class="nav-link" href="#sec2-8"><span class="header-section-number">2.8</span> 分层检验</a></li>
+<li><a class="nav-link" href="#sec2-9"><span class="header-section-number">2.9</span> log-rank 趋势检验</a></li>
+<li><a class="nav-link" href="#sec2-10"><span class="header-section-number">2.10</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

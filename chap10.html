@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 10 章 脆弱模型 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="在生存数据建模中，我们试图通过研究中记录的某些解释变量的值的不同，来解释观察到的诸如死亡等事件发生时间的变异。然而，即使考虑到这些变量的影响，他们的观测生存时间仍会有变异。有些人可能比其他人有更大的死亡风险，因此可能会更早死亡。他们可以被描述为更脆弱 (frail)，生存时间的变异可以通过个体之间这种脆弱效应 (frailty effect) 的变异性来解释。...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 10 章 脆弱模型 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="在生存数据建模中，我们试图通过研究中记录的某些解释变量的值的不同，来解释观察到的诸如死亡等事件发生时间的变异。然而，即使考虑到这些变量的影响，他们的观测生存时间仍会有变异。有些人可能比其他人有更大的死亡风险，因此可能会更早死亡。他们可以被描述为更脆弱 (frail)，生存时间的变异可以通过个体之间这种脆弱效应 (frailty effect) 的变异性来解释。...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 10 章 脆弱模型 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="在生存数据建模中，我们试图通过研究中记录的某些解释变量的值的不同，来解释观察到的诸如死亡等事件发生时间的变异。然而，即使考虑到这些变量的影响，他们的观测生存时间仍会有变异。有些人可能比其他人有更大的死亡风险，因此可能会更早死亡。他们可以被描述为更脆弱 (frail)，生存时间的变异可以通过个体之间这种脆弱效应 (frailty effect) 的变异性来解释。...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="active" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap10" class="section level1" number="10">
+<h1>
+<span class="header-section-number">第 10 章</span> 脆弱模型<a class="anchor" aria-label="anchor" href="#chap10"><i class="fas fa-link"></i></a>
+</h1>
+<p>在生存数据建模中，我们试图通过研究中记录的某些解释变量的值的不同，来解释观察到的诸如死亡等事件发生时间的变异。然而，即使考虑到这些变量的影响，他们的观测生存时间仍会有变异。有些人可能比其他人有更大的死亡风险，因此可能会更早死亡。他们可以被描述为更脆弱 (frail)，生存时间的变异可以通过个体之间这种<strong>脆弱效应</strong> (frailty effect) 的变异性来解释。</p>
+<p>在研究中，经常会遇到个体组之间的生存时间不独立的情况。同一组个体的生存时间往往比不同组的个体更相似。那么，可以通过假定同组个体具有相同的脆弱性 (frailty) 来对这种效应进行建模。由于脆弱对一个组中所有个体来说都是共同的，因此引入了该组内个体生存时间之间一定程度的依赖性。因此，具有<strong>共享脆弱</strong> (shared frailty) 的模型可用于对生存数据进行建模，其中预期事件时间之间存在某种关联，例如在涉及具有共同特征的个体组的研究中，或者当一个个体重复经历同一事件时。本章介绍了这些模型。</p>
+<div id="sec10-1" class="section level2" number="10.1">
+<h2>
+<span class="header-section-number">10.1</span> 脆弱性的介绍<a class="anchor" aria-label="anchor" href="#sec10-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>研究中的个体之间几乎总是存在生存时间的变异。即使许多个体有相同的人口统计变量值，如年龄和性别，或其他解释变量相同的值，他们的生存时间通常也会不同。这些差异可能是因为影响生存的某些变量没有测量，或者个体的生存时间取决于无法测量的变量。可能有很多这样的变量，我们对这些变量的了解可能有限，以至于我们根本不知道可以解释这种变异性的变量是什么。</p>
+<p>为了说明这一点，请考虑诊断为患有危及生命的癌症的患者的生存时间。确诊后患者的生存时间取决于许多因素，包括癌症类型和肿瘤分期、患者的特征（如年龄、体重和生活方式），以及癌症的治疗方式。然而，可以发现，每个测量的解释变量都相同的患者具有不同的生存时间。个体之间的这种变异或异质性 (heterogeneity) 是会出现的，因为有些个体不如其他个体强大，无法用相对较少的已知变量来概括。事实上，我们永远无法知道所有可能对癌症患者生存产生影响的因素是什么，更不用说能够测量它们了，但我们可以在建模过程中考虑到它们。</p>
+<p>一组个体生存时间的变异可以用一些个体比其他个体更脆弱来描述。那些脆弱程度较高的个体往往死得更快。然而，个体脆弱的程度无法直接度量；如果可以的话，我们可能会尝试将其纳入生存时间模型中。相反，我们只观测脆弱效应对<strong>可观测生存时间</strong> (observable survival times) 的影响。</p>
+<div id="sec10-1-1" class="section level3" number="10.1.1">
+<h3>
+<span class="header-section-number">10.1.1</span> 随机效应<a class="anchor" aria-label="anchor" href="#sec10-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在前几章描述的模型中，与感兴趣因素对应的效应总是假定为固定的。<strong>固定效应</strong> (fixed effect) 的可能值不会变化，并假定它们的测量没有误差。例如，与性别相关的因素有两个不同的水平，即男性和女性，这在不同的研究中不会改变，总结两种性别之间的结果差异通常是有意义的。另一方面，<strong>随机效应</strong> (random effect) 假定为具有从可能值总体中抽取的水平，其中实际水平代表该总体<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;On the other hand, a random effect is assumed to have levels drawn from a population of possible values, where the actual levels are representative of that population.&lt;/p&gt;"><sup>9</sup></a>。例如，在多中心临床试验中，可能采用的中心可认为是从更多可能的中心中抽取的。然后，我们将使用随机效应来为中心变异建模，对特定中心之间的结果进行比较的兴趣不大。</p>
+<p>随机效应假定为具有某种潜在概率分布随机变量的观测，该分布的方差用于总结其值的差异程度。这种效应通常具有许多可能的值，使用固定效应来表示它们之间的差异是不现实的，因为这会将大量未知参数引入模型。通过将它们视为随机效应，只有一个参数需要估计，即它们假定的潜在分布的方差。</p>
+</div>
+<div id="sec10-1-2" class="section level3" number="10.1.2">
+<h3>
+<span class="header-section-number">10.1.2</span> 个体脆弱性<a class="anchor" aria-label="anchor" href="#sec10-1-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>由于研究中个体的未知脆弱性本质上是从大量可能值中抽取的，因此我们将脆弱性视为随机效应。在随机效应的潜在分布方差很小的情况下，脆弱效应不会有太大差异，并且对推断的影响可以忽略不计。然而，如果脆弱性方差很大，即使考虑到其他潜在解释变量的影响，观测的个体生存时间也可能存在显着差异。</p>
+<p>当脆弱性存在时，越脆弱的人往往会更早死亡。这意味着在任何时间点观测到个体的样本生存时间时，仍然存活的个体将比从中抽取样本的相应总体更不脆弱<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;This means that at any point in time when the survival times of a sample of individuals are observed, those who are still alive will be less frail than the corresponding population from which the sample has been drawn.&lt;/p&gt;"><sup>10</sup></a>。由于脆弱是一种选择效应 (selection effect)，因此会对实际可观测的情况产生影响。例如，如果每个个体都有恒定的死亡风险，并且脆弱效应存在，越脆弱的个体就会更早死亡，而那些不那么脆弱的个体会生存更久。因此，观测风险函数可能会随着时间的推移而下降。例如，考虑一组经历过非致命心脏病发作的个体。对于这些个体，死亡风险通常会随着时间的推移而下降，这可能有两个原因。首先，个体可能只是适应了由心脏病发作引起的任何心脏损伤，从而使得潜在的死亡风险降低。或者，死亡风险可能是恒定的，但观测风险降低可能是由于脆弱性；风险较高的个体死亡较早，因此在任何时候，生存的个体都是那些不那么脆弱的个体。生存时间数据不能用来区分这两种可能的死亡风险明显下降的解释。同样，当考虑到脆弱效应时，风险比估计及其相关的标准误可能与忽略脆弱效应后获得的值大不相同。这一特征将在 <a href="chap10.html#sec10-3">10.3</a> 节中说明。</p>
+</div>
+<div id="sec10-1-3" class="section level3" number="10.1.3">
+<h3>
+<span class="header-section-number">10.1.3</span> 共享脆弱性<a class="anchor" aria-label="anchor" href="#sec10-1-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>考虑个体脆弱程度的模型可用于评估未测量变量的值如何影响生存。然而，脆弱性的概念更广泛地用于许多人有共同特征的情况。例如，在多中心研究中，来自同一中心的个体的生存经历可能比来自不同中心的个体更相似。这可能是因为不同中心的临床团队不同，或者各中心的护理实践不同。同样，在动物实验中，由于遗传和环境的影响，来自同一窝的动物会比来自不同窝的动物更相似。因此，他们的生存时间是相关的，对生存时间之间的这种关联进行建模的一种方法是假定一个群体中所有个体都具有共享脆弱性 (shared frailty). 在涉及眼、耳或肾脏的配对器官研究中，记录配对中每个器官发生某些事件的时间，脆弱性可以包含在模型中，以考虑观测事件时间对之间的任何关联。因此，共享脆弱模型提供了一种在生存时间不独立时对生存数据进行建模的方法。</p>
+<p>一些研究导致个体内重复或反复出现事件时间。这类情况的例子包括对连续不良事件之间的时间，例如偏头痛或恶心的时间、牙齿填充物脱落的时间以及接受多次移植肾脏的患者移植失败的时间。在这里，个体内的事件时间可能不是独立的，为了对此建模，我们可以假定每个事件时间的脆弱性是相同的。因此，共享脆弱的概念可以扩展到个体内部重复发生事件的情况。</p>
+</div>
+</div>
+<div id="sec10-2" class="section level2" number="10.2">
+<h2>
+<span class="header-section-number">10.2</span> 个体脆弱性建模<a class="anchor" aria-label="anchor" href="#sec10-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>个体生存时间之间的变异可以通过假定每个人都有自己的脆弱值来建模。假定该脆弱项对个体的死亡风险有乘性作用。那些脆弱性大于一的个体将增加事件发生的风险，而那些脆弱性小于一的人将减小事件发生的风险。考虑在某个时间 <span class="math inline">\(t\)</span> 发生事件风险的比例风险模型，该模型的风险函数取决于 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1, X_2,...,X_p\)</span> 的值以及未知的基线风险函数 <span class="math inline">\(h_0(t)\)</span>。第 <span class="math inline">\(i\)</span> 个个体的风险函数为</p>
+<p><span class="math display" id="eq:10-1">\[\begin{align}
+h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)
+\tag{10.1}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的解释变量的值向量，<span class="math inline">\(\boldsymbol\beta\)</span> 是其未知系数 <span class="math inline">\(\beta_1,\beta_2,...,\beta_p\)</span> 的向量。基线风险 <span class="math inline">\(h_0(t)\)</span> 可以不指定，如 Cox 回归模型（第 <a href="chap3.html#chap3">3</a> 章）或 <span class="math inline">\(t\)</span> 的参数函数，如 Weibull 模型（第 <a href="chap5.html#chap5">5</a>, <a href="chap6.html#chap6">6</a> 章）。</p>
+<p>我们现在引入一个乘性脆弱项 <span class="math inline">\(z_i\)</span></p>
+<p><span class="math display" id="eq:10-2">\[\begin{align}
+h_i(t)=z_i\exp(\boldsymbol{\beta'x}_i)h_0(t)
+\tag{10.2}
+\end{align}\]</span></p>
+<p>脆弱项 <span class="math inline">\(z_i\)</span> 不能为负，脆弱性越大，事件发生的风险就越大。若 <span class="math inline">\(z_i=1\)</span> 则回到式 <a href="chap10.html#eq:10-1">(10.1)</a> 的标准模型，对应于没有脆弱效应的情况。0 和 1 之间的 <span class="math inline">\(z_i\)</span> 值对应于风险小于潜在比例风险模型的风险的情况，发生于个体毅力增加时。<span class="math inline">\(n\)</span> 个个体样本中 <span class="math inline">\(z_i\)</span> 值的差异代表由脆弱效应导致的在任何给定时间死亡风险的变异。</p>
+<p>通常更方便的是使用脆弱效应的另一种表示，通过设 <span class="math inline">\(z_i=\exp(u_i)\)</span> 来获得。然后可以写出式 <a href="chap10.html#eq:10-2">(10.2)</a> 中的模型</p>
+<p><span class="math display" id="eq:10-3">\[\begin{align}
+h_i(t)=\exp(\boldsymbol{\beta'x}_i+u_i)h_0(t)
+\tag{10.3}
+\end{align}\]</span></p>
+<p>在该模型中，<span class="math inline">\(u_i=\log z_i\)</span> 是比例风险模型线性部分中的随机效应。注意，尽管脆弱性 <span class="math inline">\(z_i\)</span> 不能是负的，但 <span class="math inline">\(u_i\)</span> 可以取任何值，无论正或负，并且 <span class="math inline">\(u_i＝0\)</span> 对应于 <span class="math inline">\(z_i＝1\)</span> 的不存在脆弱性的情况。在式 <a href="chap10.html#eq:10-3">(10.3)</a> 中，比例风险模型的线性部分已扩展为包括随机效应，并且生存时间模型的这一部分现在类似于一般和广义线性建模其他领域中使用的<strong>混合模型</strong> (mixed models).</p>
+<p>式 <a href="chap10.html#eq:10-3">(10.3)</a> 中的 <span class="math inline">\(u_i(i=1,2,\ldots,n)\)</span> 视为 <span class="math inline">\(n\)</span> 个独立且同分布的随机变量 <span class="math inline">\(U_i\)</span> 观测值或实现 (realisations). 其中，假定每个随机变量 <span class="math inline">\(U_i\)</span> 具有共同概率分布。因此，尽管一组个体的脆弱性可能都不同，但它们来自相同的潜在概率分布。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex10-1" class="example"><strong>示例 10.1  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>第 1 章<a href="chap1.html#exm:ex1-2">示例 1.2</a> 中关于肿瘤呈阴性或阳性染色的两组妇女生存时间的数据表明，每组妇女的生存时间存在差异。阴性染色组的实际生存时间从 23 个月到 224 个月以上，而阳性染色组的生存时间从 5 个月到 225 个月以上。为了总结这些数据，如<a href="chap5.html#exm:ex5-6">示例 5.6</a> 所示，拟合了包含与阳性或阴性染色相关因素的 Weibull 比例风险模型。基线风险函数估计为：<span class="math inline">\(\hat{h}_0(t)=\hat{\lambda}\hat{\gamma}t^{\hat{\gamma}-1}\)</span>，其中，<span class="math inline">\(\hat\lambda=0.00414\)</span>，且 <span class="math inline">\(\hat\gamma=0.937\)</span>。使用第 5 章式 <a href="chap5.html#eq:5-43">(5.43)</a>，第 <span class="math inline">\(i(i=1,2,\ldots,45)\)</span> 个妇女的相应生存函数估计，由下式给出</p>
+<p><span class="math display">\[\hat{S}_i(t)=\exp\{-\exp(\hat{\beta}x_i)\hat{\lambda}t^{\hat{\gamma}}\}\]</span></p>
+<p>其中 <span class="math inline">\(x_i=0\)</span> 表示阴性染色的女性，<span class="math inline">\(x_i=1\)</span> 表示阳性染色的女性。肿瘤呈阳性染色的女性与肿瘤呈阴性染色的女性的相应风险比为 2.545，95% 置信区间为 <span class="math inline">\((0.93,6.98)\)</span>。拟合的 Weibull 生存函数如图 10.1 所示，叠加在生存函数的 Kaplan-Meier 估计上。Weibull 模型似乎对肿瘤阳性染色的女性的生存时间拟合得不太好。</p>
+<details><summary><font color="#8B2232">图 10.1</font>
+</summary><img src="figure/figure%2010.1.png#center" style="width:80.0%"></details><p><br>
+在此图中，数据仅总结为两条曲线。然而，脆弱性的引入将导致每个女性的生存函数估计不同，我们将在<a href="chap10.html#exm:ex10-2">示例 10.2</a> 中回到这一点。</p>
+</div>
+</div>
+<div id="sec10-2-1" class="section level3" number="10.2.1">
+<h3>
+<span class="header-section-number">10.2.1</span> 脆弱性分布<a class="anchor" aria-label="anchor" href="#sec10-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在式 <a href="chap10.html#eq:10-3">(10.3)</a> 的模型中，通常假定与随机效应相关的随机变量 <span class="math inline">\(U_i,i=1,2,\ldots,n\)</span> 具有零均值和共同方差 <span class="math inline">\(\sigma^2_u\)</span> s的正态分布。如果 <span class="math inline">\(U_i\sim N(0,\sigma^2_u)\)</span> ，则 <span class="math inline">\(Z_i=\exp(U_i)\)</span> 具有 lognormal 分布。第 5 章 <a href="chap5.html#sec5-1-4">5.1.4</a> 节介绍了这种分布。由于式 <a href="chap10.html#eq:10-2">(10.2)</a> 模型中的 <span class="math inline">\(z_i＝1\)</span> 对应于不存在脆弱性的情况，因此脆弱性分布最好以一为中心。通过将随机脆弱效应 <span class="math inline">\(U_i\)</span> 围绕零均值分布，<span class="math inline">\(Z_i\)</span> 的相应分布的中位数为一。然而，<span class="math inline">\(Z_i\)</span> 的期望值是</p>
+<p><span class="math display" id="eq:10-4">\[\begin{align}
+\operatorname{E}\left(Z_i\right)=\exp(\sigma_u^2/2)
+\tag{10.4}
+\end{align}\]</span></p>
+<p>将不等于 1.0，并且 <span class="math inline">\(Z_i\)</span> 的方差由下式给出</p>
+<p><span class="math display" id="eq:10-5">\[\begin{align}
+\mathrm{var}\left(Z_i\right)=\exp(\sigma_u^2)\{\exp(\sigma_u^2)-1\}
+\tag{10.5}
+\end{align}\]</span></p>
+<p>式 <a href="chap10.html#eq:10-4">(10.4)</a> 和 <a href="chap10.html#eq:10-5">(10.5)</a> 中的结果显示了如何从相应的正态分布随机效应的方差 <span class="math inline">\(\sigma^2_u\)</span> 中得到 lognormal 脆弱性分布的均值和方差。另一种方法是将 <span class="math inline">\(U_i\)</span> 取为均值 <span class="math inline">\(-\sigma_u^2/2\)</span>、方差为 <span class="math inline">\(\sigma^2_u\)</span> 的正态分布。尽管如此一来 <span class="math inline">\(Z_i\)</span> 的均值为一，但这种表示在实践中并未广泛使用。</p>
+<p>gamma 分布与 lognormal 分布非常相似，如第 5 章 <a href="chap5.html#sec5-1-6">5.1.6</a> 节所述，因此这是脆弱性随机变量 <span class="math inline">\(Z_i\)</span> 的另一种分布。这种脆弱性分布使用起来有时比 lognormal 模型更方便，并且可用于研究引入脆弱效应的一些后果，我们将在 <a href="chap10.html#sec10-3">10.3</a> 节中进行研究。</p>
+<p>如果我们取 <span class="math inline">\(Z_i\)</span> 具有 gamma 分布，未知参数等于 <span class="math inline">\(\theta\)</span>，对于 <span class="math inline">\(z_i&gt;0\)</span> 密度为</p>
+<p><span class="math display">\[f(z_i)=\frac{\theta^\theta z_i^{\theta-1}e^{-\theta z_i}}{\Gamma(\theta)},~\theta\geqslant0\]</span></p>
+<p>则 <span class="math inline">\(Z_i\sim\Gamma(\theta,\theta)\)</span>。这种脆弱性分布的均值为 1，方差为 <span class="math inline">\(1/\theta\)</span>。<span class="math inline">\(\theta\)</span> 值越大，脆弱性方差越小，当 <span class="math inline">\(\theta\rightarrow \infty\)</span>, 脆弱性方差趋于零，对应于 <span class="math inline">\(z_i\)</span> 都等于一并且不存在脆弱性的情况。对于 <span class="math inline">\(-\infty&lt;u_i&lt;\infty\)</span>，<span class="math inline">\(U_i=\log(Z_i)\)</span> 的相应分布的密度</p>
+<p><span class="math display" id="eq:10-6">\[\begin{align}
+f(u_i)=\frac{\theta^\theta e^{\theta u_i}\exp(-\theta e^{u_i})}{\Gamma(\theta)},\theta\geqslant0
+\tag{10.6}
+\end{align}\]</span></p>
+<p>称 <span class="math inline">\(U_i\)</span> 具有 exp-gamma 分布。又称为 log-gamma 分布，但这种命名法与 lognormal 分布的定义不一致。<span class="math inline">\(U_i\)</span> 众数为零，但分布是不对称的，并且 <span class="math inline">\(U_i\)</span> 的均值和方差用 digamma 和 trigamma 函数表示。具体地</p>
+<p><span class="math display" id="eq:10-7">\[\begin{align}
+\operatorname{E}\left(U_i\right)=\Psi(\theta)-\log\theta
+\tag{10.7}
+\end{align}\]</span></p>
+<p>其中，digamma 函数 <span class="math inline">\(\Psi(\theta)\)</span> 可从如下的级数展开中获得</p>
+<p><span class="math display">\[\begin{aligned}\Psi(\theta)&amp;=-\lambda+\sum_{j=0}^\infty\frac{\theta-1}{(1+j)(\theta+j)}\end{aligned}\]</span></p>
+<p>这里 <span class="math inline">\(\lambda=0.577216\)</span> 为欧拉常数。此外，<span class="math inline">\(U_i\)</span> 的方差是 <span class="math inline">\(\Psi(\theta)\)</span> 的导数，记为 <span class="math inline">\(\Psi'(\theta)\)</span>，称为 trigamma 函数。该函数也可用级数展开来获得，并且</p>
+<p><span class="math display" id="eq:10-8">\[\begin{align}
+\mathrm{var}\left(U_i\right)=\Psi^{\prime}(\theta)=\sum_{j=0}^{\infty}\frac1{(\theta+j)^2}
+\tag{10.8}
+\end{align}\]</span></p>
+<p>digamma 和 trigamma 函数在许多统计软件包中可作为标准函数使用。</p>
+<p>稍后将在<a href="chap10.html#exm:ex10-3">示例 10.3</a> 中比较脆弱性的 lognormal 分布和 gamma 分布，以及随机效应相应的正态分布和 exp-gamma 分布。</p>
+</div>
+<div id="sec10-2-2" class="section level3" number="10.2.2">
+<h3>
+<span class="header-section-number">10.2.2</span> 可观测生存函数和风险函数<a class="anchor" aria-label="anchor" href="#sec10-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>根据第 1 章式 <a href="chap1.html#eq:1-6">(1.6)</a> 和 <a href="chap1.html#eq:1-7">(1.7)</a>，第 <span class="math inline">\(i\)</span> 个个体的生存函数为</p>
+<p><span class="math display">\[S_i(t)=\exp\left\{-\int_0^th_i(t)\mathrm{~d}t\right\}\]</span></p>
+<p>其中 <span class="math inline">\(h_i(t)\)</span> 在式 <a href="chap10.html#eq:10-2">(10.2)</a> 中给出。因此</p>
+<p><span class="math display" id="eq:10-9">\[\begin{align}
+S_i(t)=\exp\{-z_ie^{\boldsymbol{\beta'x}_i}H_0(t)\}
+\tag{10.9}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(H_0(t)\)</span> 是基线累积风险函数。这是第 <span class="math inline">\(i\)</span> 个个体以脆弱性 <span class="math inline">\(z_i\)</span> 为条件的生存函数，称为生存时间的<strong>条件模型</strong> (conditional model).</p>
+<p>个体脆弱性 <span class="math inline">\(z_i\)</span> 无法直接观测，因此我们观测到的是它们对个体组的整体生存函数的效应。因此，可观测生存函数是对所有可能的 <span class="math inline">\(z_i\)</span> 值取平均的个体函数，即 <span class="math inline">\(S_i(t)\)</span> 关于脆弱性分布的期望值<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;The observable survivor function is therefore the individual functions averaged over all possible values of &lt;span class="math inline"&gt;\(z_i\)&lt;/span&gt;, that is the expected value of &lt;span class="math inline"&gt;\(S_i(t)\)&lt;/span&gt; with respect to the frailty distribution.&lt;/p&gt;'><sup>11</sup></a>。如果相应的随机变量 <span class="math inline">\(Z_i\)</span> 具有离散分布，其中只可取几个特定的脆弱值，我们将通过对不同 <span class="math inline">\(z_i\)</span> 值的 <span class="math inline">\(S_i(t)\)</span> 的可能值与 <span class="math inline">\(Z_i\)</span> 等于 <span class="math inline">\(z_i\)</span> 的概率的乘积进行求和，来得到这个期望值<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;… we would obtain this expectation by summing the products of the possible values of &lt;span class="math inline"&gt;\(S_i(t)\)&lt;/span&gt; for the different &lt;span class="math inline"&gt;\(z_i\)&lt;/span&gt; values and the probability that &lt;span class="math inline"&gt;\(Z_i\)&lt;/span&gt; was equal to &lt;span class="math inline"&gt;\(z_i\)&lt;/span&gt;.&lt;/p&gt;'><sup>12</sup></a>。然而，我们通常假定 <span class="math inline">\(Z_i\)</span> 的分布是连续的，在这种情况下，观测生存函数是通过将式 <a href="chap10.html#eq:10-9">(10.9)</a> 中的 <span class="math inline">\(S_i(t)\)</span> 关于 <span class="math inline">\(Z_i\)</span> 的分布进行积分而得到的。所得生存函数为</p>
+<p><span class="math display" id="eq:10-10">\[\begin{align}
+S_i^*(t)&amp;=\int_0^\infty S_i(t)f(z_i)\mathrm{d}z_i=\int_0^\infty\exp\{-z_ie^{\boldsymbol{\beta'x}_i}H_0(t)\}f(z_i)\mathrm{d}z_i
+\tag{10.10}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(f(z_i)\)</span> 是脆弱性分布的密度函数。量 <span class="math inline">\(S^*_i(t)\)</span> 是<strong>无条件</strong>或<strong>可观测生存函数</strong> (unconditional or observable survivor function)，式 <a href="chap10.html#eq:10-10">(10.10)</a> 定义了生存时间的<strong>无条件模型</strong> (unconditional model).</p>
+<p>一旦获得了特定模型的 <span class="math inline">\(S^*_i(t)\)</span>，就可以使用第 1 章式 <a href="chap1.html#eq:1-5">(1.5)</a> 中的关系式找到相应的可观测风险函数 <span class="math inline">\(h^*_i(t)\)</span>，从而</p>
+<p><span class="math display" id="eq:10-11">\[\begin{align}
+h_i^*(t)=-\frac{\mathrm{d}}{\mathrm{dt}}\{\log S_i^*(t)\}
+\tag{10.11}
+\end{align}\]</span></p>
+<p>通常，式 <a href="chap10.html#eq:10-10">(10.10)</a> 中的积分必须通过数值计算完成，但正如我们将在下一节看到的，这可以在脆弱效应为 gamma 分布的特殊情况下解析地实现。</p>
+</div>
+</div>
+<div id="sec10-3" class="section level2" number="10.3">
+<h2>
+<span class="header-section-number">10.3</span> gamma 脆弱性分布<a class="anchor" aria-label="anchor" href="#sec10-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>gamma 分布常用于为脆弱效应建模，因为它得出了可观测生存和风险函数的闭合形式表示，如本节所示。</p>
+<p>假定研究中的每个个体都有一个不同的脆弱性值 <span class="math inline">\(z_i\)</span>，并且这些是对独立且同分布随机变量 <span class="math inline">\(Z_i\)</span> 的观测，<span class="math inline">\(i=1,2,\ldots,n\)</span>，其中 <span class="math inline">\(Z_i\sim\Gamma(\theta,\theta)\)</span>。现在，根据式 <a href="chap10.html#eq:10-10">(10.10)</a>，可观测生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_i^*(t)&amp;=\int_0^\infty S_i(t)f(z_i)\mathrm{d}z_i\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}S_i^*(t)&amp;=\int_0^\infty\exp\{-z_ie^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}H_0(t)\}\frac{\theta^\theta z_i^{\theta-1}e^{-\theta z_i}}{\Gamma(\theta)}\mathrm{d}z_i\end{aligned}\]</span></p>
+<p>经过整理，得到</p>
+<p><span class="math display">\[\frac{\theta^\theta[\theta+e^{\boldsymbol{\beta}\prime\boldsymbol{x}_i}H_0(t)]^{-\theta}}{\Gamma(\theta)}\int_0^\infty y_i^{\theta-1}e^{-y_i}\mathrm{~d}y_i\]</span></p>
+<p>其中 <span class="math inline">\(y_i=\{\theta+e^{\boldsymbol{\beta'x}_i}H_0(t)\}z_i\)</span>。然后根据第 5 章的式 <a href="chap5.html#eq:5-6">(5.6)</a> 中 gamma 函数的定义，</p>
+<p><span class="math display">\[\int_0^\infty y_i^{\theta-1}e^{-y_i}\mathrm{~d}y_i=\Gamma(\theta)\]</span></p>
+<p>所以</p>
+<p><span class="math display" id="eq:10-12">\[\begin{align}
+S_i^*(t)=\{1+\theta^{-1}e^{\boldsymbol{\beta}'\boldsymbol{x}_i}H_0(t)\}^{-\theta}
+\tag{10.12}
+\end{align}\]</span></p>
+<p>式 <a href="chap10.html#eq:10-11">(10.11)</a> 得到可观测风险函数，由下式给出</p>
+<p><span class="math display" id="eq:10-13">\[\begin{align}
+h_i^*(t)=\frac{e^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}h_0(t)}{1+\theta^{-1}e^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}H_0(t)}
+\tag{10.13}
+\end{align}\]</span></p>
+<p>下一节将说明引入脆弱效应的一些后果。</p>
+<div id="sec10-3-1" class="section level3" number="10.3.1">
+<h3>
+<span class="header-section-number">10.3.1</span> 脆弱性对可观测风险函数的影响<a class="anchor" aria-label="anchor" href="#sec10-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>为了说明脆弱项对风险函数的影响，我们将脆弱性随机变量 <span class="math inline">\(Z_i\)</span> 设为 <span class="math inline">\(\Gamma(\theta,\theta)\)</span> 分布。假设基线风险函数 <span class="math inline">\(h_0(t)\)</span> 是一个常数 <span class="math inline">\(\lambda\)</span>，并且我们为生存时间的单个样本拟合模型，因此不存在协变量。使用式 <a href="chap10.html#eq:10-13">(10.13)</a>，可观测风险函数为</p>
+<p><span class="math display">\[h^*(t)=\frac{\theta\lambda}{\theta+\lambda t}\]</span></p>
+<p><span class="math inline">\(t=0\)</span> 时其值为 <span class="math inline">\(\lambda\)</span>，之后非线性地减小为 0. 因此，脆弱效应的存在为风险函数的减小提供了另一种解释。具体来说，一个事件的总体风险实际上可能是恒定的，但研究中个体生存时间之间的异质性意味着观察到风险的减小。</p>
+<p>如果我们假定潜在的基线风险取决于时间，也会发现类似的特征。在潜在基线风险是 Weibull 的情况下，<span class="math inline">\(h_0(t)=\lambda\gamma t^{\gamma-1}\)</span>，并且没有协变量，得到</p>
+<p><span class="math display">\[h^*(t)=\frac{\theta\lambda\gamma t^{\gamma-1}}{\theta+\lambda t^\gamma}\]</span></p>
+<p>对于 <span class="math inline">\(\lambda=1,\gamma=3\)</span> 和各种 <span class="math inline">\(\theta\)</span> 值的 Weibull 风险，<span class="math inline">\(h^*(t)\)</span> 与 <span class="math inline">\(t\)</span> 的关系图如图 10.2 所示。</p>
+<details><summary><font color="#8B2232">图 10.2</font>
+</summary><img src="figure/figure%2010.2.png#center" style="width:80.0%"></details><p><br></p>
+<p>Weibull 基线风险函数的一个局限性，如第 5 章 <a href="chap5.html#sec5-1-2">5.1.2</a> 节所述，是单调的。然而，如图 10.2 所示，当存在一定程度的脆弱性时，我们可能会观察到单峰风险函数。因此，观察到的单峰风险可能是脆弱效应的结果，而不是潜在基线风险的内在行为。</p>
+</div>
+<div id="sec10-3-2" class="section level3" number="10.3.2">
+<h3>
+<span class="header-section-number">10.3.2</span> 脆弱性对可观测风险比的影响<a class="anchor" aria-label="anchor" href="#sec10-3-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设第 <span class="math inline">\(i\)</span> 个个体的风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=z_i\exp(\beta x_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是二元协变量 <span class="math inline">\(X\)</span> 的值，取值 0 或 1，<span class="math inline">\(z_i\)</span> 是 <span class="math inline">\(\Gamma(\theta,\theta)\)</span> 随机变量的实现。根据式 <a href="chap10.html#eq:10-13">(10.13)</a>，相应的可观测风险函数为</p>
+<p><span class="math display">\[h_i^*(t)=\frac{e^{\beta x_i}h_0(t)}{1+\theta^{-1}e^{\beta x_i}H_0(t)}\]</span></p>
+<p><span class="math inline">\(X = 1\)</span> 相对于 <span class="math inline">\(X = 0\)</span> 的可观测风险比为</p>
+<p><span class="math display" id="eq:10-14">\[\begin{align}
+\psi^*(t)=\frac{1+\theta^{-1}H_0(t)}{1+\theta^{-1}e^\beta H_0(t)}e^\beta
+\tag{10.14}
+\end{align}\]</span></p>
+<p>该风险比不再恒定，而是时间 <span class="math inline">\(t\)</span> 的函数，因此比例风险不再适用。例如，在假定潜在基线风险为常数 <span class="math inline">\(\lambda\)</span> 的特定情况下，<span class="math inline">\(H_0(t) = \lambda t\)</span> 且风险比</p>
+<p><span class="math display">\[\frac{1+\theta^{-1}\lambda t}{1+\theta^{-1}e^\beta\lambda t}e^\beta \]</span></p>
+<p>为 <span class="math inline">\(t\)</span> 的非线性函数。</p>
+<p>为了说明可观测风险比对时间的依赖性，图 10.3 显示了 Weibull 基线风险的风险比 <span class="math inline">\(\psi^*(t)\)</span>，其中 <span class="math inline">\(\lambda = 1,\gamma = 3,\psi = e^\beta = 3\)</span>，<span class="math inline">\(\theta\)</span> 取不同的值。</p>
+<details><summary><font color="#8B2232">图 10.3</font>
+</summary><img src="figure/figure%2010.3.png#center" style="width:80.0%"></details><p><br>
+当不存在脆弱性时，即当 <span class="math inline">\(θ = \infty\)</span> 时，风险比恒定为 3，但当脆弱性方差大于零时，可观测风险比会随着时间的推移而下降。风险比对时间的依赖性可用于解释任何观测风险中的非比例性。</p>
+<p>这些结果表明，在 Weibull 比例风险回归模型中包含随机效应会导致风险不成比例，并导致非单调的风险函数。尽管这是使用具有 gamma 脆弱性的 Weibull 模型进行的说明，但得出的结论更适用于一般情况。这意味着，在风险函数为单峰或风险不成比例的情况下，包括随机效应的模型提供了另一种数据建模方式。</p>
+</div>
+</div>
+<div id="sec10-4" class="section level2" number="10.4">
+<h2>
+<span class="header-section-number">10.4</span> 拟合参数脆弱模型<a class="anchor" aria-label="anchor" href="#sec10-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>拟合式 <a href="chap10.html#eq:10-3">(10.3)</a> 中的模型需要估计解释变量的系数、脆弱性分布的方差和基线风险函数。完全指定 <span class="math inline">\(h_0(t)\)</span> 的模型，如 Weibull 比例风险模型或加速失效时间模型，可用最大似然法进行拟合。用对子 <span class="math inline">\((t_i,\delta_i)\)</span> 表示观测生存数据，<span class="math inline">\(i=1,2,\ldots,n\)</span>，其中 <span class="math inline">\(t_i\)</span> 是生存时间，<span class="math inline">\(\delta_i\)</span> 是事件指示符，其取 0 值表示删失观测，取 1 值表示事件。如果式 <a href="chap10.html#eq:10-3">(10.3)</a> 中的随机效应 <span class="math inline">\(u_i\)</span> 具有已知值，如第 5 章式 <a href="chap5.html#eq:5-15">(5.15)</a> 所示，似然函数将为</p>
+<p><span class="math display" id="eq:10-15">\[\begin{align}
+\prod_{i=1}^n\{h_i(t_i)\}^{\delta_i}S_i(t_i)
+\tag{10.15}
+\end{align}\]</span></p>
+<p>在该表达式中，式 <a href="chap10.html#eq:10-3">(10.3)</a> 给出了第 <span class="math inline">\(i\)</span> 个个体的风险函数，相应的生存函数为</p>
+<p><span class="math display" id="eq:10-16">\[\begin{align}
+S_i(t_i)=\exp\left\{-\exp(\boldsymbol{\beta'x}_i+u_i)H_0(t_i)\right\}
+\tag{10.16}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(H_0(t_i)\)</span> 是累积风险函数在时间 <span class="math inline">\(t_i\)</span> 处的值。</p>
+<p>然而，<span class="math inline">\(u_i\)</span> 是未知的，而是独立且同分布随机变量的实现，其密度为 <span class="math inline">\(f(u_i)\)</span>。在这种情况下，我们对似然贡献关于随机效应的可能值进行积分，从而根据式 <a href="chap10.html#eq:10-15">(10.15)</a>，似然函数变为</p>
+<p><span class="math display" id="eq:10-17">\[\begin{align}
+\prod_{i=1}^n\int_{-\infty}^\infty\{h_i(t_i)\}^{\delta_i}S_i(t_i)f(u_i)\mathrm{~d}u_i
+\tag{10.17}
+\end{align}\]</span></p>
+<p>或等价地，当使用脆弱项 <span class="math inline">\(z_i\)</span> 时，</p>
+<p><span class="math display" id="eq:10-18">\[\begin{align}
+\prod_{i=1}^n\int_0^\infty\{h_i(t_i)\}^{\delta_i}S_i(t_i)f(z_i)\mathrm{d}z_i
+\tag{10.18}
+\end{align}\]</span></p>
+<p>通常需要数值方法来最大化该函数或其对数。</p>
+<p>一旦估计了全参数模型中的未知参数，就有可能获得随机效应的估计。为此，我们使用贝叶斯定理的一个版本，这将在第 16 章中以式 <a href="chap16.html#eq:16-2">(16.2)</a> 给出。根据该定理，以事件 B 为条件，事件 A 的概率为</p>
+<p><span class="math display" id="eq:10-19">\[\begin{align}
+\operatorname{P}(A\mid B)&amp;=\frac{P(B\mid A)P(A)}{P(B)}
+\tag{10.19}
+\end{align}\]</span></p>
+<p>现在，将随机效应 <span class="math inline">\(u_i\)</span> 视为固定的，我们将第 <span class="math inline">\(i\)</span> 个事件时间 <span class="math inline">\(t_i\)</span> 的似然记作 <span class="math inline">\(L(t_i\mid u_i)\)</span>，结合式 <a href="chap10.html#eq:10-16">(10.16)</a> 和式 <a href="chap10.html#eq:10-15">(10.15)</a>，其为</p>
+<p><span class="math display">\[\begin{aligned}L(t_i\mid u_i)=\{\exp(\boldsymbol{\beta'x}_i+u_i)h_0(t_i)\}^{\delta_i}\exp\{-\exp(\boldsymbol{\beta'x}_i+u_i)H_0(t_i)\}\end{aligned}\]</span></p>
+<p>这可以解释为 <span class="math inline">\(t_i\)</span> 以随机效应 <span class="math inline">\(u_i\)</span> 为条件的概率。接下来，随机效应特定值的概率是密度函数 <span class="math inline">\(f(u_i)\)</span>。使用式 <a href="chap10.html#eq:10-19">(10.19)</a>，<span class="math inline">\(u_i\)</span> 以 <span class="math inline">\(t_i\)</span> 为条件的概率可以表示为</p>
+<p><span class="math display" id="eq:10-20">\[\begin{align}
+\pi(u_i\mid t_i)&amp;=\frac{L(t_i\mid u_i)f(u_i)}{p(t_i)}
+\tag{10.20}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(p(t_i)\)</span> 是数据的边际概率，通过对 <span class="math inline">\(L(t_i\mid u_i)f(u_i)\)</span> 关于 <span class="math inline">\(u_i\)</span> 积分获得。这确保 <span class="math inline">\(\pi(u_i\mid t_i)\)</span> 的积分为 1，从而定义了适当的概率密度函数。然后，以数据为条件，可以获得与第 <span class="math inline">\(i\)</span> 个随机效应相关的随机变量 <span class="math inline">\(U_i\)</span> 的分布 <span class="math inline">\(\pi(u_i\mid t_i)\)</span> 的均值或众数。最后，代入未知 <span class="math inline">\(\beta\)</span> 系数估计和脆弱性分布的方差估计，我们得到了 <span class="math inline">\(U_i\)</span> 的分布的均值或众数的估计 <span class="math inline">\(\hat u_i\)</span>，这可以视为随机效应的估计。出于式 <a href="chap10.html#eq:10-19">(10.19)</a> 与贝叶斯定理的联系，<span class="math inline">\(\pi(u_i\mid t_i)\)</span> 称为 <span class="math inline">\(u_i\)</span> 的<strong>后验密度</strong> (posterior density)，并且估计 <span class="math inline">\(\hat u_i\)</span> 称为<strong>经验贝叶斯估计</strong> (empirical Bayes estimates). 以类似的方式，<span class="math inline">\(U_i\)</span> 的后验方差可根据 <span class="math inline">\(\pi(u_i\mid t_i)\)</span> 获得，这得到了 <span class="math inline">\(\hat u_i\)</span> 的标准误。脆弱效应及其标准误的相应估计值是根据 <span class="math inline">\(\hat{z}_i=\exp(\hat{u}_i)\)</span> 获得的。</p>
+<p>一旦估计出脆弱效应，可用式 <a href="chap10.html#eq:10-9">(10.9)</a> 或 <a href="chap10.html#eq:10-16">(10.16)</a> 获得生存函数的完全参数估计。然后可以根据下式得到特定个体的中位生存时间</p>
+<p><span class="math display" id="eq:10-21">\[\begin{align}
+\left\{\frac{\log2}{\hat{\lambda}\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i+\hat{u}_i)}\right\}^{1/\hat{\gamma}}
+\tag{10.21}
+\end{align}\]</span></p>
+<p>这是第 5 章式 <a href="chap5.html#eq:5-48">(5.48)</a> 中结果的直接改编。</p>
+<p>当脆弱效应具有 gamma 分布时，带脆弱性的参数生存模型最容易拟合，因此该特定模型的拟合过程在下一节描述。</p>
+<div id="sec10-4-1" class="section level3" number="10.4.1">
+<h3>
+<span class="header-section-number">10.4.1</span> gamma 脆弱性<a class="anchor" aria-label="anchor" href="#sec10-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>当假定脆弱性随机变量 <span class="math inline">\(Z_i\)</span> 具有 gamma 分布时，可以获得式 <a href="chap10.html#eq:10-18">(10.18)</a> 中积分似然的封闭形式。为证明这一点，将风险函数、生存函数和 <span class="math inline">\(Z_i\)</span> 的密度代入式 <a href="chap10.html#eq:10-18">(10.18)</a>，似然函数为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^n\int_0^\infty\{z_ie^{\boldsymbol{\beta}'\boldsymbol{x}_i}h_0(t_i)\}^{\delta_i}\exp\{-z_ie^{\boldsymbol{\beta}'\boldsymbol{x}_i}H_0(t_i)\}\frac{\theta^\theta z_i^{\theta-1}e^{-\theta z_i}}{\Gamma(\theta)}\mathrm{d}z_i\end{aligned}\]</span></p>
+<p>合并关于 <span class="math inline">\(z_i\)</span> 的项，这成为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^n\frac{\theta^\theta}{\Gamma(\theta)}\{e^{\boldsymbol{\beta}'\boldsymbol{x}_i}h_0(t_i)\}^{\delta_i}\int_0^\infty z_i^{\theta+\delta_i-1}\exp\{-[\theta+e^{\boldsymbol{\beta}'\boldsymbol{x}_i}H_0(t_i)]z_i\}\mathrm{d}z_i\end{aligned}\]</span></p>
+<p>接下来，参数为 <span class="math inline">\(r\)</span> 和 <span class="math inline">\(\theta\)</span> 的 gamma 随机变量 <span class="math inline">\(Y\)</span> 的密度为</p>
+<p><span class="math display" id="eq:10-22">\[\begin{align}
+f(y)=\frac{\theta^ry^{r-1}e^{-\theta y}}{\Gamma(r)}
+\tag{10.22}
+\end{align}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\int_0^\infty y^{r-1}e^{-\theta y}\mathrm{~d}y=\frac{\Gamma(r)}{\theta^r}\]</span></p>
+<p>从而</p>
+<p><span class="math display">\[\int_0^\infty z_i^{\theta+\delta_i-1}\exp\{-[\theta+e^{\boldsymbol{\beta'x}_i}H_0(t_i)]z_i\}\mathrm{~d}z_i=\frac{\Gamma(\theta+\delta_i)}{\{\theta+e^{\boldsymbol{\beta'x}_i}H_0(t_i)\}^{\theta+\delta_i}}\]</span></p>
+<p>因此，似然函数变为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^n\frac{\theta^\theta}{\Gamma(\theta)}\{e^{\boldsymbol{\beta}'\boldsymbol{x}_i}h_0(t_i)\}^{\delta_i}\frac{\Gamma(\theta+\delta_i)}{\{\theta+e^{\boldsymbol{\beta}'\boldsymbol{x}_i}H_0(t_i)\}^{\theta+\delta_i}}\end{aligned}\]</span></p>
+<p>相应的对数似然函数为</p>
+<p><span class="math display" id="eq:10-23">\[\begin{align}
+\sum_{i=1}^n&amp;\{\theta\log\theta-\log\Gamma(\theta)+\log\Gamma(\theta+\delta_i)+\delta_i[\boldsymbol{\beta'x}_i+\log h_0(t_i)]\}\\&amp;-\sum_{i=1}^n(\theta+\delta_i)\log\{\theta+e^{\boldsymbol{\beta'x}_i}H_0(t_i)\}
+\tag{10.23}
+\end{align}\]</span></p>
+<p>现在不涉及积分，可使用标准的数值方法关于 <span class="math inline">\(\theta,\beta\)</span> 和基线风险函数中的参数最大化该函数，以给出最大似然估计。这些估计的标准误是从相应的信息矩阵中得出的；参见附录 <a href="A.html#A">A</a>。然后可以利用 <span class="math inline">\(\theta\)</span> 的最大似然估计 <span class="math inline">\(\hat\theta\)</span> 使用式 <a href="chap10.html#eq:10-8">(10.8)</a> 来得到随机效应的方差估计。</p>
+<p>当假定脆弱效应具有 gamma 分布时，为了获得脆弱效应的估计，使用 <span class="math inline">\(z_i\)</span> 而不是相应的随机效应 <span class="math inline">\(u_i\)</span> 更方便。当脆弱性 <span class="math inline">\(z_i\)</span> 固定时，将 <span class="math inline">\(t_i\)</span> 的似然写为 <span class="math inline">\(L(t_i\mid z_i)\)</span>，则式 <a href="chap10.html#eq:10-20">(10.20)</a> 的分子为 <span class="math inline">\(L(t_i\mid z_i)f(z_i)\)</span>，即</p>
+<p><span class="math display">\[[z_ie^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}h_0(t_i)]^{\delta_i}\exp\{-z_ie^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}H_0(t_i)\}~\frac{\theta^\theta z_i^{\theta-1}e^{-\theta z_i}}{\Gamma(\theta)}\]</span></p>
+<p>忽略不涉及 <span class="math inline">\(z_i\)</span> 的项，<span class="math inline">\(Z_i\)</span> 的后验密度 <span class="math inline">\(\pi(z_i\mid t_i)\)</span>，与下式成比例</p>
+<p><span class="math display">\[z_i^{\theta+\delta_i-1}\exp\{-[\theta+e^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}H_0(t_i)]z_i\}\]</span></p>
+<p>根据式 <a href="chap10.html#eq:10-22">(10.22)</a> 所示的双参数 gamma 密度函数的一般形式，可以得出 <span class="math inline">\(Z_i\)</span> 的后验分布是参数为 <span class="math inline">\(\theta+\delta_i\)</span> 和 <span class="math inline">\(\theta+e^{\boldsymbol{\beta'x}_i}H_0(t_i)\)</span> 的 gamma 分布。那么，由于参数为 <span class="math inline">\(r,\theta\)</span> 的 gamma 随机变量的期望值是 <span class="math inline">\(r/\theta\)</span>，因此给定数据的 <span class="math inline">\(Z_i\)</span> 的期望值为</p>
+<p><span class="math display">\[\operatorname{E}\left(Z_i\mid t_i\right)=\frac{\theta+\delta_i}{\theta+e^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i}H_0(t_i)}\]</span></p>
+<p>据此，对第 <span class="math inline">\(i\)</span> 个个体的脆弱效应的估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{z}_i&amp;=\frac{\hat{\theta}+\delta_i}{\hat{\theta}+e^{\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i}\hat{H}_0(t_i)}\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(\hat{H}_0(t)\)</span> 是基线累积风险函数估计。类似地，gamma 随机变量的方差为 <span class="math inline">\(r/\theta^2\)</span>，因此</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{var}\left(Z_i\mid t_i\right)&amp;=\frac{\theta+\delta_i}{\{\theta+e^{\boldsymbol{\beta}'\boldsymbol{x}_i}H_0(t_i)\}^2}\end{aligned}\]</span></p>
+<p><span class="math inline">\(Z_i\)</span> 的方差估计减小为 <span class="math inline">\(\hat{z}_i^2/(\hat{\theta}+\delta_i)\)</span>，因此 <span class="math inline">\(\hat z_i\)</span> 的标准误由下式给出</p>
+<p><span class="math display">\[\mathrm{se}\left(\hat{z}_i\right)=\frac{\hat{z}_i}{\sqrt{(\hat{\theta}+\delta_i)}}\]</span></p>
+<p>那么可以得出脆弱项的区间估计，并且可以将 <span class="math inline">\(\hat z_i\)</span> 与其标准误的比与标准正态分布的百分位点进行比较，以检验第 <span class="math inline">\(i\)</span> 个脆弱效应为零的假设，并给出 <span class="math inline">\(P\)</span> 值。然而，这一系列关于随机效应的计划外假设检验的结果，以考虑重复的显著性检验，例如通过 Bonferroni 校正。使用这种校正，在解释显著性水平之前，<span class="math inline">\(n\)</span> 个个体的脆弱项的 <span class="math inline">\(P\)</span> 值都需要各自乘以 <span class="math inline">\(n\)</span>。</p>
+<p>正如这项分析所表明的，处理 gamma 脆弱在数学上是简单的，并得到了许多量的闭合形式估计。在其他情况下，需要使用数值方法来计算给定数据的脆弱性条件分布的总结统计量。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex10-2" class="example"><strong>示例 10.2  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>当具有 gamma 分布的脆弱项包含在 Weibull 模型中，用于计算具有阴性和阳性染色肿瘤的女性的生存时间时，如<a href="chap10.html#exm:ex10-1">示例 10.1</a> 所示，所得风险函数为 <span class="math inline">\(h_i(t)=z_i\exp(\beta x_i)\lambda\gamma t^{\gamma-1}\)</span>，相应拟合的生存函数为</p>
+<p><span class="math display">\[\hat{S}_i(t)=\exp\{-\hat{z}_i\exp(\hat{\beta}x_i)\hat{\lambda}t^{\hat{\gamma}}\}\]</span></p>
+<p>脆弱性潜在 gamma 分布的方差为 <span class="math inline">\(\hat \theta^{−1} = 3.40\)</span>，并且脆弱效应的估计遵循本节概述的方法。</p>
+<p>在脆弱性存在的情况下，<span class="math inline">\(\hat{\beta}=2.298\)</span>，阳性染色女性与阴性染色女性的风险比为 9.95. 然而，这一估计的 95% 置信区间在 0.86 至 115.54 之间，这反映出考虑了脆弱性后，染色效应的不确定性要大得多。同样重要的是要注意，风险比估计是以脆弱性为条件的，因此指的是具有特定脆弱值的女性。<span class="math inline">\(\lambda,\gamma\)</span> 的新的估计分别为 0.00008 和 1.9091，个体脆弱值值与观测生存时间如表 10.1 所示。请注意，生存时间最短的女性有最大的脆弱效应估计。</p>
+<details><summary><font color="#8B2232">表 10.1</font>
+</summary><img src="figure/table%2010.1.png#center" style="width:80.0%"></details><p><br>
+生存函数的个体估计如图 10.4 所示。该图说明了脆弱效应导致的生存函数估计的变异程度，并表明肿瘤呈阳性或阴性染色的女性的估计存在一定程度的分离。</p>
+<details><summary><font color="#8B2232">图 10.4</font>
+</summary><img src="figure/figure%2010.4.png#center" style="width:80.0%"></details><p><br>
+使用式 <a href="chap10.html#eq:10-21">(10.21)</a> 计算个体的中位生存时间，阴性染色组为 55 至 372 个月，阳性染色组为 16 至 355 个月。在 32 名肿瘤呈阳性染色的女性中，有 18 名中位生存时间比阴性染色组中的任何女性都要短。这证实，一旦考虑脆弱效应，两组女性的生存时间差异就不会那么明显。</p>
+<p>根据式 <a href="chap10.html#eq:10-12">(10.12)</a>，在该模型下，肿瘤呈阴性染色的女性的可观测生存函数估计为 <span class="math inline">\(\{1+\hat{\theta}^{-1}\hat{H}_0(t)\}^{-\hat{\theta}}\)</span>，而阳性染色则为 <span class="math inline">\(\{1+\hat{\theta}^{-1}e^{\hat{\beta}}\hat{H}_0(t)\}^{-\hat{\theta}}\)</span>。这些函数如图 10.5 所示，叠加在生存函数的相应 Kaplan-Meier 估计上。将其与图 10.1 进行比较，我们发现，一旦考虑了脆弱性，Weibull 模型对观测生存时间就提供了更好的拟合。该图还提供了拟合模型适用性的直观确认。</p>
+<details><summary><font color="#8B2232">图 10.5</font>
+</summary><img src="figure/figure%2010.5.png#center" style="width:80.0%"></details><p><br>
+图 10.6 给出了肿瘤呈阳性染色的女性相对于肿瘤呈阴性染色的女性的可观测或无条件的风险比，该风险比由式 <a href="chap10.html#eq:10-14">(10.14)</a> 得出。该图显示了可观测风险比如何随时间变化；早期的风险要大得多，但下降得很快。这是由于脆弱性的选择效应，越脆弱的女性死得越早。阳性染色组也有更多的早期死亡，这就是观测风险比以这种方式变化的原因。</p>
+<details><summary><font color="#8B2232">图 10.6</font>
+</summary><img src="figure/figure%2010.6.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+</div>
+<div id="sec10-5" class="section level2" number="10.5">
+<h2>
+<span class="header-section-number">10.5</span> 拟合半参数脆弱模型<a class="anchor" aria-label="anchor" href="#sec10-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>当基线风险函数未假定潜在的参数形式时，如 Cox 回归模型，则不能再使用前一节中描述的脆弱模型拟合程序。这是因为式 <a href="chap10.html#eq:10-15">(10.15)</a> 中的似然函数不再完全指定。目前在标准软件包中最广泛实施的方法涉及最大化两个函数之和：包含随机效应的 Cox 模型的偏对数似然函数 <span class="math inline">\(\log L_p(\boldsymbol{\beta},\boldsymbol{u})\)</span> 以及随机效应的偏对数似然函数。所得对数似然函数为</p>
+<p><span class="math display" id="eq:10-24">\[\begin{align}
+\log L_p(\boldsymbol{\beta},\boldsymbol{u})+\sum_{i=1}^n\log f(u_i)
+\tag{10.24}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol\beta\)</span> 为 Cox 回归模型中 <span class="math inline">\(p\)</span> 个解释变量的系数向量，<span class="math inline">\(\boldsymbol u\)</span> 为 <span class="math inline">\(n\)</span> 个个体的随机效应向量。将第 3 章式 <a href="chap3.html#eq:3-6">(3.6)</a> 偏对数似然中的 <span class="math inline">\(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i\)</span> 替换为 <span class="math inline">\(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i+u_i\)</span>，得到了偏对数似然</p>
+<p><span class="math display" id="eq:10-25">\[\begin{align}
+\log L_p(\boldsymbol{\beta},\boldsymbol{u})=\sum_{i=1}^n\delta_i\left\{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i+u_i-\log\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_l+u_l)\right\}
+\tag{10.25}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\delta_i\)</span> 是事件指示符，<span class="math inline">\(R(t_i)\)</span> 是在时间 <span class="math inline">\(t_i\)</span> 有死亡风险的患者集合。随机效应 <span class="math inline">\(u_i\)</span> 是脆弱随机变量 <span class="math inline">\(U_i=\exp(Z_i)\)</span> 的观测值，其中 <span class="math inline">\(Z_i\)</span> 通常认为具有 lognormal 分布或 gamma 分布。</p>
+<div id="sec10-5-1" class="section level3" number="10.5.1">
+<h3>
+<span class="header-section-number">10.5.1</span> lognormal 脆弱效应<a class="anchor" aria-label="anchor" href="#sec10-5-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>当假定脆弱效应为 lognormal 分布时，式 <a href="chap10.html#eq:10-24">(10.24)</a> 中的随机效应 <span class="math inline">\(u_i\)</span> 是随机变量 <span class="math inline">\(N(0,\sigma^2_u)\)</span> 的实现，密度为</p>
+<p><span class="math display">\[f(u_i)=\frac1{\sigma_u\surd(2\pi)}\exp\left(-\frac{u_i^2}{2\sigma_u^2}\right)\]</span></p>
+<p>那么，式 <a href="chap10.html#eq:10-24">(10.24)</a> 中的对数似然函数为</p>
+<p><span class="math display" id="eq:10-26">\[\begin{align}
+\log L_p(\boldsymbol{\beta},\boldsymbol{u})-n\log\{\sigma_u√(2\pi)\}-\frac1{2\sigma_u^2}\sum_{i=1}^nu_i^2
+\tag{10.26}
+\end{align}\]</span></p>
+<p>由于该对数似然仅用于估计 <span class="math inline">\(\boldsymbol\beta\)</span> 的 <span class="math inline">\(p\)</span> 个分量和 <span class="math inline">\(\boldsymbol u\)</span> 的 <span class="math inline">\(n\)</span> 个分量，因此可以省略仅涉及 <span class="math inline">\(\sigma^2_u\)</span> 的项，得到</p>
+<p><span class="math display" id="eq:10-27">\[\begin{align}
+\log L_{pen}(\boldsymbol{\beta},\boldsymbol{u},\sigma_u^2)&amp;=\log L_p(\boldsymbol{\beta},\boldsymbol{u})-\frac{1}{2\sigma_u^2}\sum_{i=1}^nu_i^2
+\tag{10.27}
+\end{align}\]</span></p>
+<p>这称为<strong>惩罚偏对数似然</strong> (penalised partial log-likelihood)，因为第二项的作用是当 <span class="math inline">\(u_i\)</span> 具有更极端的值（即远离其预期值零的值）时，为偏对数似然函数施加惩罚。式 <a href="chap10.html#eq:10-27">(10.27)</a> 中的项 <span class="math inline">\(\sigma^2_u\)</span> 本质上控制了该对数似然函数两个分量的相对重要性。</p>
+<p>最大化过程迭代地进行：从 <span class="math inline">\(\sigma^2_u\)</span> 的初始估计开始，找到最大化 <span class="math inline">\(\log L_{pen}(\boldsymbol{\beta},\boldsymbol{u},\sigma_u^2)\)</span> 的 <span class="math inline">\(\beta\)</span> 和 <span class="math inline">\(u\)</span> 的估计。接下来，通过对式 <a href="chap10.html#eq:10-25">(10.25)</a> 中的似然 <span class="math inline">\(L_p(\boldsymbol{\beta},\boldsymbol{u})\)</span> 关于随机效应 <span class="math inline">\(u_i\)</span> 进行积分，得到边际似然 <span class="math inline">\(L_m(\boldsymbol{\beta},\sigma_u^2)\)</span>，即</p>
+<p><span class="math display">\[L_m(\boldsymbol{\beta},\sigma_u^2)=\int_{-\infty}^\infty L_p(\boldsymbol{\beta},\boldsymbol{u})f(\boldsymbol{u})\operatorname{d\boldsymbol{u}}\]</span></p>
+<p>Ripatti and Palmgren (2000) 表明，在 <span class="math inline">\(\boldsymbol \beta\)</span> 的估计 <span class="math inline">\(\hat{\boldsymbol \beta}\)</span> 处，该边际似然可通过下式得到很好的近似</p>
+<p><span class="math display" id="eq:10-28">\[\begin{align}
+\log L_m(\hat{\boldsymbol{\beta}},\sigma_u^2)=\log L_{pen}(\hat{\boldsymbol{\beta}},\hat{\boldsymbol{u}},\sigma_u^2)-\frac12\log(\sigma_u^{2n})-\frac12\log|\boldsymbol{I}_u|
+\tag{10.28}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{I}_u\)</span> 为随机效应的 <span class="math inline">\(n\times n\)</span> 观测信息矩阵，由 <span class="math inline">\(\log L_{pen}(\boldsymbol{\beta},\boldsymbol{u},\sigma_u^2)\)</span> 关于 <span class="math inline">\(u_i, i = 1, 2,...,n\)</span> 的负二阶偏导数在 <span class="math inline">\(\hat{\boldsymbol{\beta}},\hat{\boldsymbol{u}}\)</span> 处的值形成，<span class="math inline">\(|\boldsymbol{I}_u|\)</span> 是该矩阵的行列式。使用 <span class="math inline">\(\beta\)</span> 的估计，式 <a href="chap10.html#eq:10-28">(10.28)</a> 中的边际对数似然关于 <span class="math inline">\(\sigma^2_u\)</span> 最大化，以给出 <span class="math inline">\(\sigma^2_u\)</span> 的修正估计。重复此过程，直到 <span class="math inline">\(\sigma^2_u\)</span> 的两个连续估计之差足够小。</p>
+<p>从该迭代过程中还获得了随机效应的估计 <span class="math inline">\(\hat u_i\)</span>，以及脆弱项 <span class="math inline">\(\hat{z}_i=\exp(\hat{u}_i)\)</span>。此外，随机效应方差的最大似然估计由下式给出</p>
+<p><span class="math display">\[\hat{\sigma}_u^2=n^{-1}\left\{\sum_{i=1}^n\hat{u}_i^2+\text{ trace }(\boldsymbol{I}_u^{-1})\right\}\]</span></p>
+<p>其中 <span class="math inline">\(\text{trace }(\boldsymbol{I}_u^{-1})\)</span> 是 <span class="math inline">\(\boldsymbol{I}_u\)</span> 的逆的对角元之和。此估计的标准误为</p>
+<p><span class="math display">\[\mathrm{se}\left(\hat{\sigma}_u^2\right)=√(2\hat{\sigma}_u^2)\left[n+\frac1{\hat{\sigma}_u^4}\operatorname{trace}\left(\boldsymbol{I}_u^{-1}\boldsymbol{I}_u^{-1}\right)-2\frac1{\hat{\sigma}_u^2}\operatorname{trace}\left(\boldsymbol{I}_u^{-1}\right)\right]^{-1/2}\]</span></p>
+<p>方差的最大似然估计往往是有偏的，相反，基于<strong>限制性最大似然</strong> (restricted maximum likelihood, REML) 估计方法的估计是优选的。例如，在估计来自正态分布的单个观测样本 <span class="math inline">\(x_1,x_2,\ldots,x_n\)</span> 的方差时，方差的最大似然估计是有偏估计 <span class="math inline">\(n^{-1}\sum_i(x_i-\bar{x})^2\)</span>，而相应的 REML 估计是通常的无偏估计 <span class="math inline">\((n-1)^{-1}\sum_i(x_i-\bar{x})^2\)</span>。</p>
+<p>REML 估计是根据独立于 <span class="math inline">\(\boldsymbol\beta\)</span> 的似然函数中获得的，随机脆弱项方差的 REML 估计为</p>
+<p><span class="math display">\[\tilde{\sigma}_u^2=n^{-1}\left\{\sum_{i=1}^n\tilde{u}_i^2+\text{trace}\left(\tilde{\boldsymbol{V}}_{\large u}\right)\right\}\]</span></p>
+<p>其中 <span class="math inline">\(\tilde{\boldsymbol{V}}_{\large u}\)</span> 是 <span class="math inline">\(\boldsymbol u_i\)</span> 的 REML 估计 <span class="math inline">\(\tilde{\boldsymbol u_i}\)</span> 的方差-协方差阵估计。该矩阵的迹就是 <span class="math inline">\(\boldsymbol u_i\)</span> 的方差估计之和。这是正态分布随机脆弱效应方差的首选估计。<span class="math inline">\(\tilde{\sigma}_u\)</span> 的标准误可根据下式找到</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{se}\left(\tilde{\sigma}_u^2\right)&amp;=√(2\tilde{\sigma}_u^2)\left[n+\frac{1}{\tilde{\sigma}_u^4}\mathrm{trace}\left(\tilde{\boldsymbol{V}}_{\large u}\tilde{\boldsymbol{V}}_{\large u}\right)-2\frac{1}{\tilde{\sigma}_u^2}\mathrm{trace}\left(\tilde{\boldsymbol{V}}_{\large u}\right)\right]^{-1/2}\end{aligned}\]</span></p>
+<p><span class="math inline">\(\tilde{\sigma}_u\)</span> 及其标准误通常都出现在软件包的输出中，这些软件包具有拟合带 lognormal 脆弱性 Cox 回归模型的功能。</p>
+<p>对于全参数脆弱模型，可以使用未知参数的最大似然估计来估计累积基线风险函数和相应的生存函数。然而，在半参数脆弱模型中，基线风险和累积风险的估计不能扩展为考虑脆弱项，因此无法容易地获得的生存函数估计。</p>
+</div>
+<div id="sec10-5-2" class="section level3" number="10.5.2">
+<h3>
+<span class="header-section-number">10.5.2</span> gamma 脆弱效应<a class="anchor" aria-label="anchor" href="#sec10-5-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>当假设与脆弱效应相关的随机变量具有单位均值、方差为 <span class="math inline">\(1/\theta\)</span> 的 gamma 分布时，相应的随机效应 <span class="math inline">\(u_i\)</span> 具有 <a href="chap10.html#sec10-2-1">10.2.1</a> 节介绍的 exp-gamma 分布。使用式 <a href="chap10.html#eq:10-6">(10.6)</a> 中的密度函数，式 <a href="chap10.html#eq:10-24">(10.24)</a> 中的对数似然函数现在为</p>
+<p><span class="math display">\[\log L_p(\boldsymbol{\beta},\boldsymbol{u})+n\theta\log\theta-n\log\Gamma(\theta)-\theta\sum_{i=1}^n(e^{u_i}-u_i)\]</span></p>
+<p>该对数似然函数将用于估计 <span class="math inline">\(\boldsymbol\beta\)</span> 和 <span class="math inline">\(\boldsymbol u\)</span> 的分量，因此可以省略仅涉及 <span class="math inline">\(\theta\)</span> 的项，以给出惩罚偏对数似然函数</p>
+<p><span class="math display" id="eq:10-29">\[\begin{align}
+\log L_{pen}(\boldsymbol{\beta},\boldsymbol{u},\theta)=\log L_p(\boldsymbol{\beta},\boldsymbol{u})-\theta\sum_{i=1}^n\{e^{u_i}-u_i\}
+\tag{10.29}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\theta\sum_{i=1}^n\{e^{u_i}-u_i\}\)</span> 为惩罚项。</p>
+<p>为了获得 <span class="math inline">\(\boldsymbol{\beta},\boldsymbol{u}\)</span> 和 <span class="math inline">\(\theta\)</span> 的估计，首先将 <span class="math inline">\(\boldsymbol{\beta}\)</span> 和 <span class="math inline">\(\boldsymbol{u}\)</span> 的估计设为在 <span class="math inline">\(\theta\)</span> 的初始值下使式 <a href="chap10.html#eq:10-29">(10.29)</a> 最大化的值。在 <span class="math inline">\(\boldsymbol{\beta},\boldsymbol{u}\)</span> 的估计 <span class="math inline">\(\hat{\boldsymbol{\beta}},\hat{\boldsymbol{u}}\)</span> 处，<span class="math inline">\(\theta\)</span> 的边际对数似然用于获得 <span class="math inline">\(\theta\)</span> 的修正估计。Therneau and Grambsch (2000) 已证明</p>
+<p><span class="math display" id="eq:10-30">\[\begin{align}
+\log L_m(\hat{\boldsymbol{\beta}},\theta)=&amp;\,\log L_{pen}(\hat{\boldsymbol{\beta}},\hat{\boldsymbol{u}},\theta)+n\theta(1+\log\theta)\\&amp;-\sum_{i=1}^n\left\{(\theta+\delta_i)\log(\theta+\delta_i)-\log\left[\frac{\Gamma(\theta+\delta_i)}{\Gamma(\theta)}\right]\right\}
+\tag{10.30}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\delta_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的事件指示符。关于 <span class="math inline">\(\theta\)</span> 最大化式 <a href="chap10.html#eq:10-30">(10.30)</a> 中的 <span class="math inline">\(\log L_m(\hat{\boldsymbol{\beta}},\theta)\)</span>，得到 <span class="math inline">\(\hat\theta\)</span>。然后将该估计与式 <a href="chap10.html#eq:10-29">(10.29)</a> 一起使用以获得 <span class="math inline">\(\boldsymbol{\beta},\boldsymbol{u}\)</span> 的更新估计，依此类推，直到过程收敛。尚无 <span class="math inline">\(\theta\)</span> 的估计及其标准误的封闭形式表达。</p>
+<p>当脆弱性方差 <span class="math inline">\(1/\theta\)</span> 趋于零时，式 <a href="chap10.html#eq:10-30">(10.30)</a> 中的边际对数似然变为</p>
+<p><span class="math display">\[\log L_p(\hat{\boldsymbol{\beta}})-\sum_{i=1}^n\delta_i\]</span></p>
+<p>其中，<span class="math inline">\(\log L_p(\hat{\boldsymbol{\beta}})\)</span> 是不存在脆弱性时 Cox 回归模型的最大偏对数似然。通过将边际对数似然率取为 <span class="math inline">\(\log L_m(\theta)+\sum_{i=1}^n\delta_i\)</span>，即存在脆弱性时的最大边际对数似然，可直接与不存在脆弱性的模型进行比较。这一点在 <a href="chap10.html#sec10-6">10.6</a> 节将会看到，对于模型间的比较是非常有帮助的。</p>
+</div>
+</div>
+<div id="sec10-6" class="section level2" number="10.6">
+<h2>
+<span class="header-section-number">10.6</span> 比较带脆弱性的模型<a class="anchor" aria-label="anchor" href="#sec10-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>在许多情况下，脆弱性在模型中是一个讨厌项 (nuisance term). 虽然考虑其效应很重要，但主要兴趣在于确定模型中需要哪些解释变量，并在存在脆弱性的情况下获得其效应的估计。第 5 章 <a href="chap5.html#sec5-7">5.7</a> 节中描述的方法基于 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量的变化，可用于比较包含脆弱性的参数模型。然后可以直接实施模型选择策略，用于确定在存在脆弱性的情况下将哪些因素包含在参数模型中，随后可以推断其效应。</p>
+<p>对于 Cox 回归模型，情况更为复杂。这是因为惩罚似然的表现与通常的似然或偏似然函数不同，因为它包含不可观测的脆弱效应。相反，我们使用最大化的边际对数似然统计量，对于 lognormal，这是 <span class="math inline">\(\log L_m(\hat{\boldsymbol{\beta}},\hat{\sigma}_u^2)\)</span>，对于 gamma 则为 <span class="math inline">\(\log L_m(\hat{\boldsymbol{\beta}},\hat{\theta})\)</span>。该统计量通常在拟合含脆弱项的 Cox 回归模型的计算机输出中给出。可用通常的方式 <span class="math inline">\(\log L_m(\hat{\boldsymbol{\beta}},\hat{\sigma}_u^2)\)</span> 或 <span class="math inline">\(\log L_m(\hat{\boldsymbol{\beta}},\hat{\theta})\)</span>（或简记为 <span class="math inline">\(-2\log\hat{L}_m\)</span> ）的值之差与卡方分布的百分位点进行比较。在 lognormal 脆弱效应的情况下，使用基于 <span class="math inline">\(\beta\)</span> 最大似然估计的边际似然，而不是基于 REML 估计的边际似然。</p>
+<div id="sec10-6-1" class="section level3" number="10.6.1">
+<h3>
+<span class="header-section-number">10.6.1</span> 脆弱性存在的检验<a class="anchor" aria-label="anchor" href="#sec10-6-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在参数模型中，对于给定的一组协变量，可以通过将具有和不具有脆弱效应的模型的 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 与自由度为一的分布（<span class="math inline">\(\chi^2_1\)</span>）的百分位点进行比较，以评估无脆弱效应假设。然而需注意，支撑 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值之差具有卡方分布这一结果的标准渐近理论不再有效。本质上，这是因为无脆弱效应的假设对应于检验脆弱项方差为零的假设，这是方差可以取的最小值。基于 <span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 的变化的检验往往是保守的，并且所得差异的 <span class="math inline">\(P\)</span> 值将大于应有的值。在这种情况下，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的差异可以非正式地与 <span class="math inline">\(\chi^2_1\)</span> 分布的百分位点进行比较。如果观测差异相对较大或较小，关于脆弱性程度的结论就会很清楚。</p>
+<p>为了更精确地确定脆弱效应的显著性，我们可以使用以下结果：当将脆弱项添加到全参数模型时，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 变化的渐近分布是 <span class="math inline">\(\chi^2_1\)</span> 分布和 <span class="math inline">\(\chi^2_0\)</span> 分布的等权混合，记作 <span class="math inline">\(0.5(\chi_0^2+\chi_1^2)\)</span>。<span class="math inline">\(\chi^2_0\)</span> 在零处有一个点质量，因此如果随机变量 <span class="math inline">\(W\)</span> 具有 <span class="math inline">\(0.5(\chi_0^2+\chi_1^2)\)</span> 分布，则 <span class="math inline">\(\text{P}(W=0)=0.5\)</span> 以及对于<span class="math inline">\(w&gt;0\)</span> 有 <span class="math inline">\(\text{and P}(W&gt;w)=0.5\text{P}(\chi_1^2&gt;w)\)</span>。因此，为应用此结果，用于检验脆弱性方差为零的假设的 <span class="math inline">\(P\)</span> 值只是使用 <span class="math inline">\(\chi^2_1\)</span> 分布所获 <span class="math inline">\(P\)</span> 值的一半。</p>
+<p>在临界情况下，可能需要其他方法，例如 bootstrapping. 该过程可用于获得脆弱项方差的区间估计。简言之，bootstrapping 涉及有放回地对数据进行重抽样，以给出 <span class="math inline">\(n\)</span> 个生存时间的新样本。然后为该样本拟合包含脆弱项的生存模型，并估计随机效应的方差。该步骤将重复很多次。方差的 bootstrap 估计的分布的 2.5% 和 97.5% 百分位数定义了方差的 95% 区间估计。</p>
+<p>在 Cox 回归模型的情况下，使用 <a href="chap10.html#sec10-5">10.5</a> 节概述的惩罚偏对数似然法进行拟合，使用由最大化的边际对数似然形成的 <span class="math inline">\(-2\log\hat{L}_m\)</span> 统计量来评估脆弱项的显著性。对于 lognormal 脆弱效应，从最大似然估计获得的具脆弱性的模型的最大边际对数似然可直接与无脆弱性的相应 Cox 回归模型的最大偏对数似然进行比较<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;For lognormal frailty effects, the maximised marginal log-likelihood for the model with frailty, obtained from maximum likelihood estimation can be compared directly with the maximised partial log-likelihood for the corresponding Cox regression model without frailty.&lt;/p&gt;"><sup>13</sup></a>。当假定 gamma 脆弱效应时，也会使用类似的过程，但此处必须将事件总数 <span class="math inline">\(\sum_{i=1}^n\delta_i\)</span> 添加到最大边际对数似然中，如第 <a href="chap10.html#sec10-5-2">10.5.2</a> 节所解释的。与参数建模一样，该检验程序只是近似的，可能需要 bootstrapping 来更可靠地评估脆弱效应的程度。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex10-3" class="example"><strong>示例 10.3  (肺移植登记患者的生存) </strong></span><br></p>
+<p>患者在接受器官移植评估后的预期生存时间，患者和临床医生都非常关注。在一项旨在量化这一生存时间并从肺移植的名单中确定与生存相关的因素的研究中，收集了 2004 年在英国注册等待肺移植患者的有关数据。生存时间是从登记之日起直到死亡，无论是否进行了包括移植在内的所有干预治疗。从名单中删除之日（即最后一次随访日期）或是截至 2012 年 4 月 30 日仍然存活的记录均视为删失。此外，还记录了登记时的年龄、性别、体重指数和原发性疾病，其中原发性疾病分为纤维化、慢阻肺（COPD）、化脓性疾病和其他。数据集中有 196 名患者，其中 123 人在研究期间死亡。前 20 名患者的数据如表 10.2 所示。</p>
+<details><summary><font color="#8B2232">表 10.2</font>
+</summary><img src="figure/table%2010.2.png#center" style="width:80.0%"></details><p><br>
+我们首先拟合了一个包含年龄、性别、体重指数和原发疾病的 Weibull 比例风险模型。该模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量为 2043.73. 现在引入 lognormal 脆弱项，通过将正态分布随机效应添加到模型的线性部分，并最大化式 <a href="chap10.html#eq:10-17">(10.17)</a> 中的似然函数。具有 lognormal 脆弱性的 Weibull 模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 值为 2026.85，加上随机效应后 <span class="math inline">\(-2\log\hat{L}\)</span> 的变化为 16.88. 将该减小量与 <span class="math inline">\(\chi^2_1\)</span> 分布的百分位点进行比较，脆弱效应非常显著，<span class="math inline">\(P&lt;0.001\)</span>。这意味着，在考虑了四个解释变量的效应后，本研究中患者的生存时间之间存在显著的异质性。若以 <span class="math inline">\(0.5(\chi_{0}^{2}+\chi_{1}^{2})\)</span> 分布作为参考，得到脆弱效应显著性不太保守的估计，相当于将与 <span class="math inline">\(\chi^2_1\)</span> 分布的比较中的 <span class="math inline">\(P\)</span> 值减半，那么会更显著。与 lognormal 脆弱性对应的正态随机效应的方差为 <span class="math inline">\(\hat{\sigma}_u^2=2.254\)</span>。使用式 <a href="chap10.html#eq:10-4">(10.4)</a> 和 <a href="chap10.html#eq:10-5">(10.5)</a>，lognormal 脆弱效应的均值和方差分别为 3.09 和 81.20.</p>
+<p>接下来，我们拟合一个 Weibull 模型，该模型包含年龄、性别、体重指数和原发性疾病，以及 gamma 脆弱效应。该模型是通过最大化式 <a href="chap10.html#eq:10-23">(10.23)</a> 中的对数似然函数来拟合的，得到 gamma 脆弱效应具有方差 <span class="math inline">\(\hat\theta^{−1}=3.015\)</span>。随机效应的相应方差由式 <a href="chap10.html#eq:10-8">(10.8)</a> 计算得出，为 10.19. 具有 gamma 脆弱性的 Weibull 模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量为 2023.69，因此脆弱项的添加导致 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量的值减小 20.04。这种变化非常显著（<span class="math inline">\(P&lt;0.001\)</span>），并且大于引入 lognormal 脆弱时的变化。</p>
+<p>在这个例子中，脆弱项两个分布的方差以及随机效应的相应分布都非常不同。为了更详细地探讨这一点，图 10.7 和 10.8 显示了随机变量 <span class="math inline">\(U\)</span> 的拟合的正态和 exp-gamma 概率密度函数，以及脆弱随机变量 <span class="math inline">\(Z\)</span> 相应的 lognormal 和 gamma 概率密度。</p>
+<details><summary><font color="#8B2232">图 10.7</font>
+</summary><img src="figure/figure%2010.7.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 10.8</font>
+</summary><img src="figure/figure%2010.8.png#center" style="width:80.0%"></details><p><br></p>
+<p>图 10.7 显示了随机效应 exp-gamma 分布的非对称性，尽管众数为零，但根据式 <a href="chap10.html#eq:10-7">(10.7)</a> 得出的均值为 −2.05. 这解释了随机效应的正态分布和 exp-gamma 分布方差估计的差异。图 10.8 显示，当 <span class="math inline">\(z_i&gt;0.2\)</span> 时，脆弱效应的密度函数估计非常相似。然而，当 <span class="math inline">\(z_i\)</span> 趋于零时，拟合的 gamma 分布的密度趋于 <span class="math inline">\(\infty\)</span>，而拟合的 lognormal 分布是单峰的。此外，拟合的 gamma 分布的均值是 1，而根据式 <a href="chap10.html#eq:10-4">(10.4)</a> 中，拟合的 lognormal 分布的均值为 3.09，这就是 lognormal 脆弱性方差远大于 gamma 分布的脆弱性方差的原因。</p>
+<p>为了比较各种项的参数估计及其标准误，表 10.3 显示了不同拟合的 Weibull 模型的估计，包括随机效应 <span class="math inline">\(u_i\)</span> 和脆弱效应 <span class="math inline">\(z_i\)</span> 的方差估计 <span class="math inline">\(z_i\)</span>，分别表示为 <span class="math inline">\(\widehat{\operatorname{var}}\left(u_{i}\right)\)</span> 和 <span class="math inline">\(\widehat{\operatorname{var}}\left(z_{i}\right)\)</span>。请注意，对于正态随机效应，方差估计为 <span class="math inline">\(\widehat{\operatorname{var}}\left(u_{i}\right)=\hat\sigma^2_u\)</span>，而对于伽玛脆弱性，方差估计则为 <span class="math inline">\(\widehat{\operatorname{var}}\left(u_{i}\right)=1/\hat\theta\)</span>。然后使用式 <a href="chap10.html#eq:10-5">(10.5)</a> 来获得 lognormal 脆弱性方差，并且式 <a href="chap10.html#eq:10-8">(10.8)</a> 给出了对应于 gamma 脆弱随机效应的方差。</p>
+<details><summary><font color="#8B2232">表 10.3</font>
+</summary><img src="figure/table%2010.3.png#center" style="width:80.0%"></details><p><br>
+该表显示，当添加脆弱项时，参数估计倾向于离零更远，并且标准误也更大。然而，所列因素对患者生存的影响的推断并没有受到脆弱项的较大影响，并且当包括 lognormal 或 gamma 脆弱效应时，所获结果几乎没有差异。对患者生存产生影响的唯一因素是原发疾病，COPD 患者的死亡风险低于其他疾病患者。此外，根据 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量，具有 gamma 脆弱性的模型可能优于具有 lognormal 脆弱性的模型。</p>
+<p>为了避免对潜在基线风险函数的形式做出具体假定，我们拟合了 Cox 回归模型，其中包含年龄、性别、体重指数和原发性疾病，并且还包括 lognormal 或 gamma 脆弱项。这些模型是通过分别最大化式 <a href="chap10.html#eq:10-27">(10.27)</a> 和 <a href="chap10.html#eq:10-29">(10.29)</a> 中的惩罚对数似然函数来拟合的。为了检验在存在四个解释变量的情况下所有脆弱效应均为零的假设，我们将拟合的 Cox 模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量值（即 1159.101），与具有脆弱性的 Cox 模型的最大化边际对数似然统计量 <span class="math inline">\(-2\log\hat{L}_m\)</span> 进行比较。</p>
+<p>当添加 lognormal 脆弱项时，式 <a href="chap10.html#eq:10-28">(10.28)</a> 中的最大化边际对数似然统计量 <span class="math inline">\(-2\log L_{m}(\hat{\boldsymbol{\beta}},\hat{\sigma}_{u}^{2})\)</span> 的值为 1157.480，这导致 <span class="math inline">\(-2\log\hat{L}_m\)</span> 统计量的变化为 1.62，这并不显著（<span class="math inline">\(P=0.203\)</span>）。</p>
+<p>拟合具有 gamma 脆弱性的模型后，式 <a href="chap10.html#eq:10-30">(10.30)</a> 中的 <span class="math inline">\(-2\log L_{m}(\hat{\boldsymbol{\beta}},\hat{\theta})\)</span> 统计量为 −699.653，为此加上观测死亡人数 123，再乘以 −2 得到 1153.306. 这可与包含相同解释变量但无脆弱效应的 Cox 回归模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 值（1159.101）进行比较。该检验统计量的值减小了 5.80，与 <span class="math inline">\(\chi^2_1\)</span> 分布的百分位点相比，这是显著的（<span class="math inline">\(P=0.016\)</span>）。考虑到原发性疾病和其他因素造成的生存差异，这表明了显著的脆弱效应。</p>
+<p>Cox 模型中的正态和 exp-gamma 随机效应的方差小于相应的 Weibull 模型中的方差，并且脆弱效应不那么显著。这表明，拟合的 Cox 回归模型比 Weibull 模型更能解释移植登记后生存时间的变异。</p>
+<p>为比较 Cox 回归模型中各项的参数估计及其标准误，表 10.4 显示了拟合的不同模型的估计以及随机效应的方差估计 <span class="math inline">\(\widehat{\operatorname{var}}\left(u_i\right)\)</span>。</p>
+<details><summary><font color="#8B2232">表 10.4</font>
+</summary><img src="figure/table%2010.4.png#center" style="width:80.0%"></details><p><br>
+与 Weibull 模型一样，当添加脆弱项时，一些参数估计会更大，并且标准误也更大，但表 10.3 和 10.4 中的参数估计大致相似。对于 Weibull 模型，gamma 脆弱性模型得到了 <span class="math inline">\(-2\log\hat{L}_m\)</span> 统计量的最小值，并且对数据拟合得更好。</p>
+<p>脆弱效应的估计可以使用 <a href="chap10.html#sec10-4">10.4</a> 节中概述的方法获得。例如，对于 具有 lognormal 脆弱性的 Cox 模型的脆弱项 <span class="math inline">\(\hat z_i\)</span> 的估计，有 7 名患者的 <span class="math inline">\(\hat z_i\)</span> 值大于 3，即患者 11, 36, 69, 70, 87, 113 和 163. 这些患者的生存时间分别为 16, 21, 3, 4, 38, 22 和 35 天，因此，正如预期的那样，最脆弱的患者是那些生存最短的患者。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec10-7" class="section level2" number="10.7">
+<h2>
+<span class="header-section-number">10.7</span> 共享脆弱模型<a class="anchor" aria-label="anchor" href="#sec10-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>试图解释个体生存时间异质性的模型可以提供对协变量效应估计的改进，或有助于解释诸如非比例风险等特征。然而，脆弱模型在某些情况下特别有用，此时某些特征的值是由个体组共享的。<a href="chap10.html#sec10-1-3">10.1.3</a> 节给出了一些潜在应用领域的示例。</p>
+<p>为了建立生存数据的共享脆弱模型，假设有 <span class="math inline">\(g\)</span> 组个体，第 <span class="math inline">\(i(i=1,2,\ldots,g)\)</span> 组中有 <span class="math inline">\(n_i\)</span> 个个体。对于比例风险模型，第 <span class="math inline">\(i\)</span> 组第 <span class="math inline">\(j(j=1,2,\ldots,n_i)\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的死亡风险</p>
+<p><span class="math display" id="eq:10-31">\[\begin{align}
+h_{ij}(t)=z_i\exp(\boldsymbol{\beta'x}_{ij})h_0(t)
+\tag{10.31}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_{ij}\)</span> 是第 <span class="math inline">\(i\)</span> 组第 <span class="math inline">\(j\)</span> 个个体 <span class="math inline">\(p\)</span> 个解释变量的值向量，<span class="math inline">\(\boldsymbol\beta\)</span> 是它们的系数向量，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数，<span class="math inline">\(z_i\)</span> 是第 <span class="math inline">\(i\)</span> 个组中所有 <span class="math inline">\(n_i\)</span> 个个体共同的脆弱效应。式 <a href="chap10.html#eq:10-31">(10.31)</a> 中的风险函数也可写为</p>
+<p><span class="math display">\[h_{ij}(t)=\exp(\boldsymbol{\beta'x}_{ij}+u_i)h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(u_i=\log(z_i)\)</span> 并假定为 <span class="math inline">\(g\)</span> 个随机变量 <span class="math inline">\(U_1,U_2,\ldots,U_g\)</span> 的实现，假定 <span class="math inline">\(U_i\)</span> 具有均值为零的分布，其中正态分布是常见的选择。</p>
+<p>基线风险的形式可以在 Weibull 模型中完全指定，也可以如 Cox 模型一样不指定。根据第 5 章式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-60">(5.60)</a>，包含共享脆弱分量的一般参数加速失效时间模型的形式为</p>
+<p><span class="math display">\[h_{ij}(t)=e^{-\eta_{ij}}h_0(t/e^{\eta_{ij}})\]</span></p>
+<p>其中 <span class="math inline">\(\eta_{ij} = \boldsymbol \alpha' \boldsymbol x_{ij}+u_i\)</span>。等价地，扩展式 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:5-61">(5.61)</a>，该模型可以对数线性形式表示为</p>
+<p><span class="math display">\[\begin{aligned}\log T_{ij}=\mu+\boldsymbol{\alpha}'\boldsymbol{x}_{ij}+u_i+\sigma\epsilon_{ij}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(T_{ij}\)</span> 是与第 <span class="math inline">\(i\)</span> 组第 <span class="math inline">\(j\)</span> 个个体生存时间相关的随机变量，<span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 是截距和尺度参数，并且 <span class="math inline">\(\epsilon_{ij}\)</span> 具有某种指定的概率分布。</p>
+<div id="sec10-7-1" class="section level3" number="10.7.1">
+<h3>
+<span class="header-section-number">10.7.1</span> 拟合共享脆弱模型<a class="anchor" aria-label="anchor" href="#sec10-7-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>将第 <span class="math inline">\(i\)</span> 组第 <span class="math inline">\(j\)</span> 个个体的生存时间记为 <span class="math inline">\(t_{ij}\)</span>，其中 <span class="math inline">\(j = 1, 2,...,n_i\)</span> 且 <span class="math inline">\(i = 1, 2,...,g\)</span>，并将相应的事件指示符写为 <span class="math inline">\(\delta_{ij}\)</span> ，如果 <span class="math inline">\(t_{ij}\)</span> 是事件时间，则为 1，否则为 0. 另外，令 <span class="math inline">\(S_{ij} (t)\)</span> 和 <span class="math inline">\(h_{ij} (t)\)</span> 分别为第 <span class="math inline">\(i\)</span> 组第 <span class="math inline">\(j\)</span> 个个体的生存函数和风险函数。对于全参数模型，当脆弱项已知时，第 <span class="math inline">\(i\)</span> 组观测的似然函数为</p>
+<p><span class="math display">\[\begin{aligned}L_i(\boldsymbol{\beta})=\prod_{j=1}^{n_i}h_{ij}(t_{ij})^{\delta_{ij}}S_{ij}(t_{ij})\end{aligned}\]</span></p>
+<p>如 <a href="chap10.html#sec10-4">10.4</a> 节所示，我们接下来将该似然关于 <span class="math inline">\(u_i\)</span> 积分，得到</p>
+<p><span class="math display">\[\int_{-\infty}^\infty L_i(\boldsymbol{\beta})f(u_i)\mathrm{d}u_i\]</span></p>
+<p>其中 <span class="math inline">\(f(u_i)\)</span> 是 <span class="math inline">\(U_i\)</span> 的概率密度函数。跨 <span class="math inline">\(g\)</span> 个组，似然函数为</p>
+<p><span class="math display">\[L(\boldsymbol{\beta})=\prod_{i=1}^g\int_{-\infty}^\infty L_i(\boldsymbol{\beta})f(u_i)\mathrm{d}u_i\]</span></p>
+<p>与个体脆弱效应的情况一样，只有当脆弱效应具有 <span class="math inline">\(\Gamma(\theta,\theta)\)</span> 分布时，才可以解析地积分。在这种情况下，第 <span class="math inline">\(i\)</span> 组的似然函数为</p>
+<p><span class="math display">\[\prod_{j=1}^{n_i}\left\{e^{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_{ij}}h_0(t_{ij})\right\}^{\delta_{ij}}\frac{\theta^\theta\Gamma(\theta+d_i)}{\Gamma(\theta)\{\theta+\sum_j\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_{ij})H_0(t_{ij})\}^{\theta+d_i}}\]</span></p>
+<p>其中 <span class="math inline">\(d_i=\sum_i\delta_{ij}\)</span> 为第 <span class="math inline">\(i\)</span> 组的死亡数。相应的跨 <span class="math inline">\(g\)</span> 组对数似然为</p>
+<p><span class="math display">\[\begin{aligned}
+\operatorname{log}L(\boldsymbol{\beta})=&amp;\, \begin{aligned}\sum_{i=1}^{g}\left\{\log\Gamma(\theta+d_i)-\log\Gamma(\theta)-d_i\log\theta\right\}\end{aligned}  \\
+&amp;-\sum_{i=1}^g(\theta+d_i)\log\left[1+\theta^{-1}\sum_{j=1}^{n_i}\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_{ij})H_0(t_{ij})\right] \\
+&amp;+\sum_{i=1}^g\sum_{j=1}^{n_i}\delta_{ij}\left[\boldsymbol{\beta}^{\prime}\boldsymbol{x}_{ij}+\log h_0(t_{ij})\right],
+\end{aligned}\]</span></p>
+<p>对其进行最大化，以给出基线风险函数中的参数 <span class="math inline">\(\theta\)</span> 和 <span class="math inline">\(\beta\)</span> 的估计。</p>
+<p>一旦拟合了该模型，就可以按照 <a href="chap10.html#sec10-4">10.4</a> 节中描述的相同方式获得脆弱效应的估计 <span class="math inline">\(\hat z_i\)</span>，得到</p>
+<p><span class="math display">\[\hat{z}_i=\frac{\hat{\theta}+d_i}{\hat{\theta}+\sum_{j=1}^{n_i}\exp(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_{ij})\hat{H}_0(t_{ij})}\]</span></p>
+<p>标准误为 <span class="math inline">\(\hat{z}_i/(\hat{\theta}+d_i)\)</span>。</p>
+<p>带脆弱性的 Cox 回归模型可再次使用惩罚偏对数似然方法进行拟合，如 <a href="chap10.html#sec10-5">10.5</a> 节所示。为了使该节给出的公式适应共享脆弱模型的情况，事件指示符 <span class="math inline">\(\delta_i\)</span> 替换为 <span class="math inline">\(d_i\)</span>（第 <span class="math inline">\(i\)</span> 组中的死亡人数），并且关于 <span class="math inline">\(i = 1\)</span> 到 <span class="math inline">\(n\)</span> 的求和替换为 <span class="math inline">\(i=1\)</span> 至 <span class="math inline">\(g\)</span>。</p>
+</div>
+<div id="sec10-7-2" class="section level3" number="10.7.2">
+<h3>
+<span class="header-section-number">10.7.2</span> 比较共享脆弱模型<a class="anchor" aria-label="anchor" href="#sec10-7-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>同样，<a href="chap10.html#sec10-6">10.6</a> 节给出的结果同样适用于共享脆弱性模型。具体来说，包括共享脆弱项的全参数模型可以使用 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量进行比较。如 <a href="chap10.html#sec10-6-1">10.6.1</a> 节所示，为了检验脆弱性，可以将 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量在添加脆弱效应时的变化与 <span class="math inline">\(0.5(\chi_0^2+\chi_1^2)\)</span> 分布的百分位点进行正式比较。</p>
+<p>对于使用惩罚偏对数似然方法拟合的具有共享脆弱的 Cox 模型，边际对数似然统计量 <span class="math inline">\(-2\log L_m(\hat{\boldsymbol{\beta}},\hat{\sigma}_u^2)\)</span> 和 <span class="math inline">\(-2\log L_m(\hat{\boldsymbol{\beta}},\hat{\theta})\)</span> 可分别用于比较具有 lognormal 或 gamma 脆弱性的模型。这些统计量也可与没有脆弱性的 Cox 回归模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 值进行比较，以评估脆弱效应的程度。然而，<a href="chap10.html#sec10-6-1">10.6.1</a> 节中概述的这种方法的局限性也适用于此。注意，在 gamma 脆弱性的情况下，需要将量 <span class="math inline">\(\sum_{i=1}^g d_i\)</span> 添加到 <span class="math inline">\(-2\log L_m(\hat{\boldsymbol{\beta}},\hat{\sigma}_u^2)\)</span> 中，以确保在无脆弱性的条件下与最大化偏对数似然具有可比性，就像单变量脆弱性一样。</p>
+<p>可以使用 <a href="chap10.html#sec10-4">10.4</a> 节描述的方法来估计随机效应。当脆弱项代表多中心研究中的中心时，这种估计特别有用，因为中心效应估计的秩次提供了关于不同中心在患者生存方面的优点的信息。但在这里，模型中解释变量的系数估计的解释是以共享脆弱性为条件的。这意味着风险比与同一组中个体效应的比较有关。对随机效应的估计也会得到对具有给定特征的个体的生存函数的估计，并且可以很容易地获得中位生存时间。不涉及新的原则。</p>
+<p>最后，我们以一个示例来说明其中的一些特征。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex10-4" class="example"><strong>示例 10.4  (肾移植后的生存) </strong></span><br></p>
+<p>已故器官捐献者通常捐献两个肾脏，然后通常由不同的移植中心移植给两个不同的受体。在对短期移植物和患者生存进行建模时，需要考虑与受体相关的许多因素以及与移植手术本身相关的因素。本示例基于特定年份进行的所有肾移植的结果，其中供体因循环系统衰竭而亡。结局变量是移植物生存，定义为移植失败或死亡（但移植物正常工作）中较早发生的一项。在记录的许多解释因素中，本例使用了：患者年龄（岁）、糖尿病状况（0 = 不存在，1 = 存在）和冷缺血时间（CIT），即从供体中取出肾脏到移植到受体之间的时间（以小时为单位）。</p>
+<p>除了这些受体和移植因素外，供体因素也可能对移植的结果产生影响。虽然与供体相关的许多因素都会被常规记录下来，但很难将所有因素都考虑在内。此外，接受相同受体两个肾脏的患者的生存时间可能比接受不同供体肾脏的患者的生存时间具有更高的相关性<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;the survival times of the patients who receive the two kidneys from the same donor may be expected to be more highly correlated than the times for recipients of kidneys from different donors.&lt;/p&gt;"><sup>14</sup></a>。考虑供体因素（同时还考虑到使用相同供体器官时的结局之间的关联）的一种方法是将供体作为共享脆弱效应。在相同供体的两个肾脏受体的生存时间模型中，脆弱项是相同的。</p>
+<p>在这项研究中，共有 434 例移植手术使用了 270 名已故供体的器官。其中，106 人捐献了一个肾脏，164 人捐献了双肾。表 10.5 显示了当年前 15 名供体的 22 名肾脏受体的数据。</p>
+<details><summary><font color="#8B2232">表 10.5</font>
+</summary><img src="figure/table%2010.5.png#center" style="width:80.0%"></details><p><br>
+在拟合包含冷缺血时间、受体年龄和糖尿病状况的 Cox 回归模型时，<span class="math inline">\(-2\log\hat{L}\)</span> 统计量的值为 831.87. 为了考虑供体效应，添加了 lognormal 共享脆弱效应，并且 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量减小为 831.46，在一个自由度上减小了 0.41. 与 <span class="math inline">\(\chi^2_1\)</span> 分布或 <span class="math inline">\(0.5(\chi_0^2+\chi_1^2)\)</span> 分布相比，这并不显著（<span class="math inline">\(P = 0.52\)</span>）。这表明不存在脆弱效应。</p>
+<p>不包含脆弱性以及包含 lognormal 脆弱性的拟合的 Cox 回归模型中的参数估计如表 10.6 所示。</p>
+<details><summary><font color="#8B2232">表 10.6</font>
+</summary><img src="figure/table%2010.6.png#center" style="width:80.0%"></details><p><br>
+有证据表明患者的年龄会影响移植生存，但考虑到这一点后，没有证据表明糖尿病状况和冷缺血时间会影响这些患者的结果。此外，这三个变量对移植生存的效应不受供体效应的影响。</p>
+<p>当将 gamma 脆弱性添加到包含相同解释变量的 Cox 回归模型中时，<span class="math inline">\(-2\log\hat{L}\)</span> 的值与其他模型的值非常相似，如表 10.6 所示，参数估计实际上是相同的。当假定生存时间为 Weibull 分布时，获得了非常相似的结果。总之，适当考虑供体效应并不会对解释性因素对这些移植受者短期生存率影响的推断产生实质性影响。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec10-8" class="section level2" number="10.8">
+<h2>
+<span class="header-section-number">10.8</span> 脆弱建模的其他方面<a class="anchor" aria-label="anchor" href="#sec10-8"><i class="fas fa-link"></i></a>
+</h2>
+<p>本节简要讨论了与对魔建模相关的许多其他问题。</p>
+<div id="sec10-8-1" class="section level3" number="10.8.1">
+<h3>
+<span class="header-section-number">10.8.1</span> 模型检查<a class="anchor" aria-label="anchor" href="#sec10-8-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>第 <a href="chap4.html#chap4">4</a> 章和第 <a href="chap7.html#chap7">7</a> 章描述的模型检查技术可以揭示离群观测、有影响的值和不恰当的协变量函数形式。此外，评估具有 gamma 脆弱性的参数模型充分性的一种非正式方式是将观测生存函数与从脆弱模型导出的可观测函数进行比较，如<a href="chap10.html#exm:ex10-2">示例 10.2</a> 所示。在更复杂的问题中，可以通过比较具有与脆弱模型相同解释变量的 Cox 模型拟合得出的基线生存函数，与将所有解释变量都设为零的个体可观测生存函数，来进行比较<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;In more complex problems, the baseline survivor function estimated from fitting a Cox model with the same explanatory variables as the frailty model, can be compared to the observable survivor function for an individual with all explanatory variables set to zero.&lt;/p&gt;"><sup>15</sup></a>。对于脆弱性分布的其他选择，可观测生存函数只能数值地确定，因此这种方法并不那么有用。</p>
+<p>在脆弱建模中，还可以严格检查所选脆弱性分布的有效性。本章描述了两种特定的分布模型：gamma 分布和 lognormal 分布，但还有许多其他选择。选择哪种脆弱性分布通常取决于数学便利性和统计软件的可用性。区分替代脆弱性分布的一种方法是考虑一般分布族 (general distribution family)，特定的分布是其特例。<strong>幂方差函数</strong> (power variance function, PVF) 分布在这方面广泛使用。该分布的密度函数是三个参数 <span class="math inline">\(\alpha,\delta\)</span> 和 <span class="math inline">\(\theta\)</span> 的函数，对于 <span class="math inline">\(\theta\geqslant0,0&lt;\alpha\leqslant1,\delta&gt;0\)</span>，其均值和方差由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{E}\left(Z\right)&amp;=\delta\theta^{\alpha-1},\quad\quad\mathrm{~var}\left(Z\right)=\delta(1-\alpha)\theta^{\alpha-2}\end{aligned}\]</span></p>
+<p>令 <span class="math inline">\(\delta = \theta^{1-\alpha}\)</span> 得到一个具有单位均值、方差为 <span class="math inline">\((1 −\alpha)/\theta\)</span> 的分布。当 <span class="math inline">\(\alpha = 0\)</span> 时，分布简化为方差为 <span class="math inline">\(\theta−1\)</span> 的 gamma，当 <span class="math inline">\(\alpha = 0.5\)</span> 时，分布简化为逆高斯分布。那么，关于 <span class="math inline">\(\alpha\)</span> 值的假设检验可以指导模型选择。</p>
+<p>模型检查的另一种方法是评估基于模型的关键推断对脆弱模型特定选择的敏感性。将完全参数模型的风险比与具有相同脆弱性分布的 Cox 回归模型的风险比进行比较，同样具有价值。</p>
+</div>
+<div id="sec10-8-2" class="section level3" number="10.8.2">
+<h3>
+<span class="header-section-number">10.8.2</span> 相关脆弱模型<a class="anchor" aria-label="anchor" href="#sec10-8-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>将同组的个体脆弱性完全相同（共享脆弱模型）放宽至仅仅是相关的，就得到了共享脆弱模型的一个重要扩展<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;An important extension of shared frailty models is to the situation where the frailties of individuals within a group are not identical as in the shared frailty model.&lt;/p&gt;"><sup>16</sup></a>。当研究重点在事件时间之间的关联时，比如研究成对器官的事件时间或双胞胎之间的事件时间时，这种模型尤具意义。在二元脆弱性的情况下，可以通过扩展式 <a href="chap10.html#eq:10-31">(10.31)</a> 中的模型来对相关脆弱性进行建模，以使一个对子中的每个成员都具有单独的脆弱性。那么在第 <span class="math inline">\(i\)</span> 对中，对于 <span class="math inline">\(j=1,2\)</span>，风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_{ij}(t)=z_{ij}\exp(\boldsymbol{\beta'x}_{ij})h_0(t)\end{aligned}\]</span></p>
+<p>并且相应的脆弱随机变量 <span class="math inline">\((Z_{i1},Z_{i2})\)</span> 采用二元分布。在 lognormal 脆弱性的情况下，可以假定模型线性部分中相应的随机效应 <span class="math inline">\(U_{ij}=\log(Z_{ij})\)</span> 为二元正态分布，且 <span class="math inline">\(\mathrm{corr}\left(U_{i1},U_{i2}\right)=\rho\)</span>。该相关性不必对每组都相同。那么可以评估这种相关性的程度。这种模型可以使用似然法或惩罚似然法进行拟合，但也可以使用 <strong>Monte Carlo Markov Chain</strong> (MCMC) 方法进行拟合，如第 <a href="chap16.html#chap16">16</a> 章所述。</p>
+</div>
+<div id="sec10-8-3" class="section level3" number="10.8.3">
+<h3>
+<span class="header-section-number">10.8.3</span> 依赖性度量<a class="anchor" aria-label="anchor" href="#sec10-8-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>当使用共享脆弱模型来解释组内个体的事件时间之间的关联时，较大的脆弱方差对应于时间之间的高度依赖性。从这个意义上说，脆弱性方差是一种依赖性的度量，这种依赖性的程度可以在替代模型中进行比较。例如，在添加某些协变量时，脆弱效应可能会减弱，因此脆弱性方差的减小将表明修正的模型成功地减小了无法解释的变异。</p>
+<p>参数模型中的其他依赖性度量可以基于相关性。在 gamma 脆弱性分布的特殊情况下，<strong>Kendall 秩相关系数</strong> (Kendall’s coefficient of rank correlation) <span class="math inline">\(\tau\)</span> 是度量一对生存时间之间关联的实用方法。<span class="math inline">\(\tau\)</span> 仅与脆弱性方差 <span class="math inline">\(\theta^{−1}\)</span> 相关，可根据 <span class="math inline">\(\tau=(1+2\theta)^{−1}\)</span> 计算。这样做的好处是它得到了 <span class="math inline">\((0,1)\)</span> 范围内依赖性的总结统计量。</p>
+</div>
+<div id="sec10-8-4" class="section level3" number="10.8.4">
+<h3>
+<span class="header-section-number">10.8.4</span> 模型拟合中的数值问题<a class="anchor" aria-label="anchor" href="#sec10-8-4"><i class="fas fa-link"></i></a>
+</h3>
+<p>脆弱性模型通常结合数值积分和优化进行拟合。因此，为未知参数指定合适的初始值非常重要。这些初始值最好是通过拟合无脆弱性的相应模型，或使用较小的初始脆弱方差来获得。即便如此，数值程序也可能导致拟合过程中的计算问题，以及所得估计的不稳定性。当待估参数具有非常不同的尺度时，尤其如此。例如，在<a href="chap10.html#exm:ex10-3">示例 10.3</a> 中，Weibull 形状参数 <span class="math inline">\(\lambda\)</span> 的估计远小于其他参数的估计，从而导致收敛问题。这种困难往往可以通过改变时间尺度来克服。例如，通过分别除以 30.44 或 365.25，将以天为单位的生存时间转换为以月或年为单位的生存时间，通常可以收敛，这适用于<a href="chap10.html#exm:ex10-3">示例 10.3</a>。其他方法包括重新调整某些参数，例如通过使用 <span class="math inline">\(\lambda' = 10000\lambda\)</span> 或重新参数化模型。方差参数，例如正态随机效应中的 <span class="math inline">\(\sigma^2_u\)</span>，可以通过估计 <span class="math inline">\(\omega=\log\sigma_u^2\)</span> 并在模型中以 <span class="math inline">\(\exp(\omega)\)</span> 代替 <span class="math inline">\(\sigma^2_u\)</span> 来重新编码。如果这类尝试仍不成功，则可能需要对数值积分过程中使用的设置或定义优化过程收敛的标准进行一些更改。</p>
+</div>
+</div>
+<div id="sec10-9" class="section level2" number="10.9">
+<h2>
+<span class="header-section-number">10.9</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec10-9"><i class="fas fa-link"></i></a>
+</h2>
+<p>Hougaard (2000) 对脆弱模型进行了广泛的讨论，并给出了一些示例。最近，Hanagal (2019), Wienke (2011) 以及 Duchateau and Janssen (2008) 都对脆弱建模进行了全面的描述。一般性综述文章包括 Aalen (1994), Aalen (1998) 和 Hougaard (1995)。Balan and Putter (2020) 概述了脆弱建模的理论和实践。关于混合模型的一般文本包括 Brown and Prescott (2000), Demidenko (2013), Stroup (2013) 以及 West, Welch and Galecki (2022). 讨论限制性最大似然估计 (REML) 的文本包括 McCulloch, Searle and Neuhaus (2008) 以及 Searle, Casella and McCulloch (2006).</p>
+<p>McGilchrist and Aisbett (1991) 描述了如何拟合具有正态随机效应的 Cox 模型，并通过一个备受讨论的透析患者插入导管后感染复发时间的例子来说明这一点。他们的方法在 Ripatti and Palmgren (2000) 中得到了推广，他们展示了如何使用惩罚偏对数似然方法来拟合具有多变量分布的随机脆弱效应。Therneau and Grambsch (2000) 包含了关于脆弱模型的一个章节，并描述了如何使用惩罚偏对数似然方法来拟合具有脆弱性的 Cox 模型，并检验关于拟合模型参数的假设；另见 Therneau, Grambsch and Pankratz (2003). 另一种拟合方法基于 Klein (1992) 和 Klein and Moeschberger (2005) 描述的期望最大化 (EM) 算法。</p>
+<p>可以使用 Wald 检验，而不是使用最大边际对数似然将 Cox 回归模型与脆弱性进行比较。Therneau and Grambsch (2000)描述了这种方法，并使用了 Gray (1992) 描述的广义自由度的概念。Claeskens, Nguti and Janssen (2008) 给出了将脆弱效应添加到参数模型时 <span class="math inline">\(-2\log\hat{L}\)</span> 的变化具有渐近 <span class="math inline">\(0.5(\chi_0^2+\chi_1^2)\)</span> 分布的结果。</p>
+<p>Lambert et al. (2004) 和 Nelson et al. (2006) 展示了如何使用概率积分变换来拟合具有非正态随机脆弱效应的参数加速失效时间模型。这允许在使用为拟合具有正态随机效应的模型而设计的计算机软件时采用其他分布。</p>
+<p>关于脆弱模型充分性检验方法的研究相对较少，主要侧重于检验 gamma 脆弱性模型的有效性。Shih and Louis (1995) 是最早开发 gamma 脆弱性分布假设检验的论文之一，Shih (1998) 给出了一个用于二元生存数据的拟合优度检验，Glidden (1999) 描述了一些扩展。最近，Geerdens, Claeskens and Janssen (2013) 给出了一个正式的拟合优度检验，他们还简要回顾了这一领域的其他工作。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></div>
+<div class="next"><a href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap10"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li>
+<a class="nav-link" href="#sec10-1"><span class="header-section-number">10.1</span> 脆弱性的介绍</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec10-1-1"><span class="header-section-number">10.1.1</span> 随机效应</a></li>
+<li><a class="nav-link" href="#sec10-1-2"><span class="header-section-number">10.1.2</span> 个体脆弱性</a></li>
+<li><a class="nav-link" href="#sec10-1-3"><span class="header-section-number">10.1.3</span> 共享脆弱性</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-2"><span class="header-section-number">10.2</span> 个体脆弱性建模</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec10-2-1"><span class="header-section-number">10.2.1</span> 脆弱性分布</a></li>
+<li><a class="nav-link" href="#sec10-2-2"><span class="header-section-number">10.2.2</span> 可观测生存函数和风险函数</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-3"><span class="header-section-number">10.3</span> gamma 脆弱性分布</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec10-3-1"><span class="header-section-number">10.3.1</span> 脆弱性对可观测风险函数的影响</a></li>
+<li><a class="nav-link" href="#sec10-3-2"><span class="header-section-number">10.3.2</span> 脆弱性对可观测风险比的影响</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-4"><span class="header-section-number">10.4</span> 拟合参数脆弱模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec10-4-1"><span class="header-section-number">10.4.1</span> gamma 脆弱性</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-5"><span class="header-section-number">10.5</span> 拟合半参数脆弱模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec10-5-1"><span class="header-section-number">10.5.1</span> lognormal 脆弱效应</a></li>
+<li><a class="nav-link" href="#sec10-5-2"><span class="header-section-number">10.5.2</span> gamma 脆弱效应</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-6"><span class="header-section-number">10.6</span> 比较带脆弱性的模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec10-6-1"><span class="header-section-number">10.6.1</span> 脆弱性存在的检验</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-7"><span class="header-section-number">10.7</span> 共享脆弱模型</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec10-7-1"><span class="header-section-number">10.7.1</span> 拟合共享脆弱模型</a></li>
+<li><a class="nav-link" href="#sec10-7-2"><span class="header-section-number">10.7.2</span> 比较共享脆弱模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec10-8"><span class="header-section-number">10.8</span> 脆弱建模的其他方面</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec10-8-1"><span class="header-section-number">10.8.1</span> 模型检查</a></li>
+<li><a class="nav-link" href="#sec10-8-2"><span class="header-section-number">10.8.2</span> 相关脆弱模型</a></li>
+<li><a class="nav-link" href="#sec10-8-3"><span class="header-section-number">10.8.3</span> 依赖性度量</a></li>
+<li><a class="nav-link" href="#sec10-8-4"><span class="header-section-number">10.8.4</span> 模型拟合中的数值问题</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec10-9"><span class="header-section-number">10.9</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

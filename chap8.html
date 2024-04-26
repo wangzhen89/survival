@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 8 章 时依变量 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="当解释变量纳入生存数据模型时，这些变量所取的值是在研究开始时记录的那些值。例如，考虑一项研究，以比较第 1 章示例 1.4 中首次描述的两种前列腺癌治疗方法。在这里，患者的年龄、血清血红蛋白水平、肿瘤大小、Gleason 指数的值还有治疗组，都是在患者进入研究时记录的。然后评估这些变量对死亡风险的影响。...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 8 章 时依变量 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="当解释变量纳入生存数据模型时，这些变量所取的值是在研究开始时记录的那些值。例如，考虑一项研究，以比较第 1 章示例 1.4 中首次描述的两种前列腺癌治疗方法。在这里，患者的年龄、血清血红蛋白水平、肿瘤大小、Gleason 指数的值还有治疗组，都是在患者进入研究时记录的。然后评估这些变量对死亡风险的影响。...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 8 章 时依变量 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="当解释变量纳入生存数据模型时，这些变量所取的值是在研究开始时记录的那些值。例如，考虑一项研究，以比较第 1 章示例 1.4 中首次描述的两种前列腺癌治疗方法。在这里，患者的年龄、血清血红蛋白水平、肿瘤大小、Gleason 指数的值还有治疗组，都是在患者进入研究时记录的。然后评估这些变量对死亡风险的影响。...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="active" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap8" class="section level1" number="8">
+<h1>
+<span class="header-section-number">第 8 章</span> 时依变量<a class="anchor" aria-label="anchor" href="#chap8"><i class="fas fa-link"></i></a>
+</h1>
+<p>当解释变量纳入生存数据模型时，这些变量所取的值是在研究开始时记录的那些值。例如，考虑一项研究，以比较第 1 章<a href="chap1.html#exm:ex1-4">示例 1.4</a> 中首次描述的两种前列腺癌治疗方法。在这里，患者的年龄、血清血红蛋白水平、肿瘤大小、Gleason 指数的值还有治疗组，都是在患者进入研究时记录的。然后评估这些变量对死亡风险的影响。</p>
+<p>在许多产生生存数据的研究中，个体在研究期间被监测。在此期间，可以定期记录某些解释变量的值。因此，在前列腺癌的例子中，可以定期记录肿瘤的大小和其他变量。如果能够考虑到这些解释变量随时间推移而变化的情况，则可以得到更令人满意的死亡风险模型。比如，在前列腺癌的研究中，比起研究起始时肿瘤大小的值，最近的大小可能更能准确地预测未来的预期寿命。</p>
+<p>值随时间变化的变量称为<strong>时依变量</strong> (time-dependent variables)，在本章中，我们将看到如何将这些变量纳入生存数据分析所使用的模型。</p>
+<div id="sec8-1" class="section level2" number="8.1">
+<h2>
+<span class="header-section-number">8.1</span> 时依变量的类型<a class="anchor" aria-label="anchor" href="#sec8-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>考虑两种类型的时依变量，它们称为<strong>内部变量</strong> (internal variables) 和<strong>外部变量</strong> (external variables).</p>
+<p>内部变量与研究中的特定个体相关，并且只能在患者存活时进行测量。当随着时间的推移对患者的某些特征进行重复测量时，就会产生此类数据，例子包括肺功能的测量，例如肺活量和峰值流速、白细胞计数、收缩压和血清胆固醇水平；描述患者状态变化的变量也属于此类。例如，在骨髓移植后，患者可能容易发生移植物抗宿主病 (graft versus host disease). 表示患者在任何给定时间是否遭受这种危及生命的副作用的二元解释变量是内部变量的另一个例子。在每种情况下，这些变量都反映了患者的状况，它们的值很可能与患者的生存时间有关。</p>
+<p>外部变量也是时依变量，其存在不一定要求患者存活。其中一种特定类型的外部变量是其值会按预设方式随时间变化，因此在未来任何时间点其值都可以提前得知。例如，在研究过程中以预定方式调整的药物剂量，或者在器官移植后计划更改使用的免疫抑制剂类型等。</p>
+<p>另一种类型的外部变量是完全独立于任何特定个体存在的变量，例如大气中二氧化硫的水平或空气温度。例如在有关某些类型呼吸系统疾病患者管理的研究中，这些数值的变化很可能对个体的寿命产生影响。</p>
+<div id="sec8-1-1" class="section level3" number="8.1.1">
+<h3>
+<span class="header-section-number">8.1.1</span> 时依系数<a class="anchor" aria-label="anchor" href="#sec8-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在<strong>时固</strong> (time-constant) 解释变量的系数是时间的函数的情况下，也会出现时依变量。在第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9">3.9</a> 节解释了 Cox 比例风险模型中解释变量的系数是对数风险比，在该模型下，风险比是恒定的。如果这种风险比实际上是时间的函数，那么时依解释变量的系数就称为<strong>时变</strong> (time-varying) 系数。在这种情况下，对数风险比不是恒定的，因此我们不再有比例风险模型。</p>
+<p>更正式地说，假设解释变量 <span class="math inline">\(X\)</span> 的系数是时间 <span class="math inline">\(t\)</span> 的线性函数，因此我们可以将该项写为 <span class="math inline">\(\beta tX\)</span>。这意味着 <span class="math inline">\(X\)</span> 值的单位增加对应的对数风险比是 <span class="math inline">\(\beta t\)</span>，它是时间的线性函数。回想，在第 4 章 <a href="chap4.html#sec4-4-3">4.4.3</a> 节中，通过在模型中引入这种形式的项来检验比例风险假设。该项也可以写为 <span class="math inline">\(\beta X(t)\)</span>，其中 <span class="math inline">\(X(t) = Xt\)</span> 是时依变量。一般来说，假设模型包含解释变量 <span class="math inline">\(X\)</span>，其时变系数的形式为 <span class="math inline">\(\beta(t)\)</span>。模型中对应的项是 <span class="math inline">\(\beta (t)X\)</span>，可以表示为 <span class="math inline">\(\beta X(t)\)</span>。换句话说，涉及时变系数的项可以表示为具有恒定系数的时依变量。然而，如果 <span class="math inline">\(\beta(t)\)</span> 是一个或多个未知参数的非线性函数，例如 <span class="math inline">\(\beta_0 \exp(\beta_1t)\)</span>，则该项不太容易在模型中拟合。</p>
+<p>这样的变量不能直接纳入通过最大化偏似然函数进行拟合的 Cox 回归模型。要了解原因，请考虑一个包含变量 <span class="math inline">\(X_1=X_0t\)</span> 的模型，其中 <span class="math inline">\(X_0\)</span> 是数据集中的一个变量，<span class="math inline">\(X_1\)</span> 是该变量与生存时间的乘积。如果将 <span class="math inline">\(X_1\)</span> 像任何时固解释变量一样包含在模型中，<span class="math inline">\(X_1\)</span> 的系数可能显著小于零。这可能被解释为：对于 <span class="math inline">\(X_1\)</span> 值较高的个体，在任何时间的死亡风险较低，或者等价地说，<span class="math inline">\(X_1\)</span> 值较大的个体生存时间更长。但当然，生存时间较长的个体具有更大的生存时间值，因此 <span class="math inline">\(X_1\)</span> 的值也更大。因此，<span class="math inline">\(X_1\)</span> 是生存的重要预测因素就不足为奇了。相反，<span class="math inline">\(X_1\)</span> 应作为时依变量包含在模型中。</p>
+<p>所有这些不同类型的时依变量都可以按照下节描述的方式引入 Cox 回归模型。</p>
+</div>
+</div>
+<div id="sec8-2" class="section level2" number="8.2">
+<h2>
+<span class="header-section-number">8.2</span> 时依变量的建模<a class="anchor" aria-label="anchor" href="#sec8-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>根据第 3 章描述的 Cox 比例风险模型，研究中第 <span class="math inline">\(i\)</span> 个体在 <span class="math inline">\(t\)</span> 时刻的死亡风险可以写成以下形式</p>
+<p><span class="math display">\[h_i(t)=\exp\left\{\sum_{j=1}^p\beta_jx_{ji}\right\}h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(x_{ji}\)</span> 为第 <span class="math inline">\(i\)</span> 个个体第 <span class="math inline">\(j\)</span> 个解释变量 <span class="math inline">\(X_j\)</span> 的基线值，<span class="math inline">\(j=1,2,\ldots,p\)</span>，<span class="math inline">\(\beta_j\)</span> 为 <span class="math inline">\(x_{ji}\)</span> 的系数，<span class="math inline">\(h_0(t)\)</span> 为基线风险函数。将此模型推广到部分或全部解释变量为时依变量的情况，我们将第 <span class="math inline">\(i\)</span> 个个体中第 <span class="math inline">\(j\)</span> 个解释变量在时间 <span class="math inline">\(t\)</span> 的值写为 <span class="math inline">\(x_{ji}(t)\)</span>。Cox 回归模型则变为</p>
+<p><span class="math display" id="eq:8-1">\[\begin{align}
+h_i(t)=\exp\left\{\sum_{j=1}^p\beta_jx_{ji}(t)\right\}h_0(t).
+\tag{8.1}
+\end{align}\]</span></p>
+<p>在此模型中，基线风险函数 <span class="math inline">\(h_0(t)\)</span> 解释为在起点处所有变量都为零且随时间保持此值的个体的风险函数。</p>
+<p>由于式 <a href="chap8.html#eq:8-1">(8.1)</a> 给出的模型中变量 <span class="math inline">\(x_{ji}(t)\)</span> 的值取决于时间 <span class="math inline">\(t\)</span>，因此相对风险 <span class="math inline">\(h_i(t)/h_0(t)\)</span> 也是时依的。这意味着时间 <span class="math inline">\(t\)</span> 的死亡风险不再与基线风险成比例，并且该模型不再是比例风险模型。</p>
+<p>为了解释该模型中的 <span class="math inline">\(\beta\)</span> 参数，请考虑两个个体，例如第 <span class="math inline">\(r\)</span> 个和第 <span class="math inline">\(s\)</span> 个，在时间 <span class="math inline">\(t\)</span> 的风险函数之比</p>
+<p><span class="math display">\[\begin{aligned}\frac{h_{r}(t)}{h_{s}(t)}&amp;=\exp\left[\beta_{1}\{x_{1r}(t)-x_{1s}(t)\}+\cdots+\beta_{p}\{x_{pr}(t)-x_{ps}(t)\}\right]\end{aligned}\]</span></p>
+<p>因此，若这两个个体在给定时间 <span class="math inline">\(t\)</span> 的第 <span class="math inline">\(j\)</span> 个解释变量的值相差一个单位，同时这两个个体所有其他 <span class="math inline">\(p−1\)</span> 变量具有相同的值，系数 <span class="math inline">\(\beta_j, j = 1, 2,...,p\)</span> 可以解释为这两个个体的对数风险比。</p>
+<div id="sec8-2-1" class="section level3" number="8.2.1">
+<h3>
+<span class="header-section-number">8.2.1</span> 拟合含时依变量的模型<a class="anchor" aria-label="anchor" href="#sec8-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>当 Cox 回归模型扩展为包含时依变量时，第 3 章式 <a href="chap3.html#eq:3-6">(3.6)</a> 中的偏对数似然函数可以推广为</p>
+<p><span class="math display" id="eq:8-2">\[\begin{align}
+\sum_{i=1}^n\delta_i\left\{\sum_{j=1}^p\beta_jx_{ji}(t_i)-\log\sum_{l\in R(t_i)}\exp\left(\sum_{j=1}^p\beta_jx_{jl}(t_i)\right)\right\}
+\tag{8.2}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(R(t_i)\)</span> 是在时间 <span class="math inline">\(t_i\)</span> 的风险集，<span class="math inline">\(t_i\)</span> 为研究中第 <span class="math inline">\(i\)</span> 个个体的死亡时间，<span class="math inline">\(i=1,2,\ldots,n\)</span>，<span class="math inline">\(\delta_i\)</span> 是一个事件指示符，如果第 <span class="math inline">\(i\)</span> 个个体的生存时间删失，则为零，否则为一。那么可以将该表达式最大化，以给出 <span class="math inline">\(\beta\)</span> 参数的估计。</p>
+<p>为了在这个最大化过程中使用式 <a href="chap8.html#eq:8-1">(8.1)</a> 中的模型，模型中的变量在时间 <span class="math inline">\(t_i\)</span> 的风险集中所有个体的每个死亡时间都必须具有已知值。这对于值是预先确定的外部变量来说没有问题，但对于独立于研究中个体存在的外部变量，这可能会成为一个问题，对于内部变量来说更是如此。</p>
+<p>为了说明这个问题，考虑一项针对心肌梗死患者的两种维持疗法的试验。这类患者的血清胆固醇水平很可能在患者入院接受研究时以及此后每隔一定时间测量一次。该变量是时依变量，表示为 <span class="math inline">\(X(t)\)</span>。因此，任何特定患者的死亡风险，例如第 <span class="math inline">\(i\)</span> 个患者在时间 <span class="math inline">\(t\)</span> 的风险 <span class="math inline">\(h_i(t)\)</span> 更有可能受到解释变量 <span class="math inline">\(X(t)\)</span> 在时间 <span class="math inline">\(t\)</span> 的值的影响，而不是它在时间原点（<span class="math inline">\(t=0\)</span>）的值。</p>
+<p>现在假设第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t_i\)</span> 死亡，并且在时间 <span class="math inline">\(t_i\)</span> 的风险集中还有另外两个个体，记作 <span class="math inline">\(r\)</span> 和 <span class="math inline">\(s\)</span>。我们进一步假设个体 <span class="math inline">\(r\)</span> 在时间 <span class="math inline">\(t_r\)</span> 死亡，其中 <span class="math inline">\(t_r &gt; t_i\)</span>，并且个体 <span class="math inline">\(s\)</span> 的生存时间 <span class="math inline">\(t_s\)</span> 在 <span class="math inline">\(t_r\)</span> 之后的某个时间删失。这种情况如图 8.1 所示。在该图中，垂直虚线指的是测量 <span class="math inline">\(X(t)\)</span> 时的患者时间 (patient time) 中的点。</p>
+<details><summary><font color="#8B2232">图 8.1</font>
+</summary><img src="figure/figure%208.1.png#center" style="width:80.0%"></details><p><br>
+如果 <span class="math inline">\(r\)</span> 和 <span class="math inline">\(s\)</span> 是时间 <span class="math inline">\(t_i\)</span> 的风险集中仅有的两个个体，并且 <span class="math inline">\(X\)</span> 是唯一测量的解释变量，则第 <span class="math inline">\(i\)</span> 个个体对式 <a href="chap8.html#eq:8-2">(8.2)</a> 中的偏对数似然函数的贡献将为</p>
+<p><span class="math display">\[\beta x_i(t_i)-\log\sum_l\exp\{\beta x_l(t_i)\}\]</span></p>
+<p>其中，<span class="math inline">\(x_i(t_i)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(X(t)\)</span> 在其死亡时间 <span class="math inline">\(t_i\)</span> 处的值，<span class="math inline">\(l\)</span> 在求和中取值 <span class="math inline">\(i,r\)</span> 和 <span class="math inline">\(s\)</span>。因此，该表达式等于</p>
+<p><span class="math display">\[\beta x_i(t_i)-\log\left\{e^{\beta x_i(t_i)}+e^{\beta x_r(t_i)}+e^{\beta x_s(t_i)}\right\}\]</span></p>
+<p>这表明，在第 <span class="math inline">\(i\)</span> 个个体的死亡时间 <span class="math inline">\(t_i\)</span>，以及在个体 <span class="math inline">\(r\)</span> 和 <span class="math inline">\(s\)</span> 在时间 <span class="math inline">\(t_i\)</span> 处，需要时依变量 <span class="math inline">\(X(t)\)</span> 的值。此外，对于个体 <span class="math inline">\(r\)</span> 和 <span class="math inline">\(s\)</span>，在个体 <span class="math inline">\(r\)</span> 的死亡时间 <span class="math inline">\(t_r\)</span> 处，需要变量 <span class="math inline">\(X(t)\)</span> 的值。</p>
+<p>对于模型中作为时间显式函数的项，例如时间与基线测量的变量或因素之间的交互作用，在任何时间获取任何个体的时依变量值并不困难。事实上，当使用具有处理时依变量功能的统计软件时，通常可以直接将这些变量纳入 Cox 模型。对于其他变量，如血清胆固醇水平，需要在非测量时间对时依变量的值进行近似估计。</p>
+<p>在包含时依变量的 Cox 回归模型中，在某个时间 <span class="math inline">\(t\)</span> 死亡的风险只能取决于时依变量截至时间 <span class="math inline">\(t\)</span> 的值。该模型无法预测未来！这意味着，只要在特定时间需要解释变量的值，就会使用该变量的最后记录值。</p>
+<p>当在多个时间点记录个体的变量值时，可能会倾向于使用最接近给定时间的值，或者在时间之间使用某种形式的插值。图 8.2 说明了这些可能性。</p>
+<details><summary><font color="#8B2232">图 8.2</font>
+</summary><img src="figure/figure%208.2.png#center" style="width:80.0%"></details><p><br>
+图中的连续曲线表示时依变量在任意时刻的实际值，垂直虚线表示实际测量该变量的时间。如果需要在图中的 <span class="math inline">\(t\)</span> 时刻测量该变量的值，则应使用最后记录的变量在 P 处的值，而不是 R 处的值（最接近 <span class="math inline">\(t\)</span> 的值）或 Q 处的值（ P 和 R 之间的线性插值）。使用 R 或 Q 处的变量值而不是 P 处的变量值可能导致不正确的模型，因为在时间 <span class="math inline">\(t\)</span> 处，R 和 Q 处的变量值是未知的。</p>
+<p>一些分类变量可能具有这样的特点：个体只能沿特定方向经过变量的各个水平。例如，个体的表现状态可能只会恶化，因此该分类变量的值可能只从“良好”变为“一般”，再从“一般”变为“差”。再如，活检后，与肿瘤存在相关的变量将取两个值中的一个，对应于“不存在”和“存在”。因此，在连续活检中，状态从“存在”变为“不存在”的可能性非常小。</p>
+<p>通过绘制每位患者的变量值与时间的关系图，可以检测到时依变量值的异常变化。这可能会导致对数据进行一定程度的编辑。例如，考虑图 8.3，它显示了特定患者在多个时间点的活检结果，即不存在 (absent) 或存在 (present) 肿瘤。在此图中，在 <span class="math inline">\(t_A\)</span> 和 <span class="math inline">\(t_B\)</span> 这两个时间点中至少有一个是错误的。因此，可以将时间 <span class="math inline">\(t_A\)</span> 的观测更改为 “absent”，或者将时间 <span class="math inline">\(t_B\)</span> 的观测更改为 “present”.</p>
+<details><summary><font color="#8B2232">图 8.3</font>
+</summary><img src="figure/figure%208.3.png#center" style="width:80.0%"></details><p><br>
+一个完全可预测时依变量是个体的年龄，并且在进行长期研究时，年龄的增长可能具有重要意义。然而，如果将年龄以线性项纳入模型，那么偏似然函数的形式意味着年龄的变化不会出现在该似然函数中。为了说明这一点，假设变量 <span class="math inline">\(X\)</span> 与研究开始时个体的年龄（以年为单位）有关，因此他们在时间 <span class="math inline">\(t\)</span> 的年龄是一个时依变量 <span class="math inline">\(X(t)=X+t\)</span>。如果研究开始时第 <span class="math inline">\(i\)</span> 个个体的年龄是 <span class="math inline">\(x_i\)</span>，则根据式 <a href="chap8.html#eq:8-1">(8.1)</a>，可通过下式建模</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp\{\beta(x_i+t)\}h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(h_0(t)\)</span> 是基线风险函数。式 <a href="chap8.html#eq:8-2">(8.2)</a>，相应的偏对数似然函数为</p>
+<p><span class="math display">\[\begin{aligned}
+&amp;\sum_{i=1}\delta_i\{\beta(x_i+t_i)-\log\sum_{l\in R(t_i)}\exp{[\beta(x_l+t_i)]}\}, \\
+=&amp;\sum_{i=1}^n\delta_i\{\beta x_i+\beta t_i-\log\sum_{l\in R(t_i)}\exp(\beta x_l+\beta t_i)\}, \\
+=&amp;\sum_{i=1}^n\delta_i\{\beta x_i-\log\sum_{l\in R(t_i)}\exp(\beta x_l)\}.\end{aligned}\]</span></p>
+<p>这只是 Cox 回归模型的偏对数似然，该模型仅包括年龄的基线值。因此，将时间 <span class="math inline">\(t\)</span> 时的实际年龄作为线性项纳入模型不会有任何收获。</p>
+</div>
+</div>
+<div id="sec8-3" class="section level2" number="8.3">
+<h2>
+<span class="header-section-number">8.3</span> 时依变量的编码<a class="anchor" aria-label="anchor" href="#sec8-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>包含时依变量的模型可以通过最大化式 <a href="chap8.html#eq:8-2">(8.2)</a> 中的偏对数似然函数来拟合。这可以使用软件来实现，该软件能够在数据集中的不同事件时间确定任何时依变量的值，如 <a href="chap8.html#sec8-2-1">8.2.1</a> 节所述。</p>
+<p>然而，一种更灵活的方法是将个体的数据以一系列时间区间的形式表示，在这些时间区间内，所有解释变量的值都是恒定的。然后，对于除最终区间之外的所有区间，将事件指示符设为 0. 最终区间的上限是个体的事件时间或删失时间，如果在该区间结束时有事件发生，则事件指示符的值设为 1，否则设为 0. 然后，与每个时间区间的下限和上限相关的变量，例如 <span class="math inline">\(Start\)</span> 和 <span class="math inline">\(Stop\)</span>，用于指定生存经历，变量 <span class="math inline">\(Status\)</span> 用于指示在每个 <span class="math inline">\(Stop\)</span> 所在时间是否发生了事件。为避免歧义，包含时间 <span class="math inline">\(t\)</span> 的区间需满足 <span class="math inline">\(Start &lt; t \leqslant Stop\)</span>，因此该区间将包含值 <span class="math inline">\(t = Stop\)</span> 但不包含 <span class="math inline">\(t = Start\)</span>。那么，每个时间区间的生存数据由三个值 <span class="math inline">\((Start,Stop,Status)\)</span> 表示，这种数据格式称为<strong>计数过程格式</strong> (counting process format) 或 <span class="math inline">\((start,stop,status)\)</span> 格式。许多生存分析软件包可以处理以这种一般形式表示的数据。</p>
+<p>如果为这种形式的数据拟合仅包含时固解释变量的模型，则所得的偏似然函数与原始数据的偏似然函数相同。第 13 章的 <a href="chap13.html#sec13-1">13.1</a> 节对此进行了更全面的解释，其中给出了有关计数过程格式及其在生存分析其他领域的应用的更多详细信息。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-1" class="example"><strong>示例 8.1  (计数过程格式说明) </strong></span><br></p>
+<p>肝病患者的血清白蛋白水平往往会随着时间的推移而下降。因此，在任何特定时间的白蛋白水平可能比研究开始时记录的值更能指示当时的死亡风险。假设在一项关于肝病诊断后生存情况的研究中，某患者的生存时间为 379 天。该患者的基线白蛋白水平为 3.8 g/dL，随后在 88 天, 172 天, 245 天和 357 天分别进行了测量。这些天的记录值分别为 3.4, 2.9, 3.0 和 2.3 g/dL，因此，在 88 天记录的值适用于从第 89 天开始到下一次测量（第 172 天）为止的这段时间。该患者的计数过程格式数据如表 8.1 所示。</p>
+<p>该患者的数据现在有 5 行。如果患者在 379 天时仍然活着，并且这是他们参与研究的最后一天，则变量 <span class="math inline">\(Status\)</span> 的值将替换为 0. 对研究中的所有患者重复该过程，然后为此扩展的数据集拟合包含时依变量血清白蛋白的 Cox 回归模型。</p>
+<details><summary><font color="#8B2232">表 8.1</font>
+</summary><img src="figure/table%208.1.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec8-4" class="section level2" number="8.4">
+<h2>
+<span class="header-section-number">8.4</span> 累积风险函数和生存函数的估计<a class="anchor" aria-label="anchor" href="#sec8-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>在拟合了包括时依变量的 Cox 回归模型后，可以估计基线累积风险函数 <span class="math inline">\(H_0(t)\)</span> 和相应的基线生存函数 <span class="math inline">\(S_0(t)\)</span>。这需要对第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节中给出的结果进行调整，以应对时依变量带来的额外复杂性，其中解释变量的值需要用其特定时间的值进行更新。具体来说，式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-29">(3.29)</a> 中给出的基线累积风险函数的 Nelson-Aalen 估计变为</p>
+<p><span class="math display" id="eq:8-3">\[\begin{align}
+\tilde{H}_0(t)=-\log\tilde{S}_0(t)=\sum_{j=1}^k\frac{d_j}{\sum_{l\in R(t_{(j)})}\exp\{\hat{\boldsymbol{\beta}}'\boldsymbol{x}_l(t)\}}
+\tag{8.3}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(k)}\leqslant t&lt;t_{(k+1)},k=1,2,\ldots,r-1\)</span>，<span class="math inline">\(\boldsymbol x_l(t)\)</span> 是第 <span class="math inline">\(l\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 时解释变量的值向量，<span class="math inline">\(d_j\)</span> 是第 <span class="math inline">\(j\)</span> 个有序事件时间 <span class="math inline">\(t_{\left(j\right)}\)</span> 的事件数，<span class="math inline">\(j=1,2,\ldots,r\)</span>。可以对 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节中的其他结果进行类似的修改。通过这种修改，关于风险集的求和计算变得更加复杂，因为对于每个事件时间 <span class="math inline">\(t_{\left(j\right)},j=1,2,\ldots,r\)</span>，都需要在该事件时间获取风险集中所有个体每个时依变量的值。</p>
+<p>获得累积风险函数的估计后，可以使用式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-31">(3.31)</a> 估计相应的基线风险函数，且基线生存函数的估计为 <span class="math inline">\(\tilde{S}_0(t)=\exp\{-\tilde{H}_0(t)\}\)</span>。</p>
+<p>特定个体的生存函数更难以估计。这是因为 <span class="math inline">\(S_i(t)\)</span> 可表示为基线生存函数 <span class="math inline">\(S_0(t)\)</span> 的幂的这一结果不再成立（在第 3 章式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-26">(3.26)</a> 中给出）。相反，第 <span class="math inline">\(i\)</span> 个个体的生存函数是利用累积风险函数（第 1 章式 <a href="chap1.html#eq:1-7">(1.7)</a> 给出）获得的</p>
+<p><span class="math display" id="eq:8-4">\[\begin{align}
+S_i(t)=\exp\left\{-\int_0^t\exp\left(\sum_{j=1}^p\beta_jx_{ji}(u)\right)h_0(u)\mathrm{d}u\right\}
+\tag{8.4}
+\end{align}\]</span></p>
+<p>因此，该生存函数不仅取决于基线风险函数 <span class="math inline">\(h_0(t)\)</span>，还取决于时依变量在 <span class="math inline">\(0\)</span> 到 <span class="math inline">\(t\)</span> 的区间内的值。因此，生存函数可能取决于模型中时依变量的未来值，该值通常是未知的。然而，可以通过计算个体在时间 <span class="math inline">\(t\)</span> 到 <span class="math inline">\(t+h\)</span> 这一时间区间内生存<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;… an individual survives over an interval of time, from &lt;span class="math inline"&gt;\(t\)&lt;/span&gt; to &lt;span class="math inline"&gt;\(t + h\)&lt;/span&gt;&lt;/p&gt;'><sup>1</sup></a>的概率，来得出在某特定时间区间中生存的近似条件概率，以在时间 <span class="math inline">\(t\)</span> 生存为条件。</p>
+<p>这一概率为 <span class="math inline">\(\mathrm{P}(T_i\geqslant t+h\mid T_i\geqslant t)\)</span>，其中 <span class="math inline">\(T_i\)</span> 是与第 <span class="math inline">\(i\)</span> 个个体生存时间相关的随机变量。使用第 3 章 <a href="chap3.html#sec3-3-1">3.3.1</a> 节中给出的条件概率的标准结果，该概率成为 <span class="math inline">\(\mathrm{P}(T_i\geqslant t+h)/\mathrm{P}(T_i\geqslant t)\)</span>，这就是生存函数在时间 <span class="math inline">\(t+h\)</span> 和 <span class="math inline">\(t\)</span> 的值之比，即 <span class="math inline">\(S_i(t+h)/Si(t)\)</span>。现在，我们假设任何时依变量在该区间内保持恒定，因此根据式 <a href="chap8.html#eq:8-4">(8.4)</a>，近似条件概率为</p>
+<p><span class="math display">\[\begin{aligned}
+P_{{i}}(t,t+h)&amp;=\left.\frac{\exp\left\{-\exp\left(\sum_{j=1}^p\beta_jx_{ji}(t)\right)\int_0^{t+h}h_0(u)\mathrm{d}u\right\}}{\exp\left\{-\exp\left(\sum_{j=1}^p\beta_jx_{ji}(t)\right)\int_0^th_0(u)\mathrm{d}u\right\}}\right.   \\
+&amp;=\exp\left[-\left\{H_0(t+h)-H_0(t)\right\}\exp\left(\sum_{j=1}^p\beta_jx_{ji}(t)\right)\right]
+\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(H_0(t)\)</span> 是基线累积风险函数。在 <span class="math inline">\((t, t + h)\)</span> 区间内存活<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;surviving through the interval &lt;span class="math inline"&gt;\((t, t + h)\)&lt;/span&gt;&lt;/p&gt;'><sup>2</sup></a>的近似条件概率估计为</p>
+<p><span class="math display" id="eq:8-5">\[\begin{align}
+\tilde{P}_i(t,t+h)&amp;=\exp\left[-\left\{\tilde{H}_0(t+h)-\tilde{H}_0(t)\right\}\exp\left(\sum_{j=1}^p\hat{\beta}_jx_{ji}(t)\right)\right]
+\tag{8.5}
+\end{align}\]</span></p>
+<p>其中，<span class="math inline">\(\tilde H_0(t)\)</span> 是在拟合 Cox 回归模型时得到的基线累积风险函数的估计，该模型包含 <span class="math inline">\(p\)</span> 个可能的时依变量，其值对于第 <span class="math inline">\(i(i = 1, 2,...,n)\)</span> 个个体为 <span class="math inline">\(x_{ji}(t)\)</span>，<span class="math inline">\(j = 1, 2,...,p\)</span>，而 <span class="math inline">\(\tilde \beta_j\)</span> 是第 <span class="math inline">\(j\)</span> 个时依变量的系数估计。这一结果由 Altman and De Stavola (1994) 给出。</p>
+<p>区间 <span class="math inline">\((t,t+h)\)</span> 中事件的条件概率的相应估计为 <span class="math inline">\(1-\tilde{P_i}(t,t+h)\)</span>，并且这些量可用于获得在宽度为 <span class="math inline">\(h\)</span> 的多个连续区间中，每个区间中预期事件数的估计。将这些值与这些区间中观测事件数进行比较，可以对模型充分性进行非正式评估。</p>
+</div>
+<div id="sec8-5" class="section level2" number="8.5">
+<h2>
+<span class="header-section-number">8.5</span> 模型比较和验证<a class="anchor" aria-label="anchor" href="#sec8-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>包含时依变量的生存数据模型可以按照与 Cox 比例风险模型相同的方式进行比较，即使用第 3 章 <a href="chap3.html#sec3-5">3.5</a> 节中描述的程序。具体来说，模型拟合过程会得到一个最大偏似然函数，从中可以获得统计量 <span class="math inline">\(−2\log \hat L\)</span> 的值。然后，可以将不同嵌套模型之间该统计量的变化值与卡方分布的百分位点进行比较，后者自由度等于拟合的 <span class="math inline">\(\beta\)</span> 参数数量之差。因此，第 <a href="chap3.html#chap3">3</a> 章讨论的模型构建策略同样适用于存在时依变量的情况。</p>
+<div id="sec8-5-1" class="section level3" number="8.5.1">
+<h3>
+<span class="header-section-number">8.5.1</span> 治疗的比较<a class="anchor" aria-label="anchor" href="#sec8-5-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>为了考察考虑时依变量后治疗效应的大小，需要将包含时依变量和其他预后因素的模型的 <span class="math inline">\(−2\log \hat L\)</span> 与额外包含治疗项的模型的 <span class="math inline">\(−2\log \hat L\)</span> 值进行比较。但是，如果在此分析中未发现治疗效应，一个可能的解释是时依变量掩盖 (mask) 了治疗差异。</p>
+<p>为了明确这一点，请考虑一项研究的例子，该研究比较两种细胞毒性药物治疗白血病患者的效果。在这里，患者的生存时间可能取决于患者白细胞计数的后续值。如果治疗的效果是增加白细胞计数，那么在将白细胞计数作为时依变量纳入模型后，将不会识别出治疗差异。另一方面，如果不纳入该变量，治疗效应可能就会出现。对此的解释是，时依变量已经解释了治疗差异，从而解释了这种治疗是如何有效的。</p>
+<p>无论如何，将包含时依变量的分析结果与仅使用基线值的分析结果进行比较，将会获得很多有用的信息。</p>
+</div>
+<div id="sec8-5-2" class="section level3" number="8.5.2">
+<h3>
+<span class="header-section-number">8.5.2</span> 评估模型的充分性<a class="anchor" aria-label="anchor" href="#sec8-5-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在拟合包含时依变量的模型后，可以实施第 <a href="chap4.html#chap4">4</a> 章描述的许多评估模型充分性的技术。具体来说，可以改写式 <a href="chap4.html#eq:4-6">(4.6)</a> 来计算每个个体的总体鞅残差。第 <span class="math inline">\(i\)</span> 个个体的鞅残差现在为</p>
+<p><span class="math display">\[\begin{aligned}r_{Mi}=\delta_i-\exp\{\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i(t_i)\}\tilde{H}_0(t_i)\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(\boldsymbol{x}_i(t_i)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体解释变量的值向量，它可能是时依的，在该个体的事件时间 <span class="math inline">\(t_i\)</span> 处取值。此外，<span class="math inline">\(\boldsymbol{\beta}\)</span> 是系数向量，<span class="math inline">\(\delta_i\)</span> 是事件指示符，如果 <span class="math inline">\(t_i\)</span> 是事件，则取值一，否则取零，<span class="math inline">\(\tilde H_0(t_i)\)</span> 是根据式 <a href="chap8.html#eq:8-3">(8.3)</a> 获得的 <span class="math inline">\(t_i\)</span> 处的基线累积风险函数估计。偏差残差也可以使用第 4 章的式 <a href="chap4.html#eq:4-7">(4.7)</a> 利用鞅残差来计算。</p>
+<p>第 4 章 <a href="chap4.html#sec4-2-2">4.2.2</a> 节描述的图形通常会有所帮助。具体来说，鞅残差的索引图能识别离群观测。然而，在研究时依变量时，<a href="chap4.html#sec4-2-3">4.2.3</a> 中描述的用于评估协变量函数形式的诊断图并不那么有用。这是因为对于任何一个个体，时依协变量都会有许多值，尚不清楚零模型的鞅残差应该关于什么来绘制。</p>
+<p>为了检测有影响的值，第 4 章 <a href="chap4.html#sec4-3-1">4.3.1</a> 节引入的 delta-betas 提供了一种有用的方法来研究每个观测对单个参数估计的影响。在依次省略每个观测的情况下，<span class="math inline">\(−2\log \hat L\)</span> 统计量的变化可以提供每个观测对参数估计集的影响的信息。</p>
+</div>
+</div>
+<div id="sec8-6" class="section level2" number="8.6">
+<h2>
+<span class="header-section-number">8.6</span> 时依变量的一些应用<a class="anchor" aria-label="anchor" href="#sec8-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>时依变量的一个应用与评估比例风险假设有关。这在第 4 章 <a href="chap4.html#sec4-4-3">4.4.3</a> 节中进行了详细讨论。在该应用中，将解释变量 <span class="math inline">\(X\)</span> 和时间 <span class="math inline">\(t\)</span> 的乘积形成的变量添加到 Cox 模型的线性部分，并检验 <span class="math inline">\(Xt\)</span> 系数为零的原假设。如果发现该系数估计显著不等于零，则表明比例风险假设不成立。</p>
+<p>在许多情况下，从某些灾难性事件发生到患者接受治疗的等待时间 (waiting time) 可能与患者的生存密切相关。例如，在一项影响心肌梗死患者生存因素的研究中，从发生梗死到患者住院所经历的时间可能至关重要。一些患者可能在接受治疗前死亡，而那些在梗死后不久到达医院的患者往往比那些延迟治疗的患者预后更好。在评估其他解释变量对这些患者生存时间的影响时，考虑数据的这一方面非常重要。</p>
+<p>在一个类似的例子中，Crowley and Hu (1977) 展示了如何在器官移植研究中使用时依变量。在这里，一个令人感兴趣的特征是移植对患者生存时间的影响。假设在一项关于特定类型器官移植有效性的研究中，患者在某个时间 <span class="math inline">\(t_0\)</span> 被评估适合进行移植。然后他们将等待一段时间，直到找到合适的供体器官，如果患者在这段时间内存活下来，他们将在时间 <span class="math inline">\(t_1\)</span> 接受移植。</p>
+<p>在这类研究中，接受移植的患者的生存时间无法与未按常规方式进行移植的患者进行比较。原因是为了接受移植，患者必须在等待移植的时间内生存下来。因此，生存到移植时间的组与未接受此类移植的组不能直接比较。同样，无法将接受移植的患者在移植后的生存时间与未接受移植的患者的生存时间进行比较。因为两个组的时间起点不同，因此它们在时间起点上不具有可比性。这意味着无法确定用于生存分析标准方法的时间起点。</p>
+<p>该问题的解决方案是引入一个时依变量 <span class="math inline">\(X_1(t)\)</span>，若患者在时间 <span class="math inline">\(t\)</span> 尚未接受移植，则该变量的值为零，否则为一。采用 Cox 回归模型，第 <span class="math inline">\(i\)</span> 个个体在 <span class="math inline">\(t\)</span> 时刻的死亡风险为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp\{\eta_i+\beta_1x_{1i}(t)\}h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\eta_i\)</span> 是时固 (not time-dependent) 解释变量的线性组合，其值在第 <span class="math inline">\(i\)</span> 个个体的时间起点记录，<span class="math inline">\(x_{1i}(t)\)</span> 是该个体 <span class="math inline">\(X_1\)</span> 在时间 <span class="math inline">\(t\)</span> 的值。</p>
+<p>在此模型下，对于在时间 <span class="math inline">\(t\)</span> 之前未接受移植的患者，风险函数为 <span class="math inline">\(\exp(\eta_i)h_0(t)\)</span>，之后为 <span class="math inline">\(\exp\{\eta_i+\beta_1\}h_0(t)\)</span>。移植对患者生存经历的影响则反映在 <span class="math inline">\(\beta_1\)</span> 中。具体来说，对于模型中其他解释变量值相同的两名患者，<span class="math inline">\(e^{\beta_1}\)</span> 是在时间 <span class="math inline">\(t\)</span> 之前接受移植的患者的死亡风险，相对于在时间 <span class="math inline">\(t\)</span> 未接受移植的患者的死亡风险。在拟合了包含和不包含时依变量 <span class="math inline">\(X_1\)</span> 的模型后，可以比较 <span class="math inline">\(−2\log \hat L\)</span> 的值。该值存在显著差异意味着移植对生存有影响。</p>
+<p>在对该模型的改进中，Cox and Oakes (1984) 建议对于在时间 <span class="math inline">\(t_1\)</span> 接受移植的患者，将项 <span class="math inline">\(\beta_1x_{1i}(t)\)</span> 替换为 <span class="math inline">\(\beta_1+\beta_2\exp\{-\beta_3(t-t_1)\}\)</span>。在此模型中，移植的效应是在移植（<span class="math inline">\(t=t_1\)</span>）后立即将风险增加到某个值 <span class="math inline">\(\exp(\eta_i+\beta_1)h_0(t)\)</span>，然后将风险以指数方式降低为 <span class="math inline">\(\exp(\eta_i+\beta_1)h_0(t)\)</span>，如果 <span class="math inline">\(\beta_1&lt; 0\)</span>，则风险最终将小于初始风险 <span class="math inline">\(\exp(\eta_i)h_0(t)\)</span>。参见图 8.4，该图显示了移植患者风险比 <span class="math inline">\(h_i(t)/h_0(t)\)</span> 的行为，其中 <span class="math inline">\(\eta_i\)</span> 是模型的线性部分。尽管这是一个有吸引力的模型，但它确实有一个缺点：需要专门的软件来拟合。</p>
+<details><summary><font color="#8B2232">图 8.4</font>
+</summary><img src="figure/figure%208.4.png#center" style="width:80.0%"></details><p><br>
+在特定解释变量快速变化的情况下，可以定义反映这种变化的新变量。然后可以探究风险对这些变量值的依赖性。例如，在肿瘤学研究中，肿瘤大小在一段时间内增加的百分比可能是比起点时肿瘤大小或该变量的时依版本更合适的预后变量。如果使用这种变量，就可以避免拟合时依变量所带来的计算负担。</p>
+<div id="sec8-6-1" class="section level3" number="8.6.1">
+<h3>
+<span class="header-section-number">8.6.1</span> 一些例子<a class="anchor" aria-label="anchor" href="#sec8-6-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>本节给出了三个涉及时依变量的生存分析示例。首先，使用来自一项关于骨髓移植治疗白血病的研究数据，来说明如何将与患者状态相关的变量纳入模型，该变量的值在随访期内会发生变化。在第二个示例中，分析了第 5 章<a href="chap5.html#exm:ex5-11">示例 5.11</a> 中关于卵巢癌症两种化疗的比较的数据，以探讨年龄是否具有时变系数。第三个例子旨在说明如何将随访期间记录的时依解释变量的信息纳入生存时间模型。在每个患者的随访期内，定期记录某些解释变量的值的研究会产生大量数据。因此，<a href="chap8.html#exm:ex8-4">示例 8.4</a> 将使用仅含少数个体的人造数据来说明该方法。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-2" class="example"><strong>示例 8.2  (骨髓移植治疗白血病) </strong></span><br></p>
+<p>患有急性白血病的患者常常通过接受骨髓移植来治疗。这为受体提供了一组新的母体造血细胞 (parent blood-forming cells)，即干细胞 (stem cells)，进而产生健康的红细胞和白细胞。Klein and Moeschberger (2005) 描述了一项多中心研究，该研究探讨了影响接受这种治疗的白血病患者预后的因素。这项研究涉及患有急性淋巴细胞白血病 (ALL) 和急性粒细胞白血病 (AML) 的患者，根据移植时的状态，AML 患者进一步分为低风险和高风险。每个患者从输血之日起的生存时间，以及与供体和受体特征有关的许多解释变量的值，以及康复过程中发生的不良事件，都已记录。骨髓移植前，患者接受环磷酰胺和白消安的联合治疗，以破坏所有异常血细胞。血小板恢复到正常水平所需的时间是患者预后的一个重要变量，因此也记录了该变量的值。</p>
+<p>本示例仅基于 St Vincent’s Hospital Sydney, Australia 的数据。以天为单位记录每位患者的观测生存时间，以及事件指示符的值，如果患者死亡，则为 1，如果患者在研究期结束时还活着，则为 0. 本例中使用的预后变量涉及疾病组、患者和骨髓供体的年龄、表示血小板计数是否恢复到正常水平 (40 × 10<sup>9</sup>/L) 的指示变量以及恢复到该值的经历的时间。两名患者（7 号和 21 号）在血小板计数恢复正常之前死亡，因此对于这些患者，没有给出血小板计数恢复正常的时间。因此记录的变量如下：</p>
+<ul>
+<li>
+<span class="math inline">\(Time\)</span>：生存时间（天）</li>
+<li>
+<span class="math inline">\(Status\)</span>：事件指示符（0 = 删失，1 = 事件）</li>
+<li>
+<span class="math inline">\(Group\)</span>：疾病组（1 = ALL，2 = 低风险 AML，3 = 高风险 AML）</li>
+<li>
+<span class="math inline">\(Page\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Dage\)</span>：供体年龄</li>
+<li>
+<span class="math inline">\(Precovery\)</span>：血小板恢复指示符（0 = no，1 = yes）</li>
+<li>
+<span class="math inline">\(Ptime\)</span>：血小板恢复到正常水平的时间（天）（如果 <span class="math inline">\(Precovery=1\)</span>）</li>
+</ul>
+<p>表 8.2 给出了本例使用的数据。</p>
+<details><summary><font color="#8B2232">表 8.2</font>
+</summary><img src="figure/table%208.2.png#center" style="width:80.0%"></details><p><br>
+分析这些数据旨在检查调整预后变量后，三个疾病组患者的生存时间是否存在差异。为了研究血小板恢复到正常水平所需的时间对患者生存的影响，定义了一个时依变量 <span class="math inline">\(Plate(t)\)</span>。当血小板尚未恢复到正常水平时，该变量在时间 <span class="math inline">\(t\)</span> 取值为零，一旦恢复到正常水平，则变为一。正式地说，</p>
+<p><span class="math display">\[\left.Plate(t)=\left\{\begin{array}{ll}0&amp;\text{if }t&lt;\text{血小板恢复正常的时间},\\1&amp;\text{if }t\geqslant\text{血小板恢复正常的时间}\end{array}\right.\right.\]</span></p>
+<p>因此，当患者在血小板恢复之前死亡，对于所有 <span class="math inline">\(t\)</span>，<span class="math inline">\(Plate(t) = 0\)</span>。我们首先拟合 Cox 比例风险模型，其中包含与患者和供体年龄相关的变量 <span class="math inline">\(Page\)</span> 和 <span class="math inline">\(Dage\)</span> 。当这两个变量中的任何一个单独添加或在另一个变量存在的情况下添加时，<span class="math inline">\(−2\log \hat L\)</span> 统计量的值并没有显著减小。</p>
+<p>时依变量 <span class="math inline">\(Plate(t)\)</span> 现在添加到零模型中。<span class="math inline">\(−2\log \hat L\)</span> 的值从 67.13 降低为 62.21，在一个自由度上降低了 4.92，这在 5% 的水平上是显著的（<span class="math inline">\(P=0.026\)</span>）。这表明血小板恢复的时间确实会影响生存。考虑到该变量的效应后，仍然没有证据表明死亡风险取决于患者或供体的年龄。</p>
+<p>在仅包含变量 <span class="math inline">\(Plate(t)\)</span> 的模型中，Plate(t) 的系数估计为 -2.696，该系数为负值的这一事实表明，对于血小板水平不正常的患者，在任何给定时间都有更大的死亡风险。任何给定时间的风险比为 <span class="math inline">\(\exp(-2.696)=0.067\)</span>，因此，如果患者在某个时间点血小板恢复正常，则其在该时间点的死亡风险大约是血小板水平未恢复正常的十五分之一。然而，相应真实风险比的 95% 置信区间为 <span class="math inline">\((0.006, 0.751)\)</span>，这表明相对风险的点估计 相当不精确。</p>
+<p>为了量化疾病组对生存的效应，当将因素 <span class="math inline">\(Group\)</span> 添加到包含时依变量 <span class="math inline">\(Plate(t)\)</span> 的模型中时，在两个自由度上，<span class="math inline">\(−2\log \hat L\)</span> 的变化为 6.49，这在 5% 的水平上是显著的（<span class="math inline">\(P=0.039\)</span>）。与疾病组相关的参数估计表明，ALL 患者和高风险 AML 患者的死亡风险要大得多。ALL 患者相对于低风险 AML 患者的风险比为 7.97，高风险 AML 患者相对于低风险 AML 患者的风险比为 11.77.</p>
+<p>对于包含因素 <span class="math inline">\(Group\)</span> 和时依变量 <span class="math inline">\(Plate(t)\)</span> 的模型，表 8.3 给出了基线累积风险和生存函数估计。这些是使用式 <a href="chap8.html#eq:8-3">(8.3)</a> 中给出的基线累积风险函数估计获得的。</p>
+<details><summary><font color="#8B2232">表 8.3</font>
+</summary><img src="figure/table%208.3.png#center" style="width:80.0%"></details><p><br>
+在该表中，<span class="math inline">\(\tilde H_0(t)\)</span> 和 <span class="math inline">\(\tilde S0(t)\)</span> 是患有 ALL 并且血小板恢复指标 <span class="math inline">\(Plate(t)\)</span> 在整个研究过程中保持零值的患者的累积风险函数和生存函数估计。该表中还给出了患有 ALL 且对于所有 <span class="math inline">\(t\)</span> 值 <span class="math inline">\(Plate(t)=1\)</span> 的个体的生存函数估计，表示为 <span class="math inline">\(\tilde S_1(t)\)</span>。由于在研究开始时，所有患者的 <span class="math inline">\(Plate(t)\)</span> 值为零，而对于大多数患者来说，这种变化在稍后的某个时间点变为一，这两个生存函数估计说明了在任何特定时间血小板恢复的效应。例如，如果 ALL 患者的血小板在第 97 天仍未恢复到正常水平，那么他们存活超过 97 天的概率仅为 0.52. 相反，如果其他情况相同的患者此时已经血小板水平已恢复正常，他们的生存概率估计为 0.94. 血小板恢复状态在某个时间 <span class="math inline">\(t_0\)</span> 从 0 变为 1 的 ALL 患者的生存函数估计也可以从表 8.3 中获得，因为对于 <span class="math inline">\(t\leqslant t_0\)</span>，这就是 <span class="math inline">\(\tilde S_0(t)\)</span>，对于 <span class="math inline">\(t&gt;t_0\)</span> 则为 <span class="math inline">\(\tilde S_1(t)\)</span>。还可以获得其他疾病组中个体的生存函数估计。</p>
+<p>在本示例中，有两名患者（患者 7 和 21）的数据对血小板恢复效应的推断产生了重大影响，他们在血小板计数达到正常水平之前死亡。因为，如果从数据集中省略了他们的观测，当时依变量纳入零模型时，时依变量不再显著（<span class="math inline">\(P=0.755\)</span>）。因此，关于血小板恢复时间对生存的影响的结论受到这两名患者数据的显著影响。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-3" class="example"><strong>示例 8.3  (卵巢癌患者的化疗) </strong></span><br></p>
+<p>再次考虑第 5 章<a href="chap5.html#exm:ex5-11">示例 5.11</a> 中给出的卵巢癌患者生存数据。当为癌症患者生存时间数据拟合包含变量 <span class="math inline">\(Age\)</span>（时间起点时患者的年龄）和治疗组 <span class="math inline">\(Treat\)</span> 的 Cox 比例风险模型时，研究中第 <span class="math inline">\(i\)</span> 名（共 26 名）的风险函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\exp\{0.147\text{ }Age_i-0.796\text{ }Treat_i\}h_0(t)\end{aligned}\]</span></p>
+<p>该模型 <span class="math inline">\(−2\log \hat L\)</span> 统计量的值为 54.148.</p>
+<p>我们现在拟合包含 <span class="math inline">\(Age,Treat\)</span> 和一个具有时变系数的 <span class="math inline">\(Age\)</span> 项。这将由时依变量 <span class="math inline">\(Tage\)</span> 表示，其值由 Age 和生存时间 <span class="math inline">\(t\)</span> 的乘积形成，即 <span class="math inline">\(Tage=Age\times t\)</span>。由于 <span class="math inline">\(Tage\)</span> 依赖于时间 <span class="math inline">\(t\)</span>，该时依变量不能以与 <span class="math inline">\(Age,Treat\)</span> 一样的方式进行拟合，如 <a href="chap8.html#sec8-1-1">8.1.1</a> 节所解释的。当 <span class="math inline">\(Tage\)</span> 添加到模型中时，拟合的风险函数变为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)&amp;=\exp\{0.216\text{ }Age_i-0.664\text{ }Treat_i-0.0002\text{ }Age_it\}h_0(t)\end{aligned}\]</span></p>
+<p>在此模型下，给定年龄的患者在接受联合治疗（<span class="math inline">\(Treat=2\)</span>）时的死亡风险，相对于单一治疗（<span class="math inline">\(Tret=1\)</span>）中相同年龄的患者，为 <span class="math inline">\(\exp(-0.664)=0.52\)</span>，与使用不包含变量 <span class="math inline">\(Tage\)</span> 的模型得出的 0.45 的值没有太大差异。然而，<span class="math inline">\(a_2\)</span> 岁的患者相对于 <span class="math inline">\(a_1\)</span> 岁患者在时间 <span class="math inline">\(t\)</span> 处的对数风险比为</p>
+<p><span class="math display">\[\begin{aligned}0.216(a_2-a_1)-0.0002(a_2-a_1)t\end{aligned}\]</span></p>
+<p>因此，该模型允许年龄的对数风险比与生存时间线性相关。</p>
+<p>包含 <span class="math inline">\(Age,Treat\)</span> 和 <span class="math inline">\(Tage\)</span> 的模型的 <span class="math inline">\(−2\log \hat L\)</span> 值为 53.613. 因此，在将变量 <span class="math inline">\(Tage\)</span> 纳入包含 <span class="math inline">\(Age\)</span> 和 <span class="math inline">\(Treat\)</span> 的模型中时，<span class="math inline">\(−2\log \hat L\)</span> 的变化为 0.53，这并不显著（<span class="math inline">\(P=0.465\)</span>）。因此，我们得出结论，模型中实际上不需要时依变量 <span class="math inline">\(Tage\)</span>，因此年龄效应不取决于时间。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-4" class="example"><strong>示例 8.4  (肝硬化研究数据) </strong></span><br></p>
+<p>尽管在这个例子中使用的数据是人造的，但提供一个背景以考虑这些数据是有用的。因此，假设有 12 名患者被招募到一项关于肝硬化治疗的研究中。患者被随机分配为接受安慰剂或一种称为 Liverol 的新疗法。六名患者被分配到 Liverol 组，六名患者被分配到安慰剂组。患者参加研究时，将记录其年龄和基线胆红素 (bilirubin) 水平。在本分析中，将使用胆红素 (µmol/l) 的自然对数值，下面总结了测量的变量</p>
+<ul>
+<li>
+<span class="math inline">\(Time\)</span>：患者的生存时间（天）</li>
+<li>
+<span class="math inline">\(Status\)</span>：事件指示符（0 = 删失，1 = 未删失）</li>
+<li>
+<span class="math inline">\(Treat\)</span>：治疗组（0 = 安慰剂，1 = Liverol）</li>
+<li>
+<span class="math inline">\(Age\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Lbr\)</span>：胆红素水平的对数</li>
+</ul>
+<p>这些变量的值列于表 8.4.</p>
+<details><summary><font color="#8B2232">表 8.4</font>
+</summary><img src="figure/table%208.4.png#center" style="width:80.0%"></details><p><br>
+患者应在开始治疗后三个月、六个月和十二个月返回诊所，此后每年返回一次。在这些时间点再次测量并记录胆红素水平。因此，可以获得有关在整个研究期间每位患者的胆红素水平如何变化的数据。表 8.5 给出了每位患者随访期内每次胆红素的对数值 log(bilirubin).</p>
+<details><summary><font color="#8B2232">表 8.5</font>
+</summary><img src="figure/table%208.5.png#center" style="width:80.0%"></details><p><br>
+将 log(bilirubin) 视为时依变量时，变量的值是每位患者最近一次随访时记录的值。在此计算中，假定在获取新值读数后立即更改为新值，例如对于患者 1 的 log(bilirubin) 值，当 <span class="math inline">\(t\leqslant 3.4\)</span> 时为 3.2，当 <span class="math inline">\(47 &lt; t \leqslant 184\)</span> 为 3.8，当 <span class="math inline">\(184 &lt; t \leqslant 251\)</span> 为 4.9，当 <span class="math inline">\(251 &lt; t \leqslant 281\)</span> 为 5.0. 那么，给定个体的 <span class="math inline">\(Lbr\)</span> 值为阶跃函数，并假定其值在任意两个时间点之间保持恒定。</p>
+<p>首先单独使用基线 log(bilirubin) 值对数据进行分析。使用 Cox 比例风险模型，拟合特定模型的 <span class="math inline">\(−2\log \hat L\)</span> 值如表 8.6 所示。</p>
+<details><summary><font color="#8B2232">表 8.6</font>
+</summary><img src="figure/table%208.6.png#center" style="width:80.0%"></details><p><br>
+模型中似乎需要 <span class="math inline">\(Age\)</span> 和 <span class="math inline">\(Lbr\)</span>，尽管包括 <span class="math inline">\(Age\)</span> 和 <span class="math inline">\(Lbr\)</span> 的证据不是很有力。当 <span class="math inline">\(Treat\)</span> 纳入包含 <span class="math inline">\(Age\)</span> 和 <span class="math inline">\(Lbr\)</span> 的模型中时，<span class="math inline">\(−2\log \hat L\)</span> 的值在一个自由度上减小了 5.182. 这在 5% 的水平上是显著的（<span class="math inline">\(P=0.023\)</span>）。<span class="math inline">\(Treat\)</span> 的系数为 −3.052，表明药物 Liverol 在降低死亡风险方面是有效的。事实上，在其他条件相同的情况下，Liverol 将死亡风险降低了 0.047 倍。</p>
+<p>我们现在将 log(bilirubin) 值视为时依的。令 <span class="math inline">\(Lbrt\)</span> 为由 log(bilirubin) 值形成的时依变量。表 8.7 中给出了为数据拟合 Cox 回归模型的 <span class="math inline">\(−2\log \hat L\)</span> 值。</p>
+<details><summary><font color="#8B2232">表 8.7</font>
+</summary><img src="figure/table%208.7.png#center" style="width:80.0%"></details><p><br>
+从该表可以清楚地看出，风险函数取决于时依变量 <span class="math inline">\(Lbrt\)</span>，考虑到这一点后，<span class="math inline">\(Age\)</span> 的效应很小。因此，我们将治疗效应 <span class="math inline">\(Treat\)</span> 添加到仅包含 <span class="math inline">\(Lbert\)</span> 的模型中。这样做的效果是将 <span class="math inline">\(−2\log \hat L\)</span> 从 12.050 减小为 10.676，在一个自由度上减小了 1.374. 这种减小并不显著（<span class="math inline">\(P=0.241\)</span>），这得到了这样的结论：在考虑了死亡风险对 log(bilirubin) 值发展的依赖性后，没有明显的治疗效应。第 <span class="math inline">\(i\)</span> 个个体的风险函数估计由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\hat h_i(t)=\exp\{3.605\text{ }Lbr_i(t)-1.479\text{ }Treat_i\}h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(Lbr_i(t)\)</span> 是该患者在时间 <span class="math inline">\(t\)</span> 的 log(bilirubin) 值。对于接受相同治疗且 <span class="math inline">\(Lbr\)</span> 值在 <span class="math inline">\(t\)</span> 时相差 0.1 个单位的两个个体，在时间 <span class="math inline">\(t\)</span> 时死亡风险比的估计为 <span class="math inline">\(e^{0.3605}=1.43\)</span>。这意味着 log(bilirubin) 值大 0.1 个单位的个体在时间 <span class="math inline">\(t\)</span> 时的死亡风险增加了近 50%.</p>
+<p>对于这两种分析结果之间的差异，一种可能的解释是治疗能改变胆红素水平的值，因此在考虑到这些值随时间的变化后，看不到治疗效应</p>
+<p>现在可以为包含时依变量 <span class="math inline">\(Lbrt\)</span> 和 <span class="math inline">\(Treat\)</span> 的模型估计基线累积风险函数。该函数的估计如表 8.8 所示</p>
+<details><summary><font color="#8B2232">表 8.8</font>
+</summary><img src="figure/table%208.8.png#center" style="width:80.0%"></details><p><br>
+该表显示，累积风险函数以非线性方式增加，这表明基线风险不是恒定的，而是随着时间的推移而增加。可以从该估计中获得相应的基线生存函数。然而，<span class="math inline">\(Lbrt\)</span> 恒为 0 的模型很难解释，因此为 <span class="math inline">\(Lbrt = 3\)</span> 的个体获得生存函数估计。该函数如图 8.5 所示。该图清晰地表明，服用安慰剂的患者的预后比服用 Liverol 的患者差得多。</p>
+<details><summary><font color="#8B2232">图 8.5</font>
+</summary><img src="figure/figure%208.5.png#center" style="width:80.0%"></details><p><br>
+最后，我们说明了如何使用式 <a href="chap8.html#eq:8-5">(8.5)</a> 给出的结果来获得从时间 <span class="math inline">\(t\)</span> 到时间 <span class="math inline">\(t+360\)</span> 天的条件生存概率估计。使用表 8.4 和 8.5 给出的时依变量值，第 <span class="math inline">\(i\)</span> 名患者在时间 <span class="math inline">\(t\)</span> 的预后指数 <span class="math inline">\(\sum_{j=1}^p\hat{\beta}_jx_{ji}(t)\)</span> 的值，<span class="math inline">\(i=1,2,\ldots,12\)</span>，可以针对 <span class="math inline">\(t=0,360,720,1080\)</span> 和 <span class="math inline">\(1440\)</span> 来计算。对于该计算，取 log(bilirubin) 的值为上一个随访时间记录的值。然后使用表 8.8 来获得 <span class="math inline">\(\tilde{H}_0(t+360)-\tilde{H}_0(t)\)</span> 的值，再根据式 <a href="chap8.html#eq:8-5">(8.5)</a> 获得 <span class="math inline">\(\tilde{P_i}(t,t+360)\)</span>。这里不会给出完整的结果，但作为一个例子，患者 1 和 7 在连续 360 天的时间区间内存活的近似条件概率估计如表 8.9 所示。注意，因为这些估计是以在区间开始时还活着为条件的生存概率，所以它们不一定是时间的递减函数。这些估计再次表明，若患者在一年年初还存活，相比接受安慰剂治疗，接受 Liverol 治疗的患者生存一年的概率更大。最后，<span class="math inline">\(1-\tilde{P_i}(t,t+h)\)</span> 的值是每个区间内死亡概率的近似估计，条件是患者在开始时还活着。将所有 12 名患者的这些估计相加，得出每个区间的值分别为 0.02, 2.46, 5.64, 6.53, 3.16. 这些可以与每个区间中的观测死亡人数进行比较，后者分别为 1, 2, 3, 1 和 1. 因此，该模型有高估死亡人数的趋势，但由于数据集的规模较小，因此无法对模型的预测能力进行非常可靠的评估。</p>
+<details><summary><font color="#8B2232">表 8.9</font>
+</summary><img src="figure/table%208.9.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+</div>
+<div id="sec8-7" class="section level2" number="8.7">
+<h2>
+<span class="header-section-number">8.7</span> 纵向数据和生存数据的联合建模<a class="anchor" aria-label="anchor" href="#sec8-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>在给定时间发生事件的风险以及值随时间变化的解释变量之间的关联可以通过在 Cox 回归模型中纳入时依变量来评估。在建模过程中，假设这样一个变量的值在相邻的测量时间之间是恒定的，因此将作为阶跃函数来建模。这通常是不现实的，并且由此产生的模型可能很难表示时依变量对生存时间的效应。此外，与生存模型中的基线解释变量一样，时依变量假定为没有测量误差，但这也可能是不现实的。</p>
+<p>随着时间的推移，在同一个个体身上按顺序记录的数据称为<strong>纵向数据</strong> (longitudinal data)，而<strong>纵向变量</strong> (logitudinal variable) 是值随时间发展的变量。纵向变量在特定时间的观测可以视为潜在连续变量的即时捕捉 (snapshots). 若干解释变量对时间的纵向依赖性的模型可以与生存时间模型相结合，以给出纵向数据和生存数据的联合模型 (joint model). 联合模型可用来考察风险函数对纵向变量变化值的依赖性。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-5" class="example"><strong>示例 8.5  (主动脉瓣置换术后的生存) </strong></span><br></p>
+<p>左心室壁增厚，称为左心室肥大，会导致脆弱、僵硬并失去弹性，增加患心血管疾病的风险。主动脉瓣置换旨在减少这种增厚，减少肥厚程度是一个重要目标。 Lim et al. (2008) 描述的一项研究旨在调查左心室质量的长期变化，确定可能影响这些变化的因素，并评估这些变化对患者生存的影响。这项研究涉及 256 名接受了主动脉瓣置换术的患者，使用了人或猪的无支架瓣膜。对这些患者随访了 10 年，在此期间使用连续超声心动图测量来计算左心室质量指数 (left ventricular mass index, LVMI). 记录了死亡时间，在随访期结束时仍然生存的患者视为删失生存时间。对于接受第二次手术的患者，我们在该时间点进行删失处理，以确保他们在数据集中只出现一次。</p>
+<p>本例使用的数据包含在基线测量的许多变量，以及随访期间 LVMI 的纵向测量值。数据可以在 R 的 <code>joineR</code> 包的数据集 <code>heart.valve</code> 中找到，但本例将使用记录的变量的子集，如下所示。</p>
+<ul>
+<li>
+<span class="math inline">\(Id\)</span>：患者编号</li>
+<li>
+<span class="math inline">\(FUtime\)</span>：自手术之日起的总随访时间（年）</li>
+<li>
+<span class="math inline">\(Stauts\)</span>：事件指示符（0 = 删失，1 = 死亡）</li>
+<li>
+<span class="math inline">\(Time\)</span>：术后测量 LVMI 的时间（年）</li>
+<li>
+<span class="math inline">\(LVMI\)</span>：标准化左心室质量指数（LVMI）</li>
+<li>
+<span class="math inline">\(Age\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Sex\)</span>：患者性别（0 = 男性，1 = 女性）</li>
+<li>
+<span class="math inline">\(Redo\)</span>：既往心脏手术（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Emerg\)</span>：手术紧急性（0 = 非急需的，1 = 紧急的）</li>
+<li>
+<span class="math inline">\(DM\)</span>：术前糖尿病（0 = 否，1 = 是）</li>
+<li>
+<span class="math inline">\(Type\)</span>：瓣膜类型（1 = 人体组织，2 = 猪组织）</li>
+</ul>
+<p>前五名患者的数据如表 8.10 所示。LVMI 和时间之间的关系可以通过绘制 LVMI 关于时间的图形来可视化，以给出每个患者的响应曲线 (response profiles). 图 8.6 显示了所有 256 名患者的响应曲线。</p>
+<details><summary><font color="#8B2232">表 8.10</font>
+</summary><img src="figure/table%208.10.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 8.6</font>
+</summary><img src="figure/figure%208.6.png#center" style="width:80.0%"></details><p><br>
+很难从这个图形中看出任何总体趋势，但可能有迹象表明，随着时间的推移，该指数的值最初会下降。下一步是对 LVMI 对时间的依赖性进行建模，以总结响应曲线。</p>
+</div>
+</div>
+<div id="sec8-7-1" class="section level3" number="8.7.1">
+<h3>
+<span class="header-section-number">8.7.1</span> 纵向建模<a class="anchor" aria-label="anchor" href="#sec8-7-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>本节描述了纵向变量测量值与时间之间关系的可能模型，以供随后在纵向数据和生存数据的联合模型中使用。必须考虑的特殊特征包括同一个体连续测量纵向变量之间的相关性、个体间任何关系形式的变异，以及纵向变量记录值中的随机测量误差。</p>
+<p>纵向变量与时间之间关系的最简单的模型是直线关系，其中斜率和截距因个体而异。那么，随着时间的推移，每个个体都有自己的预期响应曲线，并且在这些单独的曲线之间存在关于总体平均相应的变异。</p>
+<p>假设在 <span class="math inline">\(n_i\)</span> 个连续时间 <span class="math inline">\(t_{i1},t_{i2},\ldots,t_{i,n_i}\)</span>，获得了第 <span class="math inline">\(i\)</span> 个个体（共 <span class="math inline">\(n\)</span> 个）的纵向变量 <span class="math inline">\(Y\)</span> 的值 <span class="math inline">\(y_{ij}\)</span>，<span class="math inline">\(j = 1,2,\ldots,n_i,i = 1,2,\ldots,n\)</span>，其中 <span class="math inline">\(y_{ij}\)</span> 可表示为</p>
+<p><span class="math display" id="eq:8-6">\[\begin{align}
+y_{ij}=\beta_{0i}+\beta_{1i}t_{ij}+\epsilon_{ij}
+\tag{8.6}
+\end{align}\]</span></p>
+<p>在该模型中，直线关系具有不同的截距 <span class="math inline">\(\beta_{01},\beta_{02},\ldots,\beta_{0n}\)</span>，以及不同的斜率 <span class="math inline">\(\beta_{11},\beta_{12},\ldots,\beta_{1n}\)</span>，这些对应于 <span class="math inline">\(n\)</span> 个个体。式 <a href="chap8.html#eq:8-6">(8.6)</a> 中的量 <span class="math inline">\(\varepsilon_{ij}\)</span> 是一个残差项，它总结了 <span class="math inline">\(y_{ij}\)</span> 与假设的直线模型的偏差，并可以表示测量误差。目前，假设每个个体的截距和斜率具有固定值，称为<strong>固定效应</strong> (fixed effects). 在该线性回归模型中，<span class="math inline">\(y_{ij}\)</span> 的期望为 <span class="math inline">\(\operatorname{E}\left(y_{ij}\right)=\beta_{0{i}}+\beta_{1{i}}t_{i{j}}\)</span>，并且通常假设 <span class="math inline">\(\epsilon_{ij}\)</span> 独立，每个都具有均值为零和方差为 <span class="math inline">\(\sigma^2\)</span> 的正态分布。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-6" class="example"><strong>示例 8.6  (主动脉瓣置换术后的生存) </strong></span><br></p>
+<p>假设在<a href="chap8.html#exm:ex8-5">示例 8.5</a> 描述的主动脉瓣置换研究中，左心室质量指数 (LVMI) 与时间之间的关联，是使用 256 个不同的线性关系进行建模的，每个对应于一个患者。第 <span class="math inline">\(i\)</span> 名患者在时间 <span class="math inline">\(t_{ij}\)</span> 的 LVMI 期望值为 <span class="math inline">\(\beta_{0i}+\beta_{1i}t_{ij}\)</span>，即，斜率和截距在患者之间有变异。当至少获得了两个不同时间的数据时，该线性回归模型可以拟合每个患者不同时间的 LVMI 值的数据。图 8.7 绘制了本研究中 256 名患者的拟合关系。</p>
+<details><summary><font color="#8B2232">图 8.7</font>
+</summary><img src="figure/figure%208.7.png#center" style="width:80.0%"></details><p><br>
+该图有时称为意大利面条图 (spaghetti plot)，表明患者的拟合直线之间存在明显差异。直线斜率因患者而异。总体线性回归模型在时间 <span class="math inline">\(t\)</span> 的期望值为 <span class="math inline">\(162.126-0.701t\)</span>，尽管这种关系总体呈下降趋势，表明 LVMI 随着时间的推移而下降，但斜率与零没有显著差异（<span class="math inline">\(P=0.41\)</span>）。</p>
+</div>
+</div>
+<p>式 <a href="chap8.html#eq:8-6">(8.6)</a> 的模型一个明显的缺点是可能有大量的参数需要估计。例如，在主动脉瓣置换术的数据中，有 256 个单独的截距和 256 个单独的斜率，还有 <span class="math inline">\(\varepsilon_{ij}\)</span> 的方差。此外，该模型假定患者内观测 (observations in a patient) 是独立的，但事实并非如此。考虑到这一点，现假设每个个体的截距和斜率都是从可能值的总体中随机抽取的，其中该总体由一个概率分布来总结。如此模型种的截距和斜率就是<strong>随机效应</strong> (random effects). 第 <a href="chap10.html#chap10">10</a> 章描述了包含随机效应的生存数据模型，称为<strong>脆弱模型</strong> (frailty models)，该章 <a href="chap10.html#sec10-1">10.1</a> 节包含随机效应性质的进一步细节。</p>
+<p>现在我们假设 <span class="math inline">\(n\)</span> 个个体的截距 <span class="math inline">\(\beta_{0i}\)</span> 和斜率 <span class="math inline">\(\beta_{1i}, i = 1, 2,...,n\)</span> 是正态分布随机变量。然后，假定截距 <span class="math inline">\(\beta_{0i}\)</span> 是来自均值为 <span class="math inline">\(\beta_{0}\)</span> 和方差为 <span class="math inline">\(\sigma^2_0\)</span> 的正态分布的随机样本，记作 <span class="math inline">\(N(\beta_0, \sigma^2_0)\)</span>，类似地，假定斜率 <span class="math inline">\(\beta_{1i}\)</span> 是从 <span class="math inline">\(N(\beta_1, \sigma^2_1)\)</span> 分布中随机抽取的。截距和斜率的潜在分布可认为是独立的，尽管这个假设可以放宽。随机效应的均值 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 对应于所有个体的平均截距和斜率，有时称为<strong>总体值</strong> (population values).</p>
+<p>在制定随机效应模型时，使用零均值正态分布更为方便，因此我们设 <span class="math inline">\(\beta_{0i}=\beta_{0}+u_{0i}\)</span> 以及 <span class="math inline">\(\beta_{1i}=\beta_{1}+u_{1i}\)</span>，其中 <span class="math inline">\(u_{0i}\)</span> 和 <span class="math inline">\(u_{1i}\)</span> 具有独立的正态分布，均值都为零，方差分别为 <span class="math inline">\(\sigma^2_0\)</span> 和 <span class="math inline">\(\sigma^2_1\)</span>。式 <a href="chap8.html#eq:8-6">(8.6)</a> 中的模型则变为</p>
+<p><span class="math display" id="eq:8-7">\[\begin{align}
+{y_{ij}}&amp;=(\beta_0+u_{0i})+(\beta_1+u_{1i})t_{ij}+\epsilon_{ij}\\
+&amp;=\left.\beta_0+\beta_1t_{ij}+u_{0i}+u_{1i}t_{ij}+\epsilon_{ij}\right.
+\tag{8.7}
+\end{align}\]</span></p>
+<p>通过将截距和斜率视为随机变量，对同一个体的观测将不再是独立的。要认识到这一点，请考虑第 <span class="math inline">\(i\)</span> 个个体在 <span class="math inline">\(t_{ij}\)</span> 和 <span class="math inline">\(t_{ij'}\)</span> 时刻的纵向响应变量 <span class="math inline">\(Y\)</span> 值之间的协方差（其中 <span class="math inline">\(j\ne j'\)</span>），这定义为</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{cov}\left(y_{ij},y_{ij'}\right)=\text{ E}\left[\left(y_{ij}-\text{ E}(y_{ij})\right)\left(y_{ij'}-\text{ E}(y_{ij'})\right)\right]\end{aligned}\]</span></p>
+<p>现在，<span class="math inline">\(\operatorname{E}\left(y_{ij}\right)=\beta_0+\beta_1t_{ij}\)</span>，因此 <span class="math inline">\(y_{ij}-\text{E}\left(y_{ij}\right)=u_{0i}+u_{1i}t_{ij}+\epsilon_{ij}\)</span>，对于 <span class="math inline">\(\mathrm{E}\left(y_{ij^{\prime}}\right)\)</span> 也类似，因此协方差为</p>
+<p><span class="math display">\[\begin{aligned}\text{cov}\left(y_{ij},y_{ij'}\right)=\text{E}\left[(u_{0i}+u_{1i}t_{ij}+\epsilon_{ij})(u_{0i}+u_{1i}t_{ij'}+\epsilon_{ij'})\right]\end{aligned}\]</span></p>
+<p>展开此乘积，并利用 <span class="math inline">\(u_{0i}\)</span> 与 <span class="math inline">\(u_{1i}\)</span> 的独立性，即 <span class="math inline">\(\text{cov}\left(u_{01},u_{1i}\right)=\text{ E}\left(u_{0i}u_{1i}\right)=0\)</span>，我们得到</p>
+<p><span class="math display">\[\mathrm{cov}\left(y_{ij},y_{ij'}\right)=\text{ E}\left(u_{0i}^2\right)+\text{ E}\left(u_{1i}^2\right)t_{ij}t_{ij'}\]</span></p>
+<p>由于 <span class="math inline">\(\mathrm{E}\left(u_{0{i}}\right)=0\)</span> 以及 <span class="math inline">\(\operatorname{E}\left(u_{1i}\right)=0,\operatorname{E}\left(u_{0i}^2\right)=\operatorname{var}\left(u_{0i}\right)=\sigma_{0}^2\)</span>，类似地有 <span class="math inline">\(\mathrm{E}\left(u_{1i}^2\right)=\sigma_1^2\)</span>，因此协方差成为</p>
+<p><span class="math display">\[\sigma_0^2+\sigma_1^2t_{ij}t_{ij^{\prime}}\]</span></p>
+<p><span class="math inline">\(y_{ij}\)</span> 和 <span class="math inline">\(y_{ij'}\)</span> 之间的相关系数等于协方差除以下式</p>
+<p><span class="math display">\[√\{\text{ var }(y_{ij})\operatorname{var}(y_{ij^{\prime}})\}=√\{(\sigma_0^2+\sigma_1^2t_{ij}^2+\sigma_\epsilon^2)(\sigma_0^2+\sigma_1^2t_{ij^{\prime}}^2+\sigma_\epsilon^2)\}\]</span></p>
+<p>这意味着，具有随机截距和随机斜率的模型为个体内任何一对观测引入了相关性，该相关性取决于随机效应的方差以及两次观测的时间。此外，纵向变量的方差随着时间的推移而增加，两次测量之间的相关性随着测量时间 <span class="math inline">\(t_{ij}\)</span> 和 <span class="math inline">\(t_{ij'}\)</span> 之间距离的增加而减小。</p>
+<p>通常，在随机效应模型中，个体的截距和斜率之间存在某种关联。例如，具有较大纵向变量初始值的人，该变量的值可能会随着时间的推移而急剧下降。这可以通过允许式 <a href="chap8.html#eq:8-7">(8.7)</a> 模型中每个个体的随机截距和斜率具有相关性 <span class="math inline">\(\rho\)</span> 来实现，即 <span class="math inline">\(\mathrm{cov}\left(u_{0i},u_{1i}\right)=\rho\sigma_{0}\sigma_{1}\)</span>。第 <span class="math inline">\(i\)</span> 个个体的随机效应向量 <span class="math inline">\(\boldsymbol{u}_i=(u_{0i},u_{1i})'\)</span> 具有均值为零、方差-协方差阵为 <span class="math inline">\(\boldsymbol V\)</span> 的二元正态分布，其中 <span class="math inline">\(\boldsymbol V\)</span> 由下式给出</p>
+<p><span class="math display">\[\left.\boldsymbol{V}=\left(\begin{array}{cc}\sigma_0^2&amp;\rho\sigma_0\sigma_1\\\rho\sigma_0\sigma_1&amp;\sigma_1^2\end{array}\right.\right)\]</span></p>
+<p>这为纵向变量在不同时间 <span class="math inline">\(t_{ij}\)</span> 和 <span class="math inline">\(t_{ij'}\)</span> 下观测值间的协方差表达式添加了一个额外项，因为 <span class="math inline">\(\text{cov}\left(u_{01},u_{1i}\right)=\text{ E}\left(u_{0i}u_{1i}\right)=0\)</span> 不再为零。</p>
+<p>式 <a href="chap8.html#eq:8-7">(8.7)</a> 中的纵向模型也可以扩展，其中纳入了作为固定效应的基线变量，即</p>
+<p><span class="math display" id="eq:8-8">\[\begin{align}
+y_{ij}=\boldsymbol{\beta'x}_i+\beta_0+\beta_1t_{ij}+u_{0i}+u_{1i}t_{ij}+\epsilon_{ij}
+\tag{8.8}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体基线解释变量值的线性组合。这是一个<strong>一般线性混合模型</strong> (general linear mixed model)，其中 <span class="math inline">\(y_{ij}\)</span> 是从具有正态分布中观测到的，其均值为 <span class="math inline">\(\boldsymbol{\beta'x}_i+\beta_0+\beta_1t_{ij}\)</span>，方差为</p>
+<p><span class="math display">\[\sigma_0^2+\sigma_1^2t_{ij}^2+\sigma_\epsilon^2+2\rho\sigma_0\sigma_1t_{ij}\]</span></p>
+<p>此外，<span class="math inline">\(y_{ij}\)</span> 本身是相关的，并且第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(n_i\)</span> 个观测的值向量 <span class="math inline">\(\boldsymbol y_i\)</span> 具有<strong>多元正态分布</strong> (multivariate normal distribution).</p>
+<p>纵向变量可以视为 <span class="math inline">\(t\)</span> 的连续函数，在特定时间点对变量的值进行观测，因此可以用 <span class="math inline">\(Y(t)\)</span> 表示。式 <a href="chap8.html#eq:8-7">(8.7)</a> 中关于 <span class="math inline">\(y_{ij}\)</span> 的模型，即第 <span class="math inline">\(i\)</span> 个个体在第 <span class="math inline">\(j\)</span> 个时间 <span class="math inline">\(t_{ij}\)</span> 的纵向变量 <span class="math inline">\(Y(t)\)</span> 观测值的模型，可以表示为潜在纵向过程的模型，其中第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的 <span class="math inline">\(Y(t)\)</span> 观测值为 <span class="math inline">\(y_i(t)\)</span>。那么可以编写 <span class="math inline">\(y_i(t)\)</span> 的相应线性模型</p>
+<p><span class="math display" id="eq:8-9">\[\begin{align}
+y_i(t)=m_i(t)+\epsilon_i(t)
+\tag{8.9}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(m_i(t)=\beta_0+\beta_1t+u_{0i}+u_{1i}t\)</span> 是描述第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(y_i(t)\)</span> 值轨迹的真实潜在响应曲线，而 <span class="math inline">\(\epsilon_{i}(t)\)</span> 是在时间 <span class="math inline">\(t\)</span> 处的随机误差项。在式 <a href="chap8.html#eq:8-9">(8.9)</a> 的模型下，纵向变量的期望值是 <span class="math inline">\(\beta_{0}+\beta_{1}t\)</span>。在纵向和生存数据的联合模型中，真实响应曲线 <span class="math inline">\(m_i(t)\)</span> 用于表示纵向变量与时间之间的关系。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-7" class="example"><strong>示例 8.7  (主动脉瓣置换术后的生存) </strong></span><br></p>
+<p>现在采用具有随机截距和随机斜率的线性模型对<a href="chap8.html#exm:ex8-5">示例 8.5</a> 的数据中的纵向变量 LVMI 与时间之间的关系进行建模。时间 <span class="math inline">\(t\)</span> 处的 LVMI 将表示为 <span class="math inline">\(Y(t)\)</span>，并且时间 <span class="math inline">\(t\)</span> 处第 <span class="math inline">\(i\)</span> 个患者的指数观测值如式 <a href="chap8.html#eq:8-9">(8.9)</a> 所示。这里，<span class="math inline">\(m_i(t)=\beta_0+\beta_1t+u_{0i}+u_{1i}t\)</span> 是指数在时间 <span class="math inline">\(t\)</span> 的真值，并假定 <span class="math inline">\(u_{0i},u_{1i}\)</span> 是独立的正态随机变量，均值都为零，方差分别为 <span class="math inline">\(\sigma_0^2,\sigma_1^2\)</span>。残差项 <span class="math inline">\(\epsilon_{i}(t)\)</span> 是 LVMI 的观测值与真实值之差，并且假定其具有 <span class="math inline">\(N(0,\sigma_\epsilon^2)\)</span> 分布。</p>
+<p>拟合该模型后，<span class="math inline">\(\hat{\beta}_0=164.46\)</span> 和 <span class="math inline">\(\hat{\beta}_1=-1.66\)</span>，因此 LVMI 在时间 <span class="math inline">\(t\)</span> 处的总体期望值为 <span class="math inline">\(164.46−1.66 t\)</span>。与式 <a href="chap8.html#eq:8-6">(8.6)</a> 中的固定效应模型相比，斜率估计现在在 5% 的水平上几乎是显著的（<span class="math inline">\(P=0.060\)</span>）。截距和斜率的方差估计分别为 <span class="math inline">\(\hat{\sigma}_0^2=3881.91\)</span> 和 <span class="math inline">\(\hat{\sigma}_1^2=61.39\)</span>，因此 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 的相应 95% 区间估计分别为 <span class="math inline">\((42.34,286.58)\)</span> 和 <span class="math inline">\((−17.02,13.70)\)</span>。因此，我们预期这些区间将包括研究中 256 名患者的大部分斜率和截距估计。</p>
+<p>在拟合具有随机效应的纵向模型后，可以估计每个个体的截距和斜率，从而获得个体响应曲线。研究中 256 名患者的 LVMI 与时间之间的线性关系如图 8.8 所示。</p>
+<details><summary><font color="#8B2232">图 8.8</font>
+</summary><img src="figure/figure%208.8.png#center" style="width:80.0%"></details><p><br>
+与图 8.7 相比，我们发现拟合线的斜率不是很极端。拟合过程使斜率向零收缩<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;The fitting process has ‘shrunk’ the slopes so that they are closer to zero.&lt;/p&gt;"><sup>3</sup></a>。这是随机效应模型的一个众所周知的特征，原因在于斜率假定为正态分布，这意味着出现极端值的可能性更小。各斜率现在更接近整体平均斜率，更极端的斜率向零收缩得更多。</p>
+<p>研究开始时测量的其他变量也可以纳入随机效应模型，如式 <a href="chap8.html#eq:8-8">(8.8)</a> 中的模型所示。当模型中包含基线变量 <span class="math inline">\(Age, Sex, Redo, Emerg, DM\)</span> 和 <span class="math inline">\(Type\)</span> 时，只有 <span class="math inline">\(Sex\)</span> 的效应非常显著（<span class="math inline">\(P = 0.0008\)</span>），女性患者的 LVMI 值显著较低。在允许随机效应模型中的截距依赖于这些基线测量值后，时间效应变得更为显著（<span class="math inline">\(P = 0.045\)</span>）。</p>
+</div>
+</div>
+</div>
+<div id="sec8-7-2" class="section level3" number="8.7.2">
+<h3>
+<span class="header-section-number">8.7.2</span> 联合模型<a class="anchor" aria-label="anchor" href="#sec8-7-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>生存时间与纵向变量 <span class="math inline">\(Y(t)\)</span> 之间的依赖关系可以通过将观测值 <span class="math inline">\(y_i(t)\)</span> 简单地添加到 Cox 回归模型中来进行建模，该模型用于描述第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 发生事件的风险。在该模型中，<span class="math inline">\(Y(t)\)</span> 拟合为时依变量，使用了本章 <a href="chap8.html#sec8-2">8.2</a> 节中描述的方法。然而，为了正确考虑 <span class="math inline">\(Y(t)\)</span> 与时间之间的关系，需要建立一个纵向变量和生存时间的联合模型。</p>
+<p>在对纵向响应变量随时间的发展进行建模时，式 <a href="chap8.html#eq:8-9">(8.9)</a> 中的响应曲线 <span class="math inline">\(m_i(t)\)</span> 用于描述第 <span class="math inline">\(i\)</span> 个个体的这种关系。为了形成联合模型，将 <span class="math inline">\(m_i(t)\)</span> 添加到时间 <span class="math inline">\(t\)</span> 发生事件的风险模型中，其系数总结了时间 <span class="math inline">\(t\)</span> 的风险与 <span class="math inline">\(m_i(t)\)</span> 之间的关联。可以使用风险函数的半参数或全参数模型。第 <span class="math inline">\(i\)</span> 个个体的风险函数 <span class="math inline">\(h_i(t)\)</span> 可以建模为</p>
+<p><span class="math display" id="eq:8-10">\[\begin{align}
+h_i(t)=\exp\{\boldsymbol{\beta'x}_i+\alpha m_i(t)\}h_0(t)
+\tag{8.10}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是系数为 <span class="math inline">\(\boldsymbol \beta\)</span> 的基线解释变量向量，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。该模型显示了在时间 <span class="math inline">\(t\)</span> 发生事件的风险如何取决于 <span class="math inline">\(m_i(t)\)</span> 的值，即当时响应曲线的值。在该模型中，参数 <span class="math inline">\(\alpha\)</span> 是纵向变量值与时间 <span class="math inline">\(t\)</span> 处事件风险之间关联性的度量。该参数可以解释为当 <span class="math inline">\(m_i(t)\)</span>（第 <span class="math inline">\(i\)</span> 个个体的纵向变量在时间 <span class="math inline">\(t\)</span> 处的真实值）增加一个单位，在时间 <span class="math inline">\(t\)</span> 发生事件的调整的对数风险比。</p>
+<p>对于式 <a href="chap8.html#eq:8-10">(8.10)</a> 中的模型，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 对应的生存函数为</p>
+<p><span class="math display" id="eq:8-11">\[\begin{align}
+S_i(t)=\exp\left\{-\int_0^th_i(v)\mathrm{d}v\right\}=\exp\left\{-\int_0^t\exp\{\boldsymbol{\beta'x}_i+\alpha m_i(v)\}h_0(v)\mathrm{d}v\right\}
+\tag{8.11}
+\end{align}\]</span></p>
+<p>需要利用此式来构建生存模型的似然函数。为了计算该表达式中的积分，始终需要 <span class="math inline">\(m_i(t)\)</span> 直到时间 <span class="math inline">\(t\)</span> 的值。</p>
+<p>式 <a href="chap8.html#eq:8-10">(8.10)</a> 中的模型可以通过最大化联合似然 (joint likelihood) 来拟合，这是通过纵向变量和生存时间的模型导出的。这使得能够同时估计联合模型两个部分中的参数。概括地说，模型纵向部分的似然是从第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(n_i\)</span> 个纵向观测值 <span class="math inline">\(\boldsymbol y_i\)</span> 的联合分布中获得的。如果将相应的随机效应向量 <span class="math inline">\(\boldsymbol u_i\)</span> 视为固定的，那么 <span class="math inline">\(\boldsymbol y_i\)</span> 将具有一个多元正态分布，该分布是 <span class="math inline">\(\boldsymbol u_i\)</span> 和模型参数向量 <span class="math inline">\(\boldsymbol \phi\)</span> 的函数。这里，<span class="math inline">\(\boldsymbol \phi\)</span> 包括纵向模型中解释变量的系数（包括截距和与时间变量相关的项的系数），以及残差项的方差 <span class="math inline">\(\sigma_\epsilon^2\)</span>。第 <span class="math inline">\(i\)</span> 个个体相应的似然函数表示为 <span class="math inline">\(L_L(\boldsymbol{\phi}_L,\boldsymbol{u}_i)\)</span>。</p>
+<p>根据第 5 章的式 <a href="chap5.html#eq:5-15">(5.15)</a>，第 <span class="math inline">\(i\)</span> 个个体生存时间 <span class="math inline">\(t_i\)</span> 的似然函数为</p>
+<p><span class="math display">\[h_i(t_i)^{\delta_i}S_i(t_i)\]</span></p>
+<p>其中 <span class="math inline">\(\delta_i\)</span> 是事件指示符。第 <span class="math inline">\(i\)</span> 个个体的风险和生存函数可以根据式 <a href="chap8.html#eq:8-10">(8.10)</a> 和 <a href="chap8.html#eq:8-11">(8.11)</a> 得出。再次将 <span class="math inline">\(\boldsymbol u_i\)</span> 视为固定的，将该似然表示为 <span class="math inline">\(L_S(\boldsymbol{\phi}_S,\boldsymbol{u}_i)\)</span>，其中 <span class="math inline">\(\boldsymbol{\phi}_S\)</span> 是模型的参数向量。这包括生存模型中的解释变量系数、<span class="math inline">\(m_i(t)\)</span> 的系数 <span class="math inline">\(\alpha\)</span> 以及基线风险函数中的任何未知参数。</p>
+<p>第 <span class="math inline">\(i\)</span> 个个体的联合似然是两个似然函数 <span class="math inline">\(L_L(\boldsymbol{\phi}_L,\boldsymbol{u}_i)\)</span> 和 <span class="math inline">\(L_S(\boldsymbol{\phi}_S,\boldsymbol{u}_i)\)</span> 的乘积。现在，<span class="math inline">\(\boldsymbol u_i\)</span> 的分量是随机量，因此，我们需要对其概率分布进行积分，对所有可能的随机效应值求平均来得到这个联合似然函数。<span class="math inline">\(\boldsymbol u_i\)</span> 的联合密度函数记作 <span class="math inline">\(f(\boldsymbol{u}_i;\boldsymbol{\phi}_U)\)</span>，且 <span class="math inline">\(\boldsymbol u_i\)</span> 具有多元正态分布，均值为零，方差-协方差阵取决于向量 <span class="math inline">\(\boldsymbol{\phi}_U\)</span>，其中包含了 <span class="math inline">\(\boldsymbol u_i\)</span> 各分量的方差和协方差<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;… variance-covariance matrix that depends on the variances and covariances of the &lt;span class="math inline"&gt;\(\boldsymbol u_i\)&lt;/span&gt; in the vector &lt;span class="math inline"&gt;\(\boldsymbol{\phi}_U\)&lt;/span&gt;&lt;/p&gt;'><sup>4</sup></a>。那么 <span class="math inline">\(n\)</span> 个个体的集成似然函数 (integrated likelihood function) 为</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^n\int_{-\infty}^\infty L_L(\boldsymbol{\phi}_L,\boldsymbol{u}_i)L_S(\boldsymbol{\phi}_S,\boldsymbol{u}_i)f(\boldsymbol{u}_i;\boldsymbol{\phi}_U)\mathrm{d}\boldsymbol{u}_i\end{aligned}\]</span></p>
+<p>然后，通过最大化该函数的对数来得到未知模型参数的估计，这当然只能通过数值算法来实现。估计值的标准误可从信息矩阵中找到，如附录 <a href="A.html#A">A</a> 所述。在纵向或生存部分 (longitudinal or survival components) 中具有不同解释变量集的嵌套模型可按通常方式使用 <span class="math inline">\(-2\log \hat L\)</span> 统计量进行比较，而具有不同基线风险函数公式的非嵌套模型可使用 AIC 统计量进行比较。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-8" class="example"><strong>示例 8.8  (主动脉瓣置换术后的生存) </strong></span><br></p>
+<p>现在将联合模型应用<a href="chap8.html#exm:ex8-5">示例 8.5</a> 中的数据，该模型包含了接受心脏瓣膜置换术患者的死亡时间与左心室质量指数 (LVMI) 之间的依赖关系。最初，用于纵向变量 LVMI 的模型以及用于死亡风险的生存模型都将包含所有六个基线变量，即 <span class="math inline">\(Age, Sex, Redo, Emerg, DM\)</span> 和 <span class="math inline">\(Type\)</span>。</p>
+<p>LVMI 的纵向变量将通过使用指数和测量时间之间的直线关系进行建模，每个患者的随机截距和斜率可以是相关的。首先，如第 6 章 <a href="chap6.html#sec6-1">6.1</a> 节所述，在联合模型中使用 Cox 回归模型，拟合为分段指数模型，而不是使用偏似然方法。该联合模型中的参数估计及其标准误如表 8.11 所示。</p>
+<details><summary><font color="#8B2232">表 8.11</font>
+</summary><img src="figure/table%208.11.png#center" style="width:80.0%"></details><p><br>
+在纵向变量模型中，对 LVMI 有显著影响的唯一基线变量是性别（<span class="math inline">\(P &lt; 0.001\)</span>）和术前糖尿病（<span class="math inline">\(P = 0.081\)</span>）。平均而言，女性患者的指数值显著低于男性，且术前患有糖尿病的患者指数值更低。有轻微证据表明 LVMI 随着时间的推移而降低（<span class="math inline">\(P = 0.136\)</span>）。</p>
+<p>在生存模型中，年龄每增加一岁，死亡风险就会增加 11%（<span class="math inline">\(P &lt; 0.001\)</span>），但在基线测量的其他变量均不会显著影响患者的生存。给定时间的 LVMI 真实值与当时的死亡风险之间存在显著关联（<span class="math inline">\(P=0.001\)</span>），这是通过联合模型中参数 <span class="math inline">\(\alpha\)</span> 的估计来测量的。给定时间 LVMI 真实值增加 100 会导致该时间的死亡风险增加 <span class="math inline">\(\exp(100\hat{\alpha})=2.30\)</span>。</p>
+<p>从 <span class="math inline">\(u_{0i}\)</span> 和 <span class="math inline">\(u_{1i}\)</span> 的方差估计来看，即使考虑到基线变量造成的差异，截距之间也存在相当大的变异。斜率之间的变异不那么明显，并且远小于由测量误差导致的 LVMI 值的变异。在随机截距和斜率在个体内独立的模型中<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;On fitting models in which the random intercept and slope
+are independent within an individual.&lt;/p&gt;"><sup>5</sup></a>，<span class="math inline">\(-2\log\hat{L}\)</span> 统计量的值为 11094，这远大于表 8.11 中的 11069，这表明这些项确实是相关的。从表 8.11 中可以看出，随机截距和斜率之间存在负相关，其值约为 -0.6，因此最初指数值较高的患者的 LVMI 下降得更快。</p>
+<p>风险函数的 Cox 回归模型在每个事件时间本质上都有一个未知参数来描述基线风险函数。如第 6 章 <a href="chap6.html#sec6-1">6.1</a> 节所述，通过指定分割点的数量或位置来限制分割点的数目，可以找到一个更简约的模型。为了便于说明，将拟合具有五个分割点的分段模型，结果也在表 8.11 中给出。所得参数估计及其标准误差，以及方差分量估计，与使用 Cox 回归模型对联合模型的生存部分进行建模时得到的结果非常相似。</p>
+<p>全参数模型可以以类似的方式拟合，基线风险函数的 Weibull 模型拟合结果也如表 8.11 所示。该模型参数化为比例风险模型，因此基线风险函数为 <span class="math inline">\(\lambda\gamma t^{\boldsymbol{\gamma-}1}\)</span>。同样，系数估计与其他两个拟合模型所得系数估计相似，但此时风险是时间的平滑函数，而不是阶跃函数。</p>
+<p>比较三个拟合模型的 <span class="math inline">\(-2\log\hat{L}\)</span> 和 AIC 统计量的值，我们发现 Weibull 模型的 AIC 值最小。具有五个分割点的分段指数模型具有最小的<span class="math inline">\(-2\log\hat{L}\)</span> 值，但该模型需要六个参数来指定基线风险，而 Weibull 模型只需要两个参数，因此后者 AIC 统计量的值更小。</p>
+</div>
+</div>
+</div>
+<div id="sec8-7-3" class="section level3" number="8.7.3">
+<h3>
+<span class="header-section-number">8.7.3</span> 联合模型的一些扩展<a class="anchor" aria-label="anchor" href="#sec8-7-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>有多种方法可以扩展纵向数据和生存数据的联合模型。纵向模型线性部分中的时间变量可以建模为多项式或样条项，以便捕获总体时间趋势中的非线性行为。基线测量的一个或多个因素与纵向变量之间的交互作用也可以包括在内，以允许变量真实水平的效应在不同个体组之间变化，例如不同年龄的个体组。</p>
+<p>第 <a href="chap6.html#chap6">6</a> 章描述并举例说明了基于 B 样条的对数基线风险函数和基于限制性立方样条的对数累积风险函数的灵活模型。这些模型也可用于联合模型的生存部分。</p>
+<p>在式 <a href="chap8.html#eq:8-10">(8.10)</a> 给出的联合模型中，纵向变量在时间 <span class="math inline">\(t\)</span> 的真实潜在值 <span class="math inline">\(m_i(t)\)</span> 具有系数 <span class="math inline">\(\alpha\)</span>。该系数总结了给定时间纵向变量值与该时间发生事件的风险之间的关联。作为一个明显的扩展，<span class="math inline">\(\alpha\)</span> 可以取决于某些基线变量的值，从而开发这样的模型：纵向响应以取决于个体基线特征的方式影响生存。</p>
+<p>在式 <a href="chap8.html#eq:8-10">(8.10)</a> 的模型中，纵向变量的当前值影响事件的当前风险。这有时是不合理的，因为纵向变量达到临界值与事件实际发生之间可能存在一段时间间隔。为了适应这种情况，可以采用时间滞后 (time lagged) 纵向变量的方法，使得时间 <span class="math inline">\(t\)</span> 处事件的风险取决于较早时间 <span class="math inline">\(t−k\)</span> 处变量的值。所得模型为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp\left\{\boldsymbol{\beta'x}_i+\alpha m_i(t-k)\right\}h_0(t)\end{aligned}\]</span></p>
+<p>其中当 <span class="math inline">\(t&lt;k\)</span> 时使用 <span class="math inline">\(m_i(0)\)</span>。</p>
+<p>纵向变量在给定时间的轨迹的斜率也可能影响当时事件的风险。轨迹在时间 <span class="math inline">\(t\)</span> 处的斜率是函数 <span class="math inline">\(m(t)\)</span> 关于 <span class="math inline">\(t\)</span> 的导数 <span class="math inline">\(m'(t)\)</span>，并且也可纳入联合模型</p>
+<p><span class="math display">\[h_i(t)=\exp\left\{\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i+\alpha_1m_i(t)+\alpha_2m_i^{\prime}(t)\right\}h_0(t)\]</span></p>
+<p>在该模型中，<span class="math inline">\(\alpha_2\)</span> 测量 <span class="math inline">\(t\)</span> 处事件的风险与纵向变量当时真实轨迹的斜率（或变化率）之间的关联，从而考虑到纵向变量值与当时的风险之间的关联。</p>
+<p>生存过程的风险函数也可以取决于截至时间 <span class="math inline">\(t\)</span> 的纵向变量的历史。这可以使用截至该时间的纵向变量轨迹下面积 (area under the trajectory) 来总结，该面积是纵向变量的积分。时间 <span class="math inline">\(t\)</span> 处事件风险的联合模型是</p>
+<p><span class="math display">\[h_i(t)=\exp\left\{\boldsymbol{\beta'x}_i+\alpha\int_0^tm_i(v)\mathrm{d}v\right\}h_0(t)\]</span></p>
+<p>现在 <span class="math inline">\(\alpha\)</span> 度量时间 <span class="math inline">\(t\)</span> 处事件的风险与该时间纵向变量轨迹下面积之间的关联强度。</p>
+<p>还有许多其他可能的扩展，但纵向数据建模的完整处理超出了本书的范围。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex8-9" class="example"><strong>示例 8.9  (主动脉瓣置换术后的生存) </strong></span><br></p>
+<p>在本例中，将使用<a href="chap8.html#exm:ex8-5">示例 8.5</a> 中首次给出的主动脉瓣置换术后死亡时间数据来说明纵向和生存数据联合模型的一些扩展。在<a href="chap8.html#exm:ex8-8">示例 8.8</a> 中，发现模型的纵向和生存部分中的许多基线变量不显著。因此，在本例中我们将以一个联合模型为基础，在该模型中，纵向响应取决于患者的性别和术前糖尿病状况，而生存部分仅取决于患者年龄。第 <span class="math inline">\(i\)</span> 名患者 LVMI 值在时间 <span class="math inline">\(t\)</span> 处的纵向模型 <span class="math inline">\(y_i(t)\)</span> 可以表示为</p>
+<p><span class="math display">\[\begin{aligned}y_i(t)=m_i(t)+\epsilon_i(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(m_i(t)\)</span> 是纵向变量在时间 <span class="math inline">\(t\)</span> 的真实但不可观测的值，由下式给出</p>
+<p><span class="math display" id="eq:8-12">\[\begin{align}
+m_i(t)=\beta_0+\beta_1t+u_{0i}+u_{1i}t+\beta_{11}s_i+\beta_{12}d_i
+\tag{8.12}
+\end{align}\]</span></p>
+<p><span class="math inline">\(s_i\)</span> 和 <span class="math inline">\(d_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体基线变量 <span class="math inline">\(Sex\)</span> 和 <span class="math inline">\(DM\)</span> 的值，系数分别为 <span class="math inline">\(\beta_{11}\)</span> 和 <span class="math inline">\(\beta_{12}\)</span>。此外，<span class="math inline">\(u_{0i}\)</span> 是分布于 <span class="math inline">\(N(0,\sigma_0^2)\)</span> 的随机截距，<span class="math inline">\(u_{1i}\)</span> 是分布于 <span class="math inline">\(N(0,\sigma_1^2)\)</span> 的随机斜率。目前，我们假设每个个体的随机截距和斜率具有相关系数 <span class="math inline">\(\rho=\text{corr}\left(u_{0i},u_{1i}\right)\)</span>。</p>
+<p>时间 <span class="math inline">\(t\)</span> 时死亡风险的联合模型为</p>
+<p><span class="math display">\[h_i(t)=\exp\{\beta_{13}a_i+\alpha m_i(t)\}h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(a_i\)</span> 是第 <span class="math inline">\(i\)</span> 个患者的年龄，系数为 <span class="math inline">\(\beta_{13}\)</span>，<span class="math inline">\(m_i(t)\)</span> 由式 <a href="chap8.html#eq:8-12">(8.12)</a> 给出，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。</p>
+<p>在本示例中，将使用灵活的生存时间参数模型，其中使用三次 B 样条对基线风险函数的对数进行建模。该模型在第 6 章 <a href="chap6.html#sec6-3">6.3</a> 节进行了描述，根据式 <a href="chap6.html#eq:6-10">(6.10)</a>，具有 <span class="math inline">\(m\)</span> 个内部结的样条函数的基线风险由下式给出：</p>
+<p><span class="math display" id="eq:8-13">\[\begin{align}
+\operatorname{log}h_0(t)=\sum_{j=1}^{m+4}\gamma_jB_{j,3}(t)
+\tag{8.13}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\gamma_j\)</span> 是第 <span class="math inline">\(j\)</span> 个立方样条基函数 <span class="math inline">\(B_{j,3}(t)\)</span> 的系数，由式 <a href="chap6.html#eq:6-6">(6.6)</a> 中的递归关系定义。该基线风险函数有 <span class="math inline">\(m+ 4\)</span> 个未知 <span class="math inline">\(\gamma\)</span> 参数。</p>
+<p>在拟合基线风险函数具有不断增加的内部结数的联合模型时，在事件时间的等间距百分位数上具有 <span class="math inline">\(m = 5\)</span> 个结的模型具有最小的 AIC 统计量值，为 10913. 该模型中解释变量的系数与根据基线风险函数其他公式获得的系数非常相似。拟合模型所得第 <span class="math inline">\(i\)</span> 名患者的 LVMI 的总体估计值为</p>
+<p><span class="math display">\[\begin{aligned}\hat{m}_i(t)=175.09-1.41t-29.64s_i-20.93d_i+\hat{u}_{0i}+\hat{u}_{1i}t\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{u}_{0i}\)</span> 和 <span class="math inline">\(\hat{u}_{1i}\)</span> 是与截距和斜率相关的个体随机效应估计。联合模型的风险函数估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\exp\{0.0857a_i+0.0051\hat{m}_i(t)\}\hat{h}_0(t)\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(\hat h_0(t)\)</span> 是式 <a href="chap8.html#eq:8-13">(8.13)</a> 中基线风险函数的估计值。如表 8.11 所示，该模型 <span class="math inline">\(\hat m_i(t)\)</span> 的系数估计与<a href="chap8.html#exm:ex8-8">示例 8.8</a> 中其他模型的系数估计相似。</p>
+<p>LVMI 与时间之间关系的斜率可能取决于患者的性别和术前状态。添加时间和性别之间的交互作用并不能显著提高模型的拟合度（<span class="math inline">\(P=0.75\)</span>），糖尿病和时间之间的交互作用也如此（<span class="math inline">\(P=0.37\)</span>）。</p>
+<p>下一步是扩展纵向变量的模型，以允许其与时间建立曲线关系。例如，时间的二次函数可以包含在模型中</p>
+<p><span class="math display">\[\begin{aligned}m_i(t)=\beta_0+\beta_1t+\beta_2t^2+u_{0i}+u_{1i}t+u_{2i}t^2+\beta_{11}s_i+\beta_{12}d_i\end{aligned}\]</span></p>
+<p>其中时间的线性和二次效应的系数是正态分布随机变量。当存在许多随机效应时，很难估计所有的协方差项，因此我们从此处开始将随机效应视为不相关的。将 <span class="math inline">\(m_i(t)\)</span> 的这个二次表达式与具有五个内部结的对数基线风险函数的 B 样条模型相结合，所得 AIC 值为 10926. 这可与具有不相关随机效应的直线模型的 AIC 统计量进行比较，后者为 10934. 时间的三次函数稍微改进了拟合，AIC 值为 10920.</p>
+<p>正如第 3 章 <a href="chap3.html#sec3-8-2">3.8.2</a> 节所述，多项式函数在数据范围之外可能表现不佳，而时间样条函数可能会改进拟合。这里，在此我们将对纵向变量 LVMI 使用具有 <span class="math inline">\(k\)</span> 个内部结的时间的限制性立方样条函数，如此一来，样条函数在边界结之外是线性的。限制性立方样条在第 6 章 <a href="chap6.html#sec6-2-2">6.2.2</a> 节进行了描述。</p>
+<p>现在我们拟合了一个联合模型，其中基线风险的对数采用 B 样条来表示，而纵向变量 LVMI 则采用时间的限制性立方样条函数来刻画<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;A joint model, with a B-spline representation of the logarithm of the baseline hazard, and a restricted cubic spline function of time for the longitudinal variable, LVMI, is now fitted.&lt;/p&gt;"><sup>6</sup></a>。事实证明，通过具有四个内部结的样条曲线对时间效应进行建模并不能显著提高具有三个内部结的模型的拟合度，因此采用了后者模型。对于该模型，AIC 统计量为 10885. 这比 LVMI 是时间的三次函数模型的相应 AIC 值小得多。</p>
+<p>样条曲线模型非常灵活，但很难在代数上解释。因此，我们将以图形方式比较 LVMI 与时间之间关系的一些拟合模型。图 8.9 显示了死亡风险联合模型中时间的函数估计。</p>
+<details><summary><font color="#8B2232">图 8.9</font>
+</summary><img src="figure/figure%208.9.png#center" style="width:80.0%"></details><p><br>
+该图涉及术前没有糖尿病的男性患者，显示了 <span class="math inline">\(m_i(t)\)</span> 的总体预期值估计，例如，对于二次模型，由 <span class="math inline">\(\hat{m}_{{i}}(t)=\hat{\beta}_0+\hat{\beta}_1t+\hat{\beta}_2t^2\)</span> 给出，对于其他模型也类似。图 8.9 还显示了拟合的限制性立方样条函数的 95% 置信带估计。</p>
+<p>虽然具有相关斜率的模型中的截距略大于具有不相关斜率的模型，但具有不相关和相关随机效应的直线模型彼此非常相似。三次纵向模型比两个直线模型和二次模型拟合得更好，并且与立方样条具有相似的模式，这是尝试过的最佳拟合模型。所有拟合模型的轨迹都包含在拟合样条函数的 95% 置信带内，因此很难区分它们。然而，从拟合的样条曲线来看，在主动脉瓣置换术后的两年内，LVMI 的值确实有所下降，但此后趋于稳定或可能增加。</p>
+<p>最后，我们将考察联合模型中给定时间的死亡风险是否取决于当时 LVMI 值纵向轨迹的斜率，或是否取决于截至那时的指数累积值。与立方样条项相比，对时间的多项式函数进行微分或积分更简单，由于三次多项式的拟合与立方样条模型的拟合没有太大区别，我们将在本图中使用该模型。</p>
+<p>第 <span class="math inline">\(i\)</span> 个患者在时间 <span class="math inline">\(t\)</span> 处的三次轨迹的斜率由下式关于 <span class="math inline">\(t\)</span> 的导数获得</p>
+<p><span class="math display">\[\begin{aligned}m_i(t)=\beta_0+\beta_1t+\beta_2t^2++\beta_3t^3+u_{0i}+u_{1i}t+u_{2i}t^2+u_{3i}t^3\end{aligned}\]</span></p>
+<p>这得到</p>
+<p><span class="math display">\[\begin{aligned}m_i'(t)=\beta_1+2\beta_2t+3\beta_3t^2+u_{1i}+2u_{2i}t+3u_{3i}t^2\end{aligned}\]</span></p>
+<p>LVMI 在 <span class="math inline">\(t\)</span> 处的累积效应是 <span class="math inline">\(m_i(t)\)</span> 的积分，由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\int_0^tm_i(v)\mathrm{d}v&amp;=\beta_0t+\beta_1\frac{t^2}2+\beta_2\frac{t^3}3+\beta_3\frac{t^4}4+u_{0i}t+u_{1i}\frac{t^2}2+u_{2i}\frac{t^3}3+u_{3i}\frac{t^4}4\end{aligned}\]</span></p>
+<p>除了项 <span class="math inline">\(m_i(t)\)</span> 之外，还将斜率纳入联合模型，得到</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp\{\beta_{13}a_i+\alpha_1m_i(t)+\alpha_2m_i'(t)\}h_0(t)\end{aligned}\]</span></p>
+<p>拟合该模型后，我们发现 <span class="math inline">\(\alpha_2\)</span> 的估计值为 0.0018，标准误为 0.0488（<span class="math inline">\(P=0.97\)</span>）。在考虑了给定时间的 LVMI 对当时死亡风险的效应后，LVMI 轨迹的斜率对死亡风险没有显著影响。</p>
+<p>为了对 LVMI 的累积效应而不是其在 <span class="math inline">\(t\)</span> 时的值进行建模，联合模型需包括 <span class="math inline">\(m_i(t)\)</span> 的积分，即</p>
+<p><span class="math display">\[h_i(t)=\exp\{\beta_{13}a_i+\alpha\int_0^tm_i(v)\mathrm{d}v\}h_0(t)\]</span></p>
+<p>拟合该模型后，<span class="math inline">\(\hat\alpha = 0.0008\)</span>，标准误为 0.0006，这并不显著（<span class="math inline">\(P = 0.21\)</span>）。该模型的 AIC 统计量为 10927，这大于包含 LVMI 在时间 <span class="math inline">\(t\)</span> 处的效应的三次模型的相应值 (10920). 没有证据表明给定时间的死亡风险取决于截止那时的 LVMI 的累计值。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec8-8" class="section level2" number="8.8">
+<h2>
+<span class="header-section-number">8.8</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec8-8"><i class="fas fa-link"></i></a>
+</h2>
+<p>Cox (1972) 提出了将时间相关变量纳入比例风险模型的可能性。在他的论文中给出了合适的偏似然函数，并在 Cox (1975) 中进行了更详细的讨论。Kalbfleisch and Prentice (2002) 详细介绍了偏似然函数的构造。<a href="chap8.html#sec8-1">8.1</a> 节中概述的时依变量的分类是由 Prentice and Kalbfleisch (1979) 提出的，他们在 Kalbfleich and Prentice (2002) 中对此进行了详细阐述。Andersen (1992) 回顾了生存分析中时依变量的使用，其中包括一个实例（<a href="chap8.html#exm:ex8-4">示例 8.4</a> 的假设研究大致基于该实例）。Therneau and Grambsch (2000) 以及 Therneau (2022) 描述了在使用时依变量时的一些实际的考虑和常见的误解。</p>
+<p>Altman and De Stavola (1994)讨论了在分析具有时依变量生存数据时遇到的一些实际问题。还提供了对原发性胆汁性肝硬化数据的全面分析，包括对条件生存概率的评估。参见 Christensen et al. (1986) 的进一步说明。Klein and Moeschberger (2005) 给出了骨髓移植后生存情况的完整数据集（其中部分数据在<a href="chap8.html#exm:ex8-2">示例 8.2</a> 中使用），并在许多详细的说明性示例中使用了这些数据集。</p>
+<p>Crowley and Hu (1977) 以及 Cox and Oakes (1984) 在对“斯坦福心脏移植数据”的分析中提出了 <a href="chap8.html#sec8-4">8.4</a> 节描述的与器官移植相关的模型。Crowley and Hu (1977) 给出了这一著名的数据集，Cox and Oakes (1984) 提供了更新。另见 Aitkin, Laird and Francis (1983) 以及随后的讨论。</p>
+<p>相对而言，将时依变量纳入生存数据的全参数模型的工作做得很少。然而，Petersen (1986) 展示了如何拟合具有时依变量的参数模型。第 6 章 <a href="chap6.html#sec6-4">6.4</a> 节描述的 Royston and Parmar 模型，可以通过添加潜在时依变量与第 6 章式 <a href="chap6.html#eq:6-11">(6.11)</a> 的基线累积风险函数中样条变量 <span class="math inline">\(\nu_1(y),\nu_2(y),\ldots\)</span> 的交互作用，将其扩展为包含时依变量<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;The Royston and Parmar model, described in Section 6.4 of Chapter 6, can be extended to include time-dependent variables by adding an interaction between potential time-dependent variables and the spline variables, &lt;span class="math inline"&gt;\(\nu_1(y),\nu_2(y),\ldots\)&lt;/span&gt;, in the baseline cumulative hazard function of Equation (6.11) of Chapter 6.&lt;/p&gt;'><sup>7</sup></a>。</p>
+<p>许多文献描述了用于纵向数据分析的混合模型，包括 Crowder and Hand (1990), Diggle et al. (2002), Fitzmaurice, Laird and Ware (2011), Hand and Crowder (1996), Hedeker and Gibbons (2006), Molenberghs and Verbeke (2005), Verbeke and Molenbergh (2000) 以及 Weiss (2010). Rizopoulos (2012) 是关于纵向和事件时间数据联合建模的一个关键文本，他总结了这一理论并使用 R 软件提供了许多实际说明。Elashoff, Li and Li (2017) 还通过临床研究的例子介绍了建模的理论和实践。综述论文包括 Tsiatis and Davidian (2004), Tseng, Hsieh and Wang (2005), Mcrink, Marshall and Cairns (2013) 以及 Ritchie, Kalra and Diggle (2015). Henderson, Diggle and Dobson (2000) 描述了用于联合建模的一类通用模型，并说明了一些特定模型，Crowther, Abrams and Lambert (2012) 描述了用于联合建模的灵活参数模型。Crowther et al. (2016) 展示了如何纳入延迟进入 (delayed entry) 或左截尾 (left truncation)，并研究了错误指定纵向轨迹的后果。Long and Mills (2018) 展示了联合模型在亨廷顿舞蹈症研究中的应用。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></div>
+<div class="next"><a href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap8"><span class="header-section-number">8</span> 时依变量</a></li>
+<li>
+<a class="nav-link" href="#sec8-1"><span class="header-section-number">8.1</span> 时依变量的类型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec8-1-1"><span class="header-section-number">8.1.1</span> 时依系数</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec8-2"><span class="header-section-number">8.2</span> 时依变量的建模</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec8-2-1"><span class="header-section-number">8.2.1</span> 拟合含时依变量的模型</a></li></ul>
+</li>
+<li><a class="nav-link" href="#sec8-3"><span class="header-section-number">8.3</span> 时依变量的编码</a></li>
+<li><a class="nav-link" href="#sec8-4"><span class="header-section-number">8.4</span> 累积风险函数和生存函数的估计</a></li>
+<li>
+<a class="nav-link" href="#sec8-5"><span class="header-section-number">8.5</span> 模型比较和验证</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec8-5-1"><span class="header-section-number">8.5.1</span> 治疗的比较</a></li>
+<li><a class="nav-link" href="#sec8-5-2"><span class="header-section-number">8.5.2</span> 评估模型的充分性</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec8-6"><span class="header-section-number">8.6</span> 时依变量的一些应用</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec8-6-1"><span class="header-section-number">8.6.1</span> 一些例子</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec8-7"><span class="header-section-number">8.7</span> 纵向数据和生存数据的联合建模</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec8-7-1"><span class="header-section-number">8.7.1</span> 纵向建模</a></li>
+<li><a class="nav-link" href="#sec8-7-2"><span class="header-section-number">8.7.2</span> 联合模型</a></li>
+<li><a class="nav-link" href="#sec8-7-3"><span class="header-section-number">8.7.3</span> 联合模型的一些扩展</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec8-8"><span class="header-section-number">8.8</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

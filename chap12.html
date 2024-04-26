@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 12 章 竞争风险 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="在以死亡为结局的研究中，个体可能死于多种不同原因之一。例如，在比较两种或多种前列腺癌疗法的研究中，患者可能死于中风、心肌梗塞或癌症本身。在某些情况下，对所有原因造成的死亡进行分析可能是适当的，并且可以使用生存分析的标准方法。...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 12 章 竞争风险 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="在以死亡为结局的研究中，个体可能死于多种不同原因之一。例如，在比较两种或多种前列腺癌疗法的研究中，患者可能死于中风、心肌梗塞或癌症本身。在某些情况下，对所有原因造成的死亡进行分析可能是适当的，并且可以使用生存分析的标准方法。...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 12 章 竞争风险 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="在以死亡为结局的研究中，个体可能死于多种不同原因之一。例如，在比较两种或多种前列腺癌疗法的研究中，患者可能死于中风、心肌梗塞或癌症本身。在某些情况下，对所有原因造成的死亡进行分析可能是适当的，并且可以使用生存分析的标准方法。...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="active" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap12" class="section level1" number="12">
+<h1>
+<span class="header-section-number">第 12 章</span> 竞争风险<a class="anchor" aria-label="anchor" href="#chap12"><i class="fas fa-link"></i></a>
+</h1>
+<p>在以死亡为结局的研究中，个体可能死于多种不同原因之一。例如，在比较两种或多种前列腺癌疗法的研究中，患者可能死于中风、心肌梗塞或癌症本身。在某些情况下，对所有原因造成的死亡进行分析可能是适当的，并且可以使用生存分析的标准方法。
+更常见的是，人们会对不同原因导致的死亡风险如何取决于治疗效应和其他解释变量感兴趣。当然，由其中任何一种原因导致的死亡都排除了由任何其他原因导致的死亡，这一特征对于此类数据的分析具有重要意义。
+在本章中，我们回顾了总结不同死因生存时间数据的方法，并描述了<strong>原因别</strong> (cause-specific) 生存数据的模型。</p>
+<div id="sec12-1" class="section level2" number="12.1">
+<h2>
+<span class="header-section-number">12.1</span> 竞争风险的介绍<a class="anchor" aria-label="anchor" href="#sec12-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>个体面临着多种死亡的风险。这些风险竞相成为死亡的实际原因，这就产生了所谓的<strong>竞争风险</strong> (competing risks) 的情况，在这种情况下，竞争风险阻碍了特别关注的事件的发生。更一般地说，当一个可能经历多个不同终点之一，若其中一个事件发生，则会阻碍或消除其他终点发生的可能性，这些情况适用“竞争风险”这一术语。</p>
+<p>此类数据出现在许多应用领域中。例如，在癌症临床试验中，我们可能对特定癌症导致的死亡感兴趣，而心肌梗塞或中风等事件是竞争风险。一项涉及动物暴露于可能致癌物质的研究可能会导致暴露的动物死于不同的癌症，考虑到相互竞争的死因，每种死因可能都是令人感兴趣的。在白血病患者骨髓移植后的结果的研究中，可能的终点可能是出院、复发、移植物抗宿主病或死亡的发生，所关注的是在存在其他风险的情况下，各种因素如何影响每种事件的发生时间。</p>
+<p>在有多个终点的情况下，数据分析可能有多个目标。例如，在存在竞争风险的情况下，确定哪些因素与特定终点相关可能很重要。考虑到可能的竞争原因，可能还需要估计这些因素对原因别死亡风险的影响。在其他情况下，比较不同死因的存活时间，以确定导致事件发生时间提前或推迟的原因是很有意义的。可能还需要对不同终点的某些因素的风险比估计的一致性进行评估。下面是一个具有多个终点的数据集示例。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-1" class="example"><strong>示例 12.1  (肝移植受体的生存) </strong></span><br></p>
+<p>许多情况会导致肝脏衰竭，唯一可能的治疗方法是肝移植。移植通常非常有效，成年移植受体的中位生存时间现在已经超过 12 年。然而，肝移植后，移植物可能因急性或慢性器官排异反应、肝动脉血栓形成、复发性疾病或其他原因而衰竭。本例基于 1761 名成年患者从肝移植到移植物衰竭的时间，这些患者在 2000 年 1 月至 2010 年 12 月期间首次对已故捐赠者的器官进行了选择性移植，并随访至 2012 年底。这些数据涉及三种特殊肝病的移植患者，即原发性胆汁性肝硬化 (PBC)、原发性硬化性胆管炎 (PSC) 和酒精性肝病 (ALD). 除了移植物生存时间外，还提供了患者的年龄和性别（1 = 男性，2 = 女性）、原发性肝病和移植物衰竭原因（0 = 正常工作的移植物，1 = 排异反应，2 = 血栓，3 = 复发性疾病，4 = 其他）的信息。由于移植非常成功，这些数据显示出严重的删失，只有 261 名（15%）患者经历了移植物衰竭，另有 211 人在移植物功能正常的情况下死亡。后者群体的失效时间在他们去世时删失。表 12.1 给出了数据集的前 20 个观测。</p>
+<details><summary><font color="#8B2232">表 12.1</font>
+</summary><img src="figure/table%2012.1.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec12-2" class="section level2" number="12.2">
+<h2>
+<span class="header-section-number">12.2</span> 总结竞争风险数据<a class="anchor" aria-label="anchor" href="#sec12-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>在标准生存分析中，我们观察与生存时间相关的随机变量 <span class="math inline">\(T\)</span>。此外，还会有一个事件指示符，指示终点是否实际发生或观测时间是否已删失。当存在竞争风险时，事件指示符会扩展以涵盖不同的可能终点。因此，所得数据是生存时间 <span class="math inline">\(T\)</span> 和原因 <span class="math inline">\(C\)</span>。那么，给定个体的数据是 <span class="math inline">\((T,C)\)</span> 的观测，我们将第 <span class="math inline">\(i\)</span> 个个体的数据记作 <span class="math inline">\((t_i, c_i),i = 1, 2,...,n\)</span>，其中 <span class="math inline">\(c_i\)</span> 的可能值为 <span class="math inline">\(0, 1, 2,...,m\)</span>，并且当未观察到终点时 <span class="math inline">\(c_i = 0\)</span>。</p>
+<p>从数据中，我们知道个体 <span class="math inline">\(i\)</span> 在时间 <span class="math inline">\(t_i\)</span> 之前，第 <span class="math inline">\(j(j=1,2,\ldots,m)\)</span> 个原因尚未发生。例如，某个特定原因，例如第 <span class="math inline">\(j\)</span> 个，在时间 <span class="math inline">\(t_i\)</span> 发生，如果第 <span class="math inline">\(j\)</span> 个原因没有发生，那么所有其他潜在原因可能在时间 <span class="math inline">\(t_i\)</span> 之后发生。由于我们不知道哪个原因可能在何时发生，估计原因别生存函数（即特定终点在任何时间 <span class="math inline">\(t\)</span> 之后发生的概率）可能会遇到困难。</p>
+<div id="sec12-2-1" class="section level3" number="12.2.1">
+<h3>
+<span class="header-section-number">12.2.1</span> 生存函数的 Kaplan-Meier 估计<a class="anchor" aria-label="anchor" href="#sec12-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>为了总结竞争风险数据，我们可以考虑对每种原因使用单独的生存函数估计。这将涉及依次使用每个感兴趣原因的事件时间，将所有其他原因的事件次数视为删失。这是合理的，因为如果观察到特定的终点，在此之前就不可能发生其他死因。而如果没有发生这个特定的终点，其他原因可能会在以后发生。以这种形式表达的数据称为原因别生存数据。然而，使用生存函数的 Kaplan-Meier 估计来总结此类数据存在缺陷，如以下示例所示。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-2" class="example"><strong>示例 12.2  (肝移植受体的生存) </strong></span><br></p>
+<p>表 12.2 中给出了来自<a href="chap12.html#exm:ex12-1">示例 12.1</a> 使用的数据集中的 8 名患者的移植失败时间和失效原因的数据。</p>
+<details><summary><font color="#8B2232">表 12.2</font>
+</summary><img src="figure/table%2012.2.png#center" style="width:80.0%"></details><p><br>
+用于构建患有移植排异和血栓形成的患者的生存函数的数据集如下，其中星号（*）表示删失观测。对于排异反应引起的失效，移植物生存时间为：</p>
+<p><span class="math display">\[\begin{aligned}18\quad27^*\quad63^*\quad80\quad143^*\quad255^*\quad294\quad370\end{aligned}\]</span></p>
+<p>对于血栓引起的失效，移植物生存时间为：</p>
+<p><span class="math display">\[\begin{aligned}18^*\quad27\quad63\quad80^*\quad143\quad255\quad294^*\quad370^*\end{aligned}\]</span></p>
+<p>生存函数的 Kaplan-Meier 估计可根据原因别生存时间计算，并得出表 12.3 所示的估计。</p>
+<details><summary><font color="#8B2232">表 12.3</font>
+</summary><img src="figure/table%2012.3.png#center" style="width:80.0%"></details><p><br>
+根据该表中的生存函数估计，在 370 天期间因排异反应导致移植失败的概率为 1.000，因血栓导致移植失败的概率为 1 − 0.357 = 0.643. 然而，这 8 名患者中有一半在 370 天内因排异反应导致移植失败，另一半则因血栓形成而失效。因此，每种情况下 370 天时的生存函数应为 0.5。此外，在 370 天后不论是由于排异还是血栓形成导致移植失败的概率都应该是 0，因为那时所有 8 名患者均已失效，而不是 Kaplan-Meier 估计给出的 <span class="math inline">\(1 − (1 + 0.643)\)</span>。</p>
+</div>
+</div>
+<p>这个简单的例子表明，当存在竞争风险时，Kaplan-Meier 估计并不能对生存数据进行适当的总结。那么 Kaplan-Meier 估计在估计什么呢？考虑对第 <span class="math inline">\(j\)</span> 个原因的 Kaplan-Meier 估计，其中来自其他原因的事件时间视为删失。如果原因 <span class="math inline">\(j\)</span> 是唯一的死亡原因，即所有其他风险均已消除，则 Kaplan-Meier 估计是在时间 <span class="math inline">\(t\)</span> 后死亡的概率。因此，该估计没有适当考虑其他原因造成的竞争风险。此外，Kaplan-Meier 估计假定个体最终会因任何给定的原因死亡，因此没有考虑到某个特定死因可能永远不会发生的情况。一般来说，与<a href="chap12.html#exm:ex12-2">示例 12.2</a> 一样，Kaplan-Meier 估计的补集会高估某一特定事件的发生率，因此，在竞争风险的背景下，这一估计很少具有有意义的解释。</p>
+</div>
+</div>
+<div id="sec12-3" class="section level2" number="12.3">
+<h2>
+<span class="header-section-number">12.3</span> 风险和累积发生率函数<a class="anchor" aria-label="anchor" href="#sec12-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>本节介绍了在竞争风险背景下特别有用的两个函数，即不同事件类型的风险函数和<strong>累积发生率函数</strong> (cumulative incidence function).</p>
+<div id="sec12-3-1" class="section level3" number="12.3.1">
+<h3>
+<span class="header-section-number">12.3.1</span> 原因别风险函数<a class="anchor" aria-label="anchor" href="#sec12-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>第 <span class="math inline">\(j(j=1,2,\ldots,m)\)</span> 个原因的<strong>原因别风险函数</strong> (cause-specific hazard function) <span class="math inline">\(h_j(t)\)</span> 定义为</p>
+<p><span class="math display" id="eq:12-1">\[\begin{align}
+h_j(t)=\lim_{\delta t\to0}\left\{\frac{\text{P}(t\leqslant T\leqslant t+\delta t,C=j\mid T\geqslant t)}{\delta t}\right\}
+\tag{12.1}
+\end{align}\]</span></p>
+<p>该风险函数是在存在所有其他风险的情况下，第 <span class="math inline">\(j\)</span> 个原因在时间 <span class="math inline">\(t\)</span> 的瞬时失效率。</p>
+<p>根据式 <a href="chap12.html#eq:12-1">(12.1)</a> 中 <span class="math inline">\(h_j(t)\)</span> 的定义，并遵循用于推导第 1 章式 <a href="chap1.html#eq:1-4">(1.4)</a> 的方法，我们得出</p>
+<p><span class="math display">\[\begin{aligned}
+h_{j}(t)&amp; =\lim_{\delta t\to0}\left\{\frac{\mathrm{P}(t\leqslant T\leqslant t+\delta t,C=j)}{\delta t\mathrm{P}(T\geqslant t)}\right\}  \\
+&amp;=\frac1{\mathrm{P}(T\geqslant t)}\lim_{\delta t\to0}\left\{\frac{\mathrm{P}(t\leqslant T\leqslant t+\delta t,C=j)}{\delta t}\right\}
+\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display" id="eq:12-2">\[\begin{align}
+h_{{j}}(t)=\frac{f_{{j}}(t)}{S(t)}
+\tag{12.2}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(f_j (t)\)</span> 是原因别密度函数，<span class="math inline">\(S(t) = \text{P}(T \ge t)\)</span> 是总生存函数。</p>
+<p>由于 <span class="math inline">\(m\)</span> 个可能的原因中只有一个会导致事件发生，则</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(t\leqslant T\leqslant t+\delta t\mid T\geqslant t)&amp;=\sum_{j=1}^m\text{P}(t\leqslant T\leqslant t+\delta t,C=j\mid T\geqslant t)\end{aligned}\]</span></p>
+<p>然后，使用式 <a href="chap12.html#eq:12-1">(12.1)</a> 中原因别风险的定义，总风险函数为 <span class="math inline">\(h(t)=\sum_{j=1}^mh_j(t)\)</span>。类似地，总累积风险函数为 <span class="math inline">\(H(t)=\sum_{j=1}^mH_j(t)\)</span>，其中 <span class="math inline">\(H_j(t)\)</span> 是第 <span class="math inline">\(j\)</span> 个原因的累积风险函数。那么总生存函数为</p>
+<p><span class="math display" id="eq:12-3">\[\begin{align}
+S(t)=\exp\left\{-\sum_{j=1}^mH_j(t)\right\}
+\tag{12.3}
+\end{align}\]</span></p>
+<p>虽然 <span class="math inline">\(S(t)\)</span> 也可以表达为</p>
+<p><span class="math display">\[S(t)=\prod_{j=1}^mS_j^\dagger(t)\]</span></p>
+<p>其中 <span class="math inline">\(S_j^\dagger(t)=\exp\{-H_j(t)\}\)</span>，但 <span class="math inline">\(S_j^\dagger(t)\)</span> 不是一个可观测生存函数。这是因为当有不止一个可能的原因时，我们永远无法知道在时间 <span class="math inline">\(t\)</span> 之后可能发生的死因。</p>
+<p>存在竞争风险的生存研究也可以用 <span class="math inline">\(m\)</span> 个随机变量 <span class="math inline">\(T_1,T_2,\ldots,T_m\)</span> 来表示，这些变量与 <span class="math inline">\(m\)</span> 个可能的失效原因的时间相关。这些随机变量无法直接观测，因为只有一个事件可以发生，因此它们称为潜随机变量 (latent random variables). 在实践中，我们观察到 <span class="math inline">\(m\)</span> 个事件中最早发生的事件，并且与该事件时间相关的随机变量 <span class="math inline">\(T\)</span> 满足 <span class="math inline">\(T=\min(T_1,T_2,\ldots,T_m)\)</span>。如果不同的原因是独立的，则式 <a href="chap12.html#eq:12-2">(12.2)</a> 中的风险函数是与 <span class="math inline">\(T_j\)</span> 相关的边际风险函数，其中 <span class="math inline">\(T_j\)</span> 是第 <span class="math inline">\(j\)</span> 个事件类型的随机变量，该边际风险为</p>
+<p><span class="math display">\[\lim_{\delta t\to0}\left\{\frac{\mathrm{P}(t\leqslant T_j\leqslant t+\delta t\mid T_j\geqslant t)}{\delta t}\right\}\]</span></p>
+<p>不幸的是，与不同原因的时间相关的随机变量 <span class="math inline">\((T_1,T_2,\ldots,T_m)\)</span> 的联合分布不能唯一地确定，并且无法使用竞争风险数据来检验不同原因的独立性假设。因此，将不会进一步考虑这种竞争风险的表述。</p>
+</div>
+<div id="sec12-3-2" class="section level3" number="12.3.2">
+<h3>
+<span class="header-section-number">12.3.2</span> 原因别累计发生率函数<a class="anchor" aria-label="anchor" href="#sec12-3-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在竞争风险数据中，直到个体死于特定原因时才会出现死因。因此，特定原因的<strong>原因别累积发生率函数</strong> (cause-specific cumulative incidence function) 是比生存函数更有用的数据总结。这是在存在所有其他风险的情况下，生存到时间 <span class="math inline">\(t\)</span> 且死因为 <span class="math inline">\(j(j=1,2,\ldots,m)\)</span> 的概率，由下式给出</p>
+<p><span class="math display">\[F_j(t)=\mathrm{P}(T&lt;t,C=j)\]</span></p>
+<p>累积发生率函数的最大值为</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(T&lt;\infty,C=j)=\text{P}(C=j)=\pi_j\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\pi_j\)</span> 是原因 <span class="math inline">\(j\)</span> 发生的最终概率。因此，当 <span class="math inline">\(t\rightarrow\infty\)</span>时，<span class="math inline">\(F_j(t)\to\pi_j\)</span>，并且由于 <span class="math inline">\(F_j(t)\)</span> 的极限不是 1，因此 <span class="math inline">\(F_j(t)\)</span> 不是“适当”的概率分布函数。因此，累积发生率函数也称为<strong>子分布函数</strong> (subdistribution function).</p>
+<p>根据式 <a href="chap12.html#eq:12-2">(12.2)</a>，<span class="math inline">\(f_j(t)=h_j(t)S(t)\)</span>，那么 <span class="math inline">\(F_j(t)\)</span> 可用如下形式表示</p>
+<p><span class="math display" id="eq:12-4">\[\begin{align}
+F_j(t)&amp;=\int_0^th_j(u)S(u)\mathrm{d}u
+\tag{12.4}
+\end{align}\]</span></p>
+<p>式 <a href="chap12.html#eq:12-4">(12.4)</a> 表明原因别累积发生率函数可通过下式估计</p>
+<p><span class="math display" id="eq:12-5">\[\begin{align}
+\hat{F_j}(t)=\sum_{i:t_i\leqslant t}\frac{\delta_{ij}}{n_i}\hat{S}(t_{i-1})
+\tag{12.5}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{S}(t_{i-1})\)</span> 是在 <span class="math inline">\(t_{i−1}\)</span> 处的总生存函数的 Kaplan-Meier 估计，忽略了不同原因。<span class="math inline">\(n_i\)</span> 是在 <span class="math inline">\(t_i\)</span> 之前存活且未删失的个体数，而 <span class="math inline">\(\delta_{ij}\)</span> 是特定原因的事件指示符。因此，如果原因 <span class="math inline">\(j\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的死因，则 <span class="math inline">\(\delta_{ij}\)</span> 为 1，否则为 0，并且式 <a href="chap12.html#eq:12-5">(12.5)</a> 中的比值 <span class="math inline">\(\delta_{ij}/n_i\)</span> 是第 <span class="math inline">\(j\)</span> 个原因的风险函数的 Nelson-Aalen 估计；参见第 2 章的 <a href="chap2.html#sec2-3-3">2.3.3</a> 节。式 <a href="chap12.html#eq:12-5">(12.5)</a> 中的求和运算是关于直到时间 <span class="math inline">\(t\)</span> 的所有事件时间进行的，因此给定原因的累积发生率函数估计使用了所有原因的死亡时间信息。这意味着无法根据相应的原因别风险函数来估计原因别累积发生率函数。</p>
+<p>当只有一种事件类型，即 <span class="math inline">\(m = 1\)</span> 时，我们有 <span class="math inline">\(\delta_{i1} \equiv \delta_i\)</span>，并使用第 2 章的式 <a href="chap2.html#eq:2-4">(2.4)</a>，我们发现 <span class="math inline">\(\hat{F}_1(t)=1-\hat{S}(t)\)</span>，其中 <span class="math inline">\(\hat{S}(t)\)</span> 是生存函数通常的 Kaplan-Meier 估计。</p>
+<p>时间 t 处累积发生率函数估计的方差由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\text{var}\left\{\hat{F_j}(t)\right\}=&amp;\,\sum_{i:t_i\leqslant t}\left\{\left[\hat{F_j}(t)-\hat{F_j}(t_i)\right]^2\frac{\delta_i}{n_i(n_i-\delta_i)}+\hat{S}(t_{i-1})^2\frac{\delta_{ij}(n_i-\delta_{ij})}{n_i^3}\right\}\\&amp;-2\sum_{i:t_i\leqslant t}\left\{\hat{F_j}(t)-\hat{F_j}(t_i)\right\}\hat{S}(t_{i-1})\frac{\delta_{ij}}{n_i^2},\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\delta_i=\sum_{j=1}^m\delta_{ij}\)</span>，<span class="math inline">\(n_i\)</span> 为在时间 <span class="math inline">\(t_i\)</span> 处于风险的人数。累积发生率函数在任意时刻 <span class="math inline">\(t\)</span> 的置信区间可用第 2 章 <a href="chap2.html#sec2-2-3">2.2.3</a> 节描述的方法求出。当只有一种类型的事件时，<span class="math inline">\(\hat{S}(t_{i-1})=n_i(n_i-\delta_i)^{-1}\hat{S}(t_i)\)</span>，并且上述方差的平方根可简化为 Kaplan-Meier 估计的标准误的 Greenwood 公式，如第 2 章的式 <a href="chap2.html#eq:2-12">(2.12)</a> 所示。</p>
+<p>使用 <span class="math inline">\(\hat{F}(t)=\sum_{j=1}^m\hat{F}_j(t)\)</span> 这一结果，总累积发生率 <span class="math inline">\(F(t)\)</span> 也可根据 <span class="math inline">\(m\)</span> 个原因别发生率函数估计。这反过来又得到了总生存函数的估计 <span class="math inline">\(\hat{S}(t)=1-\hat{F}(t)\)</span>，其中在没有解释变量的情况下，<span class="math inline">\(S(t)\)</span> 是通常的 Kaplan-Meier 估计，忽略了不同原因导致的死亡差异。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-3" class="example"><strong>示例 12.3  (肝移植受体的生存) </strong></span><br></p>
+<p><a href="chap12.html#exm:ex12-2">示例 12.2</a> 表明，生存函数的 Kaplan-Meier 估计不能用于估计累积发生率，对于表 12.2 所示的数据，需要分别计算移植失败的两个原因（排异反应和血栓形成）的累积发生率函数， 示于表 12.4 中。<span class="math inline">\(\hat{S}(t_{i-1})\)</span> 的值是根据所有事件时间的生存函数的 Kaplan-Meier 估计计算的。</p>
+<details><summary><font color="#8B2232">表 12.4</font>
+</summary><img src="figure/table%2012.4.png#center" style="width:80.0%"></details><p><br>
+使用式 <a href="chap12.html#eq:12-5">(12.5)</a> 计算两个原因在 370 天处的累积发生率估计，均为 0.5，符合要求。此外，370 天处的总生存函数估计现在是 <span class="math inline">\(\hat{S}(370)=1-\sum_{j=1}^m\hat{F}_j(370)=1-(0.5+0.5)=0\)</span>，这也是正确的。</p>
+</div>
+</div>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-4" class="example"><strong>示例 12.4  (肝移植受体的生存) </strong></span><br></p>
+<p>对于肝移植受体的生存时间数据，由于排异、肝动脉血栓形成、疾病复发或其他原因导致的移植失败的累积发生率函数估计如图 12.1 所示。</p>
+<p>该图显示，移植失败的四种原因之间的发生率函数有所不同，其中其他原因导致的移植失败在这些肝脏受体中的发生率最高。</p>
+<p>每种原因发生移植失败的最终概率估计是根据 12 年累积发生率函数估计得到的，其中排异、肝动脉血栓形成、复发性疾病和其他原因的该函数的近似估计分别为 0.025, 0.055, 0.060 和 0.102.</p>
+<details><summary><font color="#8B2232">图 12.1</font>
+</summary><img src="figure/figure%2012.1.png#center" style="width:80.0%"></details><p><br>
+累积发生率函数估计也可用于总结某些解释变量对特定终点的影响。如图 12.2 显示了具有三种移植指征（PBC， PSC 和 ALD）的移植受体的血栓形成的累积发生率。PBC 和 PSC 患者的血栓形成发生率非常相似，高于 ALD 患者。然而，需要更正式的分析来确定这些差异的显著性。</p>
+<details><summary><font color="#8B2232">图 12.2</font>
+</summary><img src="figure/figure%2012.2.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<p>累积发生率函数提供了竞争风险数据的描述性总结，但在存在竞争风险的情况下，可以通过类似于 log-rank 检验的方法来比较两个或更多组别，从而对其进行补充。这些检验方法包括 Gray 检验 (Gray, 1988) 以及 Pepe and Mori (1993) 提出的方法。这里没有给出更多细节，因为可以通过建模方法获得分析竞争风险数据的替代程序，这在第 <a href="chap12.html#sec12-4">12.4</a> 节和 <a href="chap12.html#sec12-5">12.5</a> 节中描述。</p>
+</div>
+<div id="sec12-3-3" class="section level3" number="12.3.3">
+<h3>
+<span class="header-section-number">12.3.3</span> 关注的其他函数<a class="anchor" aria-label="anchor" href="#sec12-3-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>原因别累积发生率函数 <span class="math inline">\(F_j(t)\)</span> 可得到竞争风险情况下可能关注的某些其他量。例如，当死因为 <span class="math inline">\(j\)</span> 时，<span class="math inline">\(t\)</span> 之前的死亡概率为</p>
+<p><span class="math display">\[\mathrm{P}(T&lt;t\mid C=j)=\pi_j^{-1}F_j(t)\]</span></p>
+<p>其中 <span class="math inline">\(\pi_j\)</span> 是第 <span class="math inline">\(j\)</span> 个原因发生的概率。此外，当死亡发生在时间 <span class="math inline">\(t\)</span> 之前时，死于原因 <span class="math inline">\(j\)</span> 的概率为</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(C=j\mid T&lt;t)=\frac{F_j(t)}{F(t)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(F(t)=1-S(t)\)</span>，<span class="math inline">\(S(t)\)</span> 为总生存函数。根据累积发生率函数估计可以很容易地获得这些概率的估计。</p>
+</div>
+</div>
+<div id="sec12-4" class="section level2" number="12.4">
+<h2>
+<span class="header-section-number">12.4</span> 原因别风险建模<a class="anchor" aria-label="anchor" href="#sec12-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>为了对原因别风险函数关于 <span class="math inline">\(p\)</span> 个解释变量值的依赖性进行建模，我们记第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体来自原因 <span class="math inline">\(j(j=1,2,\ldots,m)\)</span> 的死亡风险为</p>
+<p><span class="math display">\[h_{{i}j}(t)=\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_i)h_{0j}(t)\]</span></p>
+<p>式中，<span class="math inline">\(h_{0j}(t)\)</span> 是第 <span class="math inline">\(j\)</span> 个原因的基线风险，<span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体解释变量的值向量，<span class="math inline">\(\boldsymbol \beta_j\)</span> 是第 <span class="math inline">\(j\)</span> 个原因解释变量的系数向量。</p>
+<p>根据在后文给出的结果，可以根据原因别生存数据为每种死因开发单独的模型，如<a href="chap12.html#exm:ex12-2">示例 12.2</a> 所示。为此，依次为每个原因生成一组生存数据，其中该原因导致的死亡是一个事件，所有其他原因的死亡时间视为删失。那么可以使用 Cox 回归模型或参数模型，以通常的方式基于风险比来推断每个解释变量对原因别风险函数的效应。</p>
+<p>在对原因别风险进行建模时，经历竞争风险的个体的事件时间是删失的，就好像未来有可能发生感兴趣的事件一样<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;In modelling cause-specific hazards, the event times of individuals who experience a competing risk are censored, and so are treated as if there is the possibility of the event of interest occurring in the future.&lt;/p&gt;"><sup>19</sup></a>。因此，风险比估计对应于其他死因被排除或假定不发生的情况。这可能会导致高估特定原因的风险。此外，原因别生存数据的模型也是基于通常的独立删失假设。如果竞争事件不是独立于感兴趣的事件而发生的，则该假设是无效的。不幸的是，独立竞争风险的假设不能用观测数据来检验。尽管存在这些缺点，但当关注点在于解释变量如何直接影响与特定死因相关的风险，而忽略其他原因造成的死亡时，这种方法可能是合理的。</p>
+<p>当只有一种事件类型时，生存函数以及累积发生率函数可以使用第 1 章的式 <a href="chap1.html#eq:1-7">(1.7)</a> 和 <a href="chap1.html#eq:1-6">(1.6)</a> 根据风险函数计算。解释变量值的变化对风险函数的影响可根据这种变化对累积发生率函数的影响来解释。然而，在存在竞争风险的情况下，任何原因的累积发生率函数取决于每个潜在死亡原因的发生风险，如式 <a href="chap12.html#eq:12-5">(12.5)</a> 所示。这意味着我们无法通过分析原因别生存数据来推断解释变量如何影响每种原因的累积发生率。为此，我们需要直接对 <span class="math inline">\(F_j(t)\)</span> 进行建模，第 <a href="chap12.html#sec12-5">12.5</a> 节描述并说明了一个特定的模型。</p>
+<div id="sec12-4-1" class="section level3" number="12.4.1">
+<h3>
+<span class="header-section-number">12.4.1</span> 竞争风险模型的似然函数<a class="anchor" aria-label="anchor" href="#sec12-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>本节表明，为 <span class="math inline">\(m\)</span> 组原因别生存数据拟合单独的模型（如 Cox 回归模型或全参数模型），来对原因别风险函数对解释变量的依赖性进行建模。</p>
+<p>原因别风险函数的模型，其中每个原因的基线风险函数 <span class="math inline">\(h_{0j} (t), j = 1, 2,...,m\)</span> 未指定时，是通过最大化偏似然函数来拟合的，就像在单一死因的情况一样。考虑第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体在第 <span class="math inline">\(i\)</span> 个有序死亡时间 <span class="math inline">\(t_i\)</span> 死于原因 <span class="math inline">\(j\)</span> 的概率，条件是在时间 <span class="math inline">\(t_i\)</span> 处有死亡风险的个体之一死于原因 <span class="math inline">\(j\)</span>。使用第 3 章 <a href="chap3.html#sec3-3-1">3.3.1</a> 节描述的方法，该概率为</p>
+<p><span class="math display" id="eq:12-6">\[\begin{align}
+\frac{\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_i)}{\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_l)}
+\tag{12.6}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(R(t_i)\)</span> 为时间 <span class="math inline">\(t_i\)</span> 的风险集，即，在 <span class="math inline">\(t_i\)</span> 之前还存活且未删失的个体的集合。如果第 <span class="math inline">\(i\)</span> 个个体死于第 <span class="math inline">\(j\)</span> 个原因，则令 <span class="math inline">\(\delta_{ij} = 1\)</span>，否则为 0. 则式 <a href="chap12.html#eq:12-6">(12.6)</a> 中的偏似然函数可以写为</p>
+<p><span class="math display">\[\prod_{j=1}^m\left\{\frac{\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_i)}{\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_l)}\right\}^{\delta_{ij}}\]</span></p>
+<p>那么所有 <span class="math inline">\(n\)</span> 个个体的偏似然函数是</p>
+<p><span class="math display">\[\prod\limits_{i=1}^n\prod\limits_{j=1}^m\left\{\frac{\exp(\boldsymbol{\beta'}_j\boldsymbol{x}_i)}{\sum\limits_{l\in R(t_i)}\exp(\boldsymbol{\beta'}_j\boldsymbol{x}_l)}\right\}\delta_{ij}\]</span></p>
+<p>该函数可分解为形如下式的 <span class="math inline">\(m\)</span> 项的乘积</p>
+<p><span class="math display">\[\prod_{i=1}^n\left\{\frac{\exp(\boldsymbol{\beta'}_j\boldsymbol{x}_i)}{\sum_{l\in R(t_i)}\exp(\boldsymbol{\beta'}_j\boldsymbol{x}_l)}\right\}^{\delta_{ij}}\]</span></p>
+<p>这是第 <span class="math inline">\(j\)</span> 个原因对应的原因别生存数据的偏似然函数。这意味着可以为原因别生存数据拟合 <span class="math inline">\(m\)</span> 个单独的 Cox 回归模型，以确定解释变量如何影响每种原因的死亡风险。</p>
+<p>当 <span class="math inline">\(h_{0j}(t)\)</span> 完全指定时，我们就得到了一个可使用标准最大似然法进行拟合的参数模型。同样，此时似然函数分解为原因别生存数据的似然之积。为了证明这一点，在 <span class="math inline">\(t_i\)</span> 处死于原因 <span class="math inline">\(c_i\)</span> 的个体对似然函数的贡献为 <span class="math inline">\(f_{c_i}(t_i)\)</span>，其中 <span class="math inline">\(c_i = 1, 2,...,m,i=1,2,\ldots,n\)</span>. 删失生存时间（原因变量 <span class="math inline">\(c_i=0\)</span>）不包含有关未来可能的死亡原因的信息，因此对似然函数的相应贡献是总生存函数 <span class="math inline">\(S(t_i)\)</span>。暂时忽略协变量，<span class="math inline">\(n\)</span> 个个体数据的似然函数为</p>
+<p><span class="math display" id="eq:12-7">\[\begin{align}
+L=\prod_{i=1}^nf_{c_i}(t_i)^{\delta_i}S(t_i)^{1-\delta_i}
+\tag{12.7}
+\end{align}\]</span></p>
+<p>其中，如果第 <span class="math inline">\(i\)</span> 个个体具有删失生存时间，则 <span class="math inline">\(\delta_i = 0\)</span>，否则为 1. 使用式 <a href="chap12.html#eq:12-2">(12.2)</a> 中的结果，并令 <span class="math inline">\(h_{c_i} (t)\)</span> 表示经历原因 <span class="math inline">\(c_i\)</span> 的第 <span class="math inline">\(i\)</span> 个个体的风险函数，有</p>
+<p><span class="math display" id="eq:12-8">\[\begin{align}
+L=\prod_{i=1}^{n}\{h_{c_{i}}(t_{i})\}^{\delta_{i}}S(t_{i})
+\tag{12.8}
+\end{align}\]</span></p>
+<p>现在，根据式 <a href="chap12.html#eq:12-4">(12.4)</a>，<span class="math inline">\(S(t_i)~=~\prod_{j=1}^m\exp\{-H_j(t_i)\}\)</span>，其中，第 <span class="math inline">\(j\)</span> 个原因在时间 <span class="math inline">\(t_i\)</span> 处的累积风险函数 <span class="math inline">\(H_j(t_i)\)</span> 是根据相应的原因别风险函数 <span class="math inline">\(h_j (t_i)\)</span> 获得的，即</p>
+<p><span class="math display">\[\begin{aligned}H_j(t_i)&amp;=\int_0^{t_i}h_j(u)\mathrm{d}u\end{aligned}\]</span></p>
+<p>此外，若 <span class="math inline">\(c_i = j(j=1,2,\ldots,m)\)</span>，则令 <span class="math inline">\(\delta_{ij} = 1\)</span>，否则为 0，式 <a href="chap12.html#eq:12-8">(12.8)</a> 中似然可以仅用每个原因的风险函数来表示，即</p>
+<p><span class="math display">\[\begin{aligned}L&amp;=\prod_{i=1}^n\left(\prod_{j=1}^mh_j(t_i)^{\delta_{ij}}\right)\prod_{j=1}^m\exp\{-H_j(t_i)\}\end{aligned}\]</span></p>
+<p>该式可写为</p>
+<p><span class="math display" id="eq:12-9">\[\begin{align}
+L&amp;=\prod_{i=1}^n\prod_{j=1}^mh_j(t_i)^{\delta_{ij}}\exp\{-H_j(t_i)\}
+\tag{12.9}
+\end{align}\]</span></p>
+<p>式 <a href="chap12.html#eq:12-9">(12.9)</a> 中的似然函数是如下形式的 <span class="math inline">\(m\)</span> 项的乘积</p>
+<p><span class="math display">\[\begin{aligned}\prod_{i=1}^nh_j(t_i)^{\delta_{ij}}\exp\{-H_j(t_i)\}\end{aligned}\]</span></p>
+<p>将其与式 <a href="chap12.html#eq:12-8">(12.8)</a> 进行比较，我们发现这是当所有其他原因的事件时间都删失时，第 <span class="math inline">\(j\)</span> 个原因的似然函数。因此，可以为原因别生存数据拟合单独的参数模型来估计原因别风险函数。例如，如果第 <span class="math inline">\(j\)</span> 个原因的基线风险函数 <span class="math inline">\(h_{0j} (t)\)</span> 取为 Weibull 形式，则 <span class="math inline">\(h_{0j}(t)=\lambda_j\gamma_jt^{\gamma_j-1}\)</span>，则该基线风险函数中的参数 <span class="math inline">\(\lambda_j\)</span> 和 <span class="math inline">\(\gamma_j\)</span>，连同模型解释变量的系数，可以通过为原因别生存时间拟合单独的 Weibull 模型来获得。然后可以使用标准方法来推断解释变量对每种原因的死亡风险的影响。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-5" class="example"><strong>示例 12.5  (肝移植受体的生存) </strong></span><br></p>
+<p>为了说明对原因别风险的建模，与为肝移植受体移植失败时间的原因别数据拟合单独的 Cox 回归模型。拟合的模型包含与患者年龄（线性项）、性别和原发疾病相关的变量。相应的风险比及其 95% 置信限如表 12.5 所示。</p>
+<details><summary><font color="#8B2232">表 12.5</font>
+</summary><img src="figure/table%2012.5.png#center" style="width:80.0%"></details><p><br>
+该表中的风险比可以解释为每个变量对移植失败的四种可能原因其一的影响，而不考虑其他三种原因的发生。例如，排异反应的风险比适用于假定的情况：患者只能因排异反应而导致移植失败。根据这项分析，老年患者发生排异反应和血栓形成的风险较小，但随着患者年龄的增长，其他原因导致的移植物衰竭的风险增加。没有证据表明移植失败的风险受性别的影响。与 PSC 和 ALD 患者相比，PBC 患者因复发性疾病导致移植失败的风险较低，而且有迹象表明 PBC 患者因血栓形成而导致移植失败的发生率较高。</p>
+</div>
+</div>
+</div>
+<div id="sec12-4-2" class="section level3" number="12.4.2">
+<h3>
+<span class="header-section-number">12.4.2</span> 累积发生率函数的参数模型<a class="anchor" aria-label="anchor" href="#sec12-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在 <a href="chap12.html#sec12-4-1">12.4.1</a> 节中，我们了解了如何通过对原因别生存数据进行建模来拟合第 <span class="math inline">\(j\)</span> 个原因的风险函数 <span class="math inline">\(h_j (t),j = 1, 2,...,m\)</span> 的标准参数模型。然而，如果第 <span class="math inline">\(j\)</span> 个原因的风险函数具有 Weibull 形式，则根据式 <a href="chap12.html#eq:12-2">(12.2)</a>，相应的密度函数 <span class="math inline">\(f_j (t)\)</span> 和累积发生率函数 <span class="math inline">\(F_j (t)\)</span> 不是 Weibull 分布生存时间的相应形式。事实上，由于累积发生率函数不是适当的分布函数，我们无法使用标准概率分布对此进行建模，我们需要考虑到特定原因的最终概率 <span class="math inline">\(F_j (\infty)&lt;1\)</span> 这一事实。</p>
+<p>举一个最简单的例子，假定生存时间是指数分布，对于原因 <span class="math inline">\(j=1,2,\ldots,m\)</span> 其均值为 <span class="math inline">\(\theta_j^{-1}\)</span>。那么，以原因 <span class="math inline">\(j\)</span> 为条件，</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(T&lt;t\mid C=j)=1-e^{-\theta_jt}\end{aligned}\]</span></p>
+<p>因此原因 <span class="math inline">\(j\)</span> 的累积发生率为</p>
+<p><span class="math display">\[\begin{aligned}F_j(t)=\mathrm{P}(T&lt;t\mid C=j)P(C=j)=\pi_j(1-e^{-\theta_jt})\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\pi_j\)</span> 是死于 <span class="math inline">\(j\)</span> 的概率。当 <span class="math inline">\(t\rightarrow \infty\)</span>，该累计发生率函数趋于 <span class="math inline">\(\pi_j\)</span>，符合要求。</p>
+<p>相应的密度函数为 <span class="math inline">\(f_j (t) = \pi_j \theta_j e^{−\theta_j t}\)</span>，利用式 <a href="chap12.html#eq:12-2">(12.2)</a> 中的结果，并取 <span class="math inline">\(S(t)=\prod_{j=1}^{m}\{1{-}F_j(t)\}\)</span>，相应的原因别风险变为</p>
+<p><span class="math display">\[\begin{aligned}\lambda_j(t)&amp;=\frac{\pi_j\theta_je^{-\theta_jt}}{\prod_j\{1-\pi_j(1-e^{-\theta_jt})\}}\end{aligned}\]</span></p>
+<p>即使条件发生率函数具有指数形式，该原因别风险函数也不是常数。</p>
+<p>当对第 <span class="math inline">\(j\)</span> 个原因的累积发生率 <span class="math inline">\(F_j(t)\)</span> 采用参数模型时，可以通过最大化式 <a href="chap12.html#eq:12-7">(12.7)</a> 中的似然函数来拟合模型，其中 <span class="math inline">\(n\)</span> 个观测 <span class="math inline">\((t_i,c_i)\)</span> 的似然函数为</p>
+<p><span class="math display">\[\prod_{i=1}^nf_{c_i}(t_i)^{\delta_i}S(t_i)^{1-\delta_i}\]</span></p>
+<p>其中，对于删失观测，<span class="math inline">\(\delta_i=0\)</span>，否则为 1。在该表达式中，如果第 <span class="math inline">\(i\)</span> 个个体经历第 <span class="math inline">\(j\)</span> 个事件类型，则 <span class="math inline">\(c_i=j\)</span>，并且 <span class="math inline">\(S(t_i)\)</span> 是根据 <span class="math inline">\(S(t_i)=\prod_{j=1}^m\{1-F_j(t_i)\}\)</span> 计算的 <span class="math inline">\(t_i\)</span> 处的生存函数。即使在指数原因别生存时间的情况下，相应的似然函数也具有复杂的形式，并且需要数值方法来确定使其最大化的未知参数的估计。因此，累积发生率的参数模型在实践中很少使用。</p>
+</div>
+</div>
+<div id="sec12-5" class="section level2" number="12.5">
+<h2>
+<span class="header-section-number">12.5</span> 原因别发生率建模<a class="anchor" aria-label="anchor" href="#sec12-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>在标准生存分析中，只有一个可能的终点，累积发生率、生存和风险函数之间存在直接的对应关系，并且生存函数的模型可直接根据风险函数的模型获得。如 <a href="chap12.html#sec12-4">12.4</a> 节所述，当存在竞争风险时，情况并非如此。尽管原因别风险模型可用于确定解释变量对竞争风险的影响，但需要采用不同的方法来对它们如何影响累积发生率函数进行建模。在本节中，描述了原因别累积发生率函数对解释变量的依赖性的模型。该模型由 Fine and Gray (1999) 提出，称为 <strong>Fine and Gray 模型</strong>。</p>
+<div id="sec12-5-1" class="section level3" number="12.5.1">
+<h3>
+<span class="header-section-number">12.5.1</span> Fine and Gray 竞争风险模型<a class="anchor" aria-label="anchor" href="#sec12-5-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>第 <span class="math inline">\(j\)</span> 个原因的原因别累积发生率函数或子分布函数为 <span class="math inline">\(F_j(t)=\text{P }(T~&lt;~t,C~=~j)\)</span>。使用第 1 章式 <a href="chap1.html#eq:1-5">(1.5)</a> 中首先给出的关系，对于第 <span class="math inline">\(j\)</span> 个原因，子分布的相应风险函数，称为<strong>子分布风险函数</strong>或<strong>子风险</strong> (subdistribution hazard function or subhazard)，为</p>
+<p><span class="math display" id="eq:12-10">\[\begin{align}
+\lambda_j(t)&amp;=-\frac{\mathrm{d}}{\mathrm{d}t}\log\{1-F_j(t)\}=\frac{1}{1-F_j(t)}\frac{\mathrm{d}F_j(t)}{\mathrm{d}t}
+\tag{12.10}
+\end{align}\]</span></p>
+<p>现在，<span class="math inline">\(1 − F_j (t)\)</span> 是一个个体在时间 <span class="math inline">\(t\)</span> 后生存的概率，或者在此之前死于第 <span class="math inline">\(j\)</span> 个原因以外的原因的概率，如第 1 章 <a href="chap1.html#sec1-3">1.3</a> 节所述，有</p>
+<p><span class="math display">\[\frac{\mathrm{d}F_j(t)}{\mathrm{d}t}=\lim_{\delta t\to0}\left\{\frac{F_j(t+\delta t)-F_j(t)}{\delta t}\right\}\]</span></p>
+<p>那么子分布风险函数 <span class="math inline">\(\lambda_j(t)\)</span> 可表示为</p>
+<p><span class="math display">\[\lambda_j(t)=\lim_{\delta t\to0}\left\{\frac{\text{P}(t\leqslant T\leqslant t+\delta t,C=j\mid T\geqslant t\text{ or }\{T\leqslant t\text{ and }C\neq j\})}{\delta t}\right\}\]</span></p>
+<p>这是在时间 <span class="math inline">\(t\)</span> 原因 <span class="math inline">\(j\)</span> 的瞬时死亡率，给定在此之前未死于原因 <span class="math inline">\(j\)</span>。由于该风险函数的定义包括了那些在时间 <span class="math inline">\(t\)</span> 之前已经死于 <span class="math inline">\(j\)</span> 以外的原因的个体，所以该子分布风险函数在定义和解释上都不同于式 <a href="chap12.html#eq:12-1">(12.1)</a> 中的原因别风险。</p>
+<p>为了对原因别累积发生率函数进行建模，假定第 <span class="math inline">\(j\)</span> 个原因的子风险函数采用 Cox 回归模型。第 i 个个体（共 <span class="math inline">\(n\)</span> 个）在时间 <span class="math inline">\(t\)</span> 时原因 <span class="math inline">\(j\)</span> 的风险为</p>
+<p><span class="math display" id="eq:12-11">\[\begin{align}
+\lambda_{ij}(t)=\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_i)\lambda_{0j}(t)
+\tag{12.11}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\lambda_{0j} (t)\)</span> 是原因 <span class="math inline">\(j\)</span> 的基线子分布风险函数，<span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(p\)</span> 个解释变量的值向量，向量 <span class="math inline">\(\boldsymbol \beta_j\)</span> 包含第 <span class="math inline">\(j\)</span> 个原因的系数。在该模型中，假定子分布风险函数是成比例的。</p>
+<p>式 <a href="chap12.html#eq:12-11">(12.11)</a> 中的模型是通过改编第 3 章式 <a href="chap3.html#eq:3-4">(3.4)</a> 中通常的偏似然来拟合的，以纳入风险集中的值的加权组合。所得第 <span class="math inline">\(j\)</span> 个原因的偏似然函数为</p>
+<p><span class="math display" id="eq:12-12">\[\begin{align}
+\prod_{h=1}^{r_j}\frac{\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_h)}{\sum_{l\in R(t_{(h)})}w_{hl}\exp(\boldsymbol{\beta}_j^{\prime}\boldsymbol{x}_l)}
+\tag{12.12}
+\end{align}\]</span></p>
+<p>其中乘积运算是关于死于原因 <span class="math inline">\(j\)</span> 的<span class="math inline">\(r_j\)</span> 个个体来进行的，其对应的死亡时间为 <span class="math inline">\(t_{(1)}&lt;t_{(1)}\ldots&lt;t_{(r_j)}\)</span>，<span class="math inline">\(\boldsymbol x_h\)</span> 是在时间 <span class="math inline">\(t_{(h)},h=1,2,\ldots,r_j\)</span> 死于原因 <span class="math inline">\(j\)</span> 的个体的解释变量的值向量。所有在第 <span class="math inline">\(h\)</span> 个事件时间 <span class="math inline">\(t_{(h)}\)</span> 之前未经历过事件、生存时间大于等于 <span class="math inline">\(t_{(h)}\)</span> 的个体，以及那些在 <span class="math inline">\(t_{(h)}\)</span> 之前经历过竞争风险，生存时间小于等于 <span class="math inline">\(t_{(h)}\)</span> 的个体，构成了风险集 <span class="math inline">\(R(t_{(h)})\)</span>。该风险集并不容易解释，因为在时间 <span class="math inline">\(t\)</span> 之前死于除第 <span class="math inline">\(j\)</span> 个原因以外的原因的个体在 <span class="math inline">\(t\)</span> 时不再面临风险，尽管如此，他们确实出现在该模型的风险集中。式 <a href="chap12.html#eq:12-12">(12.12)</a> 中的权重定义为</p>
+<p><span class="math display">\[\begin{aligned}w_{hl}&amp;=\frac{\hat{S}_c(t_{(h)})}{\hat{S}_c(\min\{t_{(h)},t_l\})}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{S}_c(t)\)</span> 是删失时间的生存函数的 Kaplan-Meier 估计。这是通过将数据集中的所有事件时间（无论何种类型）视为删失时间，同样地，将所有删失时间视为事件时间，根据这样的数据计算的 Kaplan-Meier 估计。当 <span class="math inline">\(t_l\geqslant t_{(h)}\)</span> 时，即对于处于 <span class="math inline">\(t_{(h)}\)</span> 的风险集中、在此之前未发生事件的那些个体，权重 <span class="math inline">\(w_{hl}\)</span> 将为 1.0，否则小于 1.0. 该加权函数的作用是，死于第 <span class="math inline">\(j\)</span> 个原因以外的原因的个体仍在风险集中，并赋予其一个超过所有事件时间的删失时间。此外，随着竞争事件与关注事件之间的时间的增加，权重变得更小，因此竞争风险导致的早期死亡对结果的影响会逐渐减小<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;Also, the weights become smaller with increasing time between the occurrence of a competing risk and the event time being considered, so that earlier deaths from a competing risk have a diminishing impact on the results.&lt;/p&gt;"><sup>20</sup></a>。</p>
+<p>最大化式 <a href="chap12.html#eq:12-12">(12.12)</a> 中的偏似然被以获得给定原因的 <span class="math inline">\(\beta\)</span> 参数的估计。由于此偏似然中使用的权重可能会因特定个体生存时间而异，因此必须首先将数据整理为<strong>计数过程格式</strong>，第 8 章 <a href="chap8.html#sec8-3">8.3</a> 节对其进行了概述。这也使得能直接地在此模型中包含时依变量。</p>
+<p>子分布风险函数很难解释，拟合的模型最好根据解释变量对第 <span class="math inline">\(j\)</span> 个原因的原因别累积发生率函数的效应进行解释，根据式 <a href="chap12.html#eq:12-10">(12.10)</a>，第 <span class="math inline">\(i\)</span> 个个体的累计发生率函数可以通过下式进行估计</p>
+<p><span class="math display">\[\hat{F}_{ij}(t)=1-\exp\{-\hat{\Lambda}_{ij}(t)\}\]</span></p>
+<p>其中 <span class="math inline">\(\hat\Lambda_{ij} (t)\)</span> 是累积子分布风险函数 <span class="math inline">\(\Lambda_{ij} (t)\)</span> 的估计。该估计由下式给出</p>
+<p><span class="math display">\[\hat{\Lambda}_{ij}(t)=\exp(\hat{\boldsymbol{\beta}}'_j\boldsymbol{x}_i)\hat{\Lambda}_{0j}(t)\]</span></p>
+<p>其中 <span class="math inline">\(\hat{{\Lambda}}_{0{j}}(t)\)</span> 是第 <span class="math inline">\(j\)</span> 个事件类型的基线累积子分布风险函数。该函数可以使用基线累积风险函数的 Nelson-Aalen 估计（第 3 章式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-29">(3.29)</a>）的改编来估计，即</p>
+<p><span class="math display">\[\hat{\Lambda}_{0j}(t)=\sum_{t_{(h)}\leqslant t}\frac{d_h}{\sum_{l\in R(t_{(h)})}w_{hl}\exp(\hat{\boldsymbol{\beta}_j^{\prime}}\boldsymbol{x}_l)}\]</span></p>
+<p>其中 <span class="math inline">\(d_h\)</span> 是时间 <span class="math inline">\(t_{(h)}\)</span> 时的死亡人数。</p>
+<p>Fine and Gray 模型还可以用每个原因的基线累积发生率函数 <span class="math inline">\(F_{ij} (t)\)</span> 来表示，其中</p>
+<p><span class="math display">\[F_{ij}(t)=1-\{1-F_{0j}(t)\}^{\exp(\boldsymbol{\beta}'_j\boldsymbol{x}_i)}\]</span></p>
+<p><span class="math inline">\(F_{0j}(t)=1-\exp\{-\Lambda_{0j}(t)\}\)</span> 是第 <span class="math inline">\(j\)</span> 个原因的基线累积发生率函数。这强调了正在对感兴趣的量进行建模。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-6" class="example"><strong>示例 12.6  (肝移植受体的生存) </strong></span><br></p>
+<p>在本示例中，利用累积关联函数的 Fine and Gray 模型用于对<a href="chap12.html#exm:ex12-1">示例 12.1</a> 给出的数据进行建模。对移植排斥反应、血栓形成、复发性疾病和其他失效原因依次拟合累积发生率模型。这四种失效类型的子风险比 (subhazard ratio) 及其相应的 95% 置信区间如表 12.6 所示。</p>
+<details><summary><font color="#8B2232">表 12.6</font>
+</summary><img src="figure/table%2012.6.png#center" style="width:80.0%"></details><p><br>
+该表中的子风险比总结了在存在竞争风险的情况下每个变量对移植失败的不同原因的发生率的直接效应。然而，它们的值与表 12.5 中显示的风险比非常相似，这表明移植失败的竞争原因之间几乎没有关联。但在后面的示例（<a href="chap12.html#sec12-6">12.6</a> 节中的<a href="chap12.html#exm:ex12-7">示例 12.7</a>）中，情况并非如此。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec12-6" class="section level2" number="12.6">
+<h2>
+<span class="header-section-number">12.6</span> 模型检查<a class="anchor" aria-label="anchor" href="#sec12-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>第 <a href="chap4.html#chap4">4</a> 章描述的许多模型检查程序可直接用于检查原因别模型的充分性。检查解释变量的函数形式（鞅和 Schoenfeld 残差图）和比例风险检验（缩放 Schoenfeld 残差图、比例风险检验）的方法特别有用<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;The methods for checking the functional form of an explanatory variable (plots of martingale and Schoenfeld residuals) and testing for proportional hazards (plot of scaled Schoenfeld residuals, tests of proportional hazards) are particularly useful.&lt;/p&gt;"><sup>21</sup></a>。此外，第 7 章 <a href="chap7.html#sec7-3">7.3</a> 节描述将观测生存与基于模型的估计进行比较的方法，改编后可用于确定对每个原因的累积发生率假定的参数模型的有效性。<a href="chap12.html#exm:ex12-7">示例 12.7</a> 说明了其中一些方法。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex12-7" class="example"><strong>示例 12.7  (实验小鼠的生存) </strong></span><br></p>
+<p>在一项实验研究中，为了比较两组小鼠暴露在辐射后的生存时间，一组在标准环境中饲养，另一组在无菌环境中饲养。这些小鼠均为 RFM 品系雄性，这是一种特别容易受到电离辐射后发展出肿瘤的品系。小鼠在 5 到 6 周大时接受 300 rad 剂量的辐射，并追踪每只小鼠直至其死亡。经尸检后，每只小鼠的死因记录为胸腺淋巴瘤 (Thymic lymphoma)、网状细胞肉瘤 (Reticulum cell sarcoma) 或其他原因，以及相应的生存天数。这些数据首先由 Hoel (1972) 描述，并列于表 12.7. 这些数据的特点是没有删失生存时间。</p>
+<details><summary><font color="#8B2232">表 12.7</font>
+</summary><img src="figure/table%2012.7.png#center" style="width:80.0%"></details><p><br>
+这三种原因的累积发生率函数估计如图 12.3 所示。该图表明，在无菌环境中饲养的小鼠胸腺淋巴瘤的发生率更高，但在标准环境中饲养的小鼠网状细胞肉瘤的发生率更高。其他原因导致的死亡发生率在两种环境中也有所不同。</p>
+<p>接下来，我们为原因别生存时间拟合 Cox 回归模型。对于在第 <span class="math inline">\(i(i=1,2)\)</span> 个环境中饲养的小鼠，第 <span class="math inline">\(j(j=1,2,3)\)</span> 个原因别风险的模型为</p>
+<p><span class="math display">\[\begin{aligned}h_{ij}(t)=\exp(\beta_jx_i)h_{0j}(t)\end{aligned}\]</span></p>
+<p>其中，对于在无菌环境中饲养的小鼠，<span class="math inline">\(x_i=1\)</span>，否则为 0，因此 <span class="math inline">\(\beta_j\)</span> 是相对于标准环境，在无菌环境下饲养的小鼠在任何时间因 <span class="math inline">\(j\)</span> 原因死亡的对数风险比。表 12.8 显示了每种死因的风险比估计、相应的 95% 置信限以及用于检验风险比为 1.0 的假设的 <span class="math inline">\(P\)</span> 值。</p>
+<details><summary><font color="#8B2232">表 12.8</font>
+</summary><img src="figure/table%2012.8.png#center" style="width:80.0%"></details><p><br>
+该表显示，胸腺淋巴瘤的死亡风险未受到小鼠饲养环境显著的影响，但在无菌环境中饲养的小鼠死于网状细胞肉瘤或其他原因的风险显著较低。</p>
+<p>该分析表明，在其他两种可能的死因无法发生的情况下，饲养小鼠的环境类型如何影响三种死因的发生。由于任何特定死因的累积发生率取决于所有可能原因的风险，因此我们无法通过对原因别风险进行建模来得出有关环境对原因别发生率函数的影响的任何结论。为此，我们针对胸腺淋巴瘤、网状细胞肉瘤和其他原因的累积发生率拟合了 Fine and Gray 模型。在存在竞争风险的情况下，这使得能够对环境对三种死亡原因的效应进行建模。</p>
+<p>根据式 <a href="chap12.html#eq:12-11">(12.11)</a>，在第 <span class="math inline">\(i\)</span> 个环境中饲养的、因第 <span class="math inline">\(j\)</span> 个原因而亡的小鼠的子风险函数模型为</p>
+<p><span class="math display" id="eq:12-13">\[\begin{align}
+\lambda_{ij}(t)=\exp(\beta_jx_i)\lambda_{0j}(t)
+\tag{12.13}
+\end{align}\]</span></p>
+<p>因原因 <span class="math inline">\(j\)</span> 而亡的累积发生率的相应模型为</p>
+<p><span class="math display">\[F_{{i}j}(t)=1-\operatorname{exp}\{-e^{\boldsymbol{\beta}_{j}x_{i}}\Lambda_{0{j}}(t)\}\]</span></p>
+<p>其中 <span class="math inline">\(\Lambda_{0j} (t)\)</span> 是基线累积子风险函数，对于无菌环境，<span class="math inline">\(x_i = 1\)</span>，否则为 0. 表 12.9 给出了在无菌环境中饲养的小鼠相对于在标准环境中饲养的小鼠的子风险函数的估计之比、<span class="math inline">\(P\)</span> 值和 95% 置信限。</p>
+<details><summary><font color="#8B2232">表 12.9</font>
+</summary><img src="figure/table%2012.9.png#center" style="width:80.0%"></details><p><br>
+该表表明，在存在竞争的死亡风险的情况下，环境对胸腺淋巴瘤死亡的子风险有一定影响，对网状细胞癌死亡有非常显著的影响，但对其他原因造成的死亡没有影响。无菌环境增加了胸腺淋巴瘤的子风险，并降低了网状细胞肉瘤的子风险。</p>
+<p>乍一看，与表 12.8 中的风险比相比，表 12.9 中的子风险比显得十分惊人。尽管这一特征可能是由于竞争风险对胸腺淋巴瘤或其他原因死亡发生率的影响，但累积发生率函数的估计提出了另一种解释，如图 12.3 所示。对于其他原因造成的死亡，在事件相对较少的情况下，标准环境中的死亡发生率超过无菌环境中的死亡率。在事件较多的后期，发生率函数更接近，超过 800<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;从图中来看应该是 900 天。&lt;/p&gt;"><sup>22</sup></a> 天后，无菌环境中的死亡发生率更高。因此，Fine and Gray 模型中的子风险函数成比例的假设是可疑的。</p>
+<details><summary><font color="#8B2232">图 12.3</font>
+</summary><img src="figure/figure%2012.3.png#center" style="width:80.0%"></details><p><br>
+使用第 4 章 <a href="chap4.html#sec4-4">4.4</a> 节中描述的技术来进一步探究这一点。
+首先，我们得到了每个原因的子风险函数模型的缩放 Schoenfeld 残差图，并叠加了一条平滑曲线。其他原因造成的死亡的图形如图 12.4 所示，该图清晰地表明，平滑曲线不是水平的，并强烈表明环境效应是时依的。</p>
+<details><summary><font color="#8B2232">图 12.4</font>
+</summary><img src="figure/figure%2012.4.png#center" style="width:80.0%"></details><p><br>
+为进一步检验比例子风险的假设，将时依变量 <span class="math inline">\(x_i \log t\)</span> 以及与原因相关的系数 <span class="math inline">\(\beta_{j1}\)</span> 纳入式 <a href="chap12.html#eq:12-13">(12.13)</a> 的模型中。将此项添加到子风险模型中后，<span class="math inline">\(-2\operatorname{log}\hat{L}\)</span> 值的变化对于胸腺淋巴瘤死亡不显著（<span class="math inline">\(P = 0.16\)</span>），但对于网状细胞肉瘤是显著的（<span class="math inline">\(P = 0.016\)</span>），对于其他原因的死亡非常显著（<span class="math inline">\(P &lt; 0.001\)</span>）。这表明环境对网状细胞肉瘤和其他原因导致的死亡的子风险的效应并不独立于时间。以其他原因导致的死亡（其中 <span class="math inline">\(j = 3\)</span>）来说明这一点，图 12.5 显示了时依子风险比 <span class="math inline">\(\exp\{\beta_3+\beta_{31}\log t\}\)</span> 关于 <span class="math inline">\(\log t\)</span> 绘制的图形，并附有 95% 置信带。对于生存时间小于 240 天的风险比显著小于 1.0，对于生存时间大于 650 天的风险比显著大于 1.0.</p>
+<details><summary><font color="#8B2232">图 12.5</font>
+</summary><img src="figure/figure%2012.5.png#center" style="width:80.0%"></details><p><br>
+这些数据的另一个特点是，在标准环境中饲养的小鼠中，有四只小鼠因其他原因死亡的时间异常短，但这些观测对结果几乎没有影响。</p>
+</div>
+</div>
+</div>
+<div id="sec12-7" class="section level2" number="12.7">
+<h2>
+<span class="header-section-number">12.7</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec12-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>最早发表的有关竞争风险的文章是 David and Moeschberger (1978) 的文章，其中包括自 17 世纪以来该领域工作的总结。最新的是 Moeschberger and Klein (1995) 的论文，以及 Pintilie (2006), Crowder (2012) 和 Beyersmann, Allignol and Schumacher (2012) 的文本。它们都展示了如何使用 R 软件进行分析。Crowder (2001) 对该领域给出了更数学化的解释。包含竞争风险章节的生存分析书籍包括 Kalbfleisch and Prentice (2002), Lawless (2002) 以及 Kleinbaum and Klein (2012). 也有关于竞争风险的教程论文，例如 Putter, Fiocco and Geskus (2007) 以及 Pintilie (2007a) 的论文。</p>
+<p>该领域的术语命名极不一致；参见 Wolbers and Koller (2007) 以及 Latouche, Beyersmann and Fine (2007) 对 Pintilie (2007a) 中所采用命名规则的评论，以及 Pintilie (2007b) 的回应。Wolbers et al. (2009) 举例说明了在预测建模中使用竞争风险模型，而 Tai et al. (2001) 则对四种不同方法进行了比较。</p>
+<p>累积发生率函数估计的方差表达式由 Aalen (1978a), Marubini and Valsecchi (1995) 以及 Lin (1997) 等人导出。Gray (1988) 和 Pepe and Mori (1993) 描述了各种模型，并提出了在存在竞争风险的情况下比较两组或多组生存时间的累积发生率函数的检验。</p>
+<p>Kalbfleish and Prentice (2002) 以及 Maller and Zhu (2002) 描述了原因别风险参数模型，而 Hinchcliffe and Lambert (2013) 描述并说明了竞争风险数据的灵活参数模型。Fine and Gray (1999) 引入了竞争风险的 Fine and Gray 模型。许多论文提出了 Fine and Gray 模型的扩展，包括 Sun et al. (2006) 的加性模型，以及 Jeong and Fine (2007) 的参数模型。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></div>
+<div class="next"><a href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap12"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="nav-link" href="#sec12-1"><span class="header-section-number">12.1</span> 竞争风险的介绍</a></li>
+<li>
+<a class="nav-link" href="#sec12-2"><span class="header-section-number">12.2</span> 总结竞争风险数据</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec12-2-1"><span class="header-section-number">12.2.1</span> 生存函数的 Kaplan-Meier 估计</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec12-3"><span class="header-section-number">12.3</span> 风险和累积发生率函数</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec12-3-1"><span class="header-section-number">12.3.1</span> 原因别风险函数</a></li>
+<li><a class="nav-link" href="#sec12-3-2"><span class="header-section-number">12.3.2</span> 原因别累计发生率函数</a></li>
+<li><a class="nav-link" href="#sec12-3-3"><span class="header-section-number">12.3.3</span> 关注的其他函数</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec12-4"><span class="header-section-number">12.4</span> 原因别风险建模</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec12-4-1"><span class="header-section-number">12.4.1</span> 竞争风险模型的似然函数</a></li>
+<li><a class="nav-link" href="#sec12-4-2"><span class="header-section-number">12.4.2</span> 累积发生率函数的参数模型</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec12-5"><span class="header-section-number">12.5</span> 原因别发生率建模</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec12-5-1"><span class="header-section-number">12.5.1</span> Fine and Gray 竞争风险模型</a></li></ul>
+</li>
+<li><a class="nav-link" href="#sec12-6"><span class="header-section-number">12.6</span> 模型检查</a></li>
+<li><a class="nav-link" href="#sec12-7"><span class="header-section-number">12.7</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

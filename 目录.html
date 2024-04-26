@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>目录 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="生存分析 1.1 生存分析的应用 1.2 生存数据的特殊特征 1.2.1 删失 1.2.2 独立删失 1.2.3 研究时间和患者时间  1.3 一些示例 1.4 生存函数，风险函数和累积风险函数 1.4.1 生存函数 1.4.2 风险函数 1.4.3 累积风险函数  1.5 用于生存分析的计算机软件 1.6 延伸阅读  一些非参数程序 2.1 估计生存函数 2.1.1 生存函数的生命表估计...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="目录 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="生存分析 1.1 生存分析的应用 1.2 生存数据的特殊特征 1.2.1 删失 1.2.2 独立删失 1.2.3 研究时间和患者时间  1.3 一些示例 1.4 生存函数，风险函数和累积风险函数 1.4.1 生存函数 1.4.2 风险函数 1.4.3 累积风险函数  1.5 用于生存分析的计算机软件 1.6 延伸阅读  一些非参数程序 2.1 估计生存函数 2.1.1 生存函数的生命表估计...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="目录 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="生存分析 1.1 生存分析的应用 1.2 生存数据的特殊特征 1.2.1 删失 1.2.2 独立删失 1.2.3 研究时间和患者时间  1.3 一些示例 1.4 生存函数，风险函数和累积风险函数 1.4.1 生存函数 1.4.2 风险函数 1.4.3 累积风险函数  1.5 用于生存分析的计算机软件 1.6 延伸阅读  一些非参数程序 2.1 估计生存函数 2.1.1 生存函数的生命表估计...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="active" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="目录" class="section level1 unnumbered">
+<h1>目录<a class="anchor" aria-label="anchor" href="#%E7%9B%AE%E5%BD%95"><i class="fas fa-link"></i></a>
+</h1>
+<ol style="list-style-type: decimal">
+<li>
+<a href="chap1.html#chap1">生存分析</a>
+<ul>
+<li>1.1 <a href="chap1.html#sec1-1">生存分析的应用</a>
+</li>
+<li>1.2 <a href="chap1.html#sec1-2">生存数据的特殊特征</a>
+<ul>
+<li>1.2.1 <a href="chap1.html#sec1-2-1">删失</a>
+</li>
+<li>1.2.2 <a href="chap1.html#sec1-2-2">独立删失</a>
+</li>
+<li>1.2.3 <a href="chap1.html#sec1-2-3">研究时间和患者时间</a>
+</li>
+</ul>
+</li>
+<li>1.3 <a href="chap1.html#sec1-3">一些示例</a>
+</li>
+<li>1.4 <a href="chap1.html#sec1-4">生存函数，风险函数和累积风险函数</a>
+<ul>
+<li>1.4.1 <a href="chap1.html#sec1-4-1">生存函数</a>
+</li>
+<li>1.4.2 <a href="chap1.html#sec1-4-2">风险函数</a>
+</li>
+<li>1.4.3 <a href="chap1.html#sec1-4-3">累积风险函数</a>
+</li>
+</ul>
+</li>
+<li>1.5 <a href="chap1.html#sec1-5">用于生存分析的计算机软件</a>
+</li>
+<li>1.6 <a href="chap1.html#sec1-6">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap2.html#chap2">一些非参数程序</a>
+<ul>
+<li>2.1 <a href="chap2.html#sec2-1">估计生存函数</a>
+<ul>
+<li>2.1.1 <a href="chap2.html#sec2-1-1">生存函数的生命表估计</a>
+</li>
+<li>2.1.2 <a href="chap2.html#sec2-1-2">生存函数的 Kaplan-Meier 估计</a>
+</li>
+<li>2.1.3 <a href="chap2.html#sec2-1-3">生存函数的 Nelson-Aalen 估计</a>
+</li>
+</ul>
+</li>
+<li>2.2 <a href="chap2.html#sec2-2">生存函数估计的标准误</a>
+<ul>
+<li>2.2.1 <a href="chap2.html#sec2-2-1">Kaplan-Meier 估计的标准误</a>
+</li>
+<li>2.2.2 <a href="chap2.html#sec2-2-2">其他估计的标准误</a>
+</li>
+<li>2.2.3 <a href="chap2.html#sec2-2-3">生存函数的置信区间</a>
+</li>
+</ul>
+</li>
+<li>2.3 <a href="chap2.html#sec2-3">估计风险函数</a>
+<ul>
+<li>2.3.1 <a href="chap2.html#sec2-3-1">风险函数的生命表估计</a>
+</li>
+<li>2.3.2 <a href="chap2.html#sec2-3-2">Kaplan-Meier 型估计</a>
+</li>
+<li>2.3.3 <a href="chap2.html#sec2-3-3">估计累积风险函数</a>
+</li>
+</ul>
+</li>
+<li>2.4 <a href="chap2.html#sec2-4">估计生存时间的中位数和百分位数</a>
+</li>
+<li>2.5 <a href="chap2.html#sec2-5">中位数和百分位数的置信区间</a>
+</li>
+<li>2.6 <a href="chap2.html#sec2-6">两组生存数据的比较</a>
+<ul>
+<li>2.6.1 <a href="chap2.html#sec2-6-1">两组生存数据的比较</a>
+</li>
+<li>2.6.2 <a href="chap2.html#sec2-6-2">log-rank 检验</a>
+</li>
+<li>2.6.3 <a href="chap2.html#sec2-6-3">Wilcoxon 检验</a>
+</li>
+<li>2.6.4 <a href="chap2.html#sec2-6-4">Peto-Peto 检验</a>
+</li>
+<li>2.6.5 <a href="chap2.html#sec2-6-5">log-rank 检验、Wilcoxon 检验和 Peto-Peto 检验的比较</a>
+</li>
+</ul>
+</li>
+<li>2.7 <a href="chap2.html#sec2-7">三组或更多组生存数据的比较</a>
+</li>
+<li>2.8 <a href="chap2.html#sec2-8">分层检验</a>
+</li>
+<li>2.9 <a href="chap2.html#sec2-9">log-rank 趋势检验</a>
+</li>
+<li>2.10 <a href="chap2.html#sec2-10">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap3.html#chap3">Cox 回归模型</a>
+<ul>
+<li>3.1 <a href="chap3.html#sec3-1">风险函数建模</a>
+<ul>
+<li>3.1.1 <a href="chap3.html#sec3-1-1">用于两组比较的模型</a>
+</li>
+<li>3.1.2 <a href="chap3.html#sec3-1-2">一般比例风险模型</a>
+</li>
+</ul>
+</li>
+<li>3.2 <a href="chap3.html#sec3-2">模型的线性部分</a>
+<ul>
+<li>3.2.1 <a href="chap3.html#sec3-2-1">纳入一个变量</a>
+</li>
+<li>3.2.2 <a href="chap3.html#sec3-2-2">纳入一个因素</a>
+</li>
+<li>3.2.3 <a href="chap3.html#sec3-2-3">纳入一个交互作用</a>
+</li>
+<li>3.2.4 <a href="chap3.html#sec3-2-4">纳入一个混合项</a>
+</li>
+</ul>
+</li>
+<li>3.3 <a href="chap3.html#sec3-3">拟合 Cox 回归模型</a>
+<ul>
+<li>3.3.1 <a href="chap3.html#sec3-3-1">模型的似然函数</a>
+</li>
+<li>3.3.2 <a href="chap3.html#sec3-3-2">结的处理</a>
+</li>
+<li>3.3.3 <a href="chap3.html#sec3-3-3">Newton-Raphson 程序</a>
+</li>
+</ul>
+</li>
+<li>3.4 <a href="chap3.html#sec3-4">置信区间和假设检验</a>
+<ul>
+<li>3.4.1 <a href="chap3.html#sec3-4-1">风险比的标准误和置信区间</a>
+</li>
+<li>3.4.2 <a href="chap3.html#sec3-4-2">两个示例</a>
+</li>
+</ul>
+</li>
+<li>3.5 <a href="chap3.html#sec3-5">比较替代模型</a>
+<ul>
+<li>3.5.1 <a href="chap3.html#sec3-5-1"><span class="math inline">\(-2\log\hat{L}\)</span> 统计量</a>
+</li>
+<li>3.5.2 <a href="chap3.html#sec3-5-2">比较嵌套模型</a>
+</li>
+</ul>
+</li>
+<li>3.6 <a href="chap3.html#sec3-6">模型选择策略</a>
+<ul>
+<li>3.6.1 <a href="chap3.html#sec3-6-1">变量选择程序</a>
+</li>
+</ul>
+</li>
+<li>3.7 <a href="chap3.html#sec3-7">使用 lasso 进行变量选择</a>
+<ul>
+<li>3.7.1 <a href="chap3.html#sec3-7-1">Cox 回归中的 lasso</a>
+</li>
+<li>3.7.2 <a href="chap3.html#sec3-7-2">数据准备</a>
+</li>
+</ul>
+</li>
+<li>3.8 <a href="chap3.html#sec3-8">非线性项</a>
+<ul>
+<li>3.8.1 <a href="chap3.html#sec3-8-1">非线性检验</a>
+</li>
+<li>3.8.2 <a href="chap3.html#sec3-8-2">非线性建模</a>
+</li>
+<li>3.8.3 <a href="chap3.html#sec3-8-3">分数多项式</a>
+</li>
+</ul>
+</li>
+<li>3.9 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9">参数估计的解释</a>
+<ul>
+<li>3.9.1 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9-1">具有一个变量的模型</a>
+</li>
+<li>3.9.2 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-9-2">估计风险函数和生存函数</a>
+</li>
+</ul>
+</li>
+<li>3.10 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">参数估计的解释</a>
+<ul>
+<li>3.10.1 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10-1">无协变量的特例</a>
+</li>
+<li>3.10.2 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10-2">基线函数估计的一些近似</a>
+</li>
+</ul>
+</li>
+<li>3.11 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-11">风险调整的生存函数</a>
+<ul>
+<li>3.11.1 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-11-1">分组风险调整的生存函数</a>
+</li>
+</ul>
+</li>
+<li>3.12 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12">一致性，预测能力和解释的变异</a>
+<ul>
+<li>3.12.1 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-1">一致性的度量</a>
+</li>
+<li>3.12.2 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-2">预测能力</a>
+</li>
+<li>3.12.3 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-3">Cox 回归模型解释的变异</a>
+</li>
+<li>3.12.4 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-4">解释的变异的度量</a>
+</li>
+<li>3.12.5 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-12-5">模型验证</a>
+</li>
+</ul>
+</li>
+<li>3.13 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13">时依 ROC 曲线</a>
+<ul>
+<li>3.13.1 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13-1">灵敏度和特异度</a>
+</li>
+<li>3.13.2 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13-2">疾病概率建模</a>
+</li>
+<li>3.13.3 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13-3">ROC 曲线</a>
+</li>
+<li>3.13.4 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-13-4">时依 ROC 曲线</a>
+</li>
+</ul>
+</li>
+<li>3.14 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-14">比例风险建模和 log-rank 检验</a>
+</li>
+<li>3.15 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-15">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap4.html#chap4">Cox 回归模型的模型检查</a>
+<ul>
+<li>4.1 <a href="chap4.html#sec4-1">Cox 回归模型的残差</a>
+<ul>
+<li>4.1.1 <a href="chap4.html#sec4-1-1">Cox-Snell 残差</a>
+</li>
+<li>4.1.2 <a href="chap4.html#sec4-1-2">修正的 Cox-Snell 残差</a>
+</li>
+<li>4.1.3 <a href="chap4.html#sec4-1-3">鞅残差</a>
+</li>
+<li>4.1.4 <a href="chap4.html#sec4-1-4">偏差残差</a>
+</li>
+<li>4.1.5 <a href="chap4.html#sec4-1-5">Schoenfeld 残差</a>
+</li>
+<li>4.1.6 <a href="chap4.html#sec4-1-6">得分残差</a>
+</li>
+</ul>
+</li>
+<li>4.2 <a href="chap4.html#sec4-2">模型拟合的评估</a>
+<ul>
+<li>4.2.1 <a href="chap4.html#sec4-2-1">基于 Cox-Snell 残差的图形</a>
+</li>
+<li>4.2.2 <a href="chap4.html#sec4-2-2">基于鞅残差和偏差残差的图形</a>
+</li>
+<li>4.2.3 <a href="chap4.html#sec4-2-3">检查协变量的函数形式</a>
+</li>
+</ul>
+</li>
+<li>4.3 <a href="chap4.html#sec4-3">识别有影响的观测</a>
+<ul>
+<li>4.3.1 <a href="chap4.html#sec4-3-1">观测对单个参数估计的影响</a>
+</li>
+<li>4.3.2 <a href="chap4.html#sec4-3-2">观测对参数估计集的影响</a>
+</li>
+<li>4.3.3 <a href="chap4.html#sec4-3-3">有影响观测的处理</a>
+</li>
+</ul>
+</li>
+<li>4.4 <a href="chap4.html#sec4-4">检验比例风险假设</a>
+<ul>
+<li>4.4.1 <a href="chap4.html#sec4-4-1">对数累积风险图</a>
+</li>
+<li>4.4.2 <a href="chap4.html#sec4-4-2">使用 Schoenfeld 残差</a>
+</li>
+<li>4.4.3 <a href="chap4.html#sec4-4-3">非比例风险的检验</a>
+</li>
+<li>4.4.4 <a href="chap4.html#sec4-4-4">添加时依变量</a>
+</li>
+</ul>
+</li>
+<li>4.5 <a href="chap4.html#sec4-5">建议</a>
+</li>
+<li>4.6 <a href="chap4.html#sec4-6">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap5.html#chap5">参数回归模型</a>
+<ul>
+<li>5.1 <a href="chap5.html#sec5-1">风险函数的模型</a>
+<ul>
+<li>5.1.1 <a href="chap5.html#sec5-1-1">指数分布</a>
+</li>
+<li>5.1.2 <a href="chap5.html#sec5-1-2">Weibull 分布</a>
+</li>
+<li>5.1.3 <a href="chap5.html#sec5-1-3">log-logistic 分布</a>
+</li>
+<li>5.1.4 <a href="chap5.html#sec5-1-4">log-logistic 分布</a>
+</li>
+<li>5.1.5 <a href="chap5.html#sec5-1-5">Gompertz 分布</a>
+</li>
+<li>5.1.6 <a href="chap5.html#sec5-1-6">逆高斯分布</a>
+</li>
+<li>5.1.7 <a href="chap5.html#sec5-1-7">gamma 分布</a>
+</li>
+<li>5.1.8 <a href="chap5.html#sec5-1-8">一些其他分布</a>
+</li>
+</ul>
+</li>
+<li>5.2 <a href="chap5.html#sec5-2">评估参数模型的适用性</a>
+</li>
+<li>5.3 <a href="chap5.html#sec5-3">为单样本拟合参数模型</a>
+<ul>
+<li>5.3.1 <a href="chap5.html#sec5-3-1">随机删失数据的似然函数</a>
+</li>
+</ul>
+</li>
+<li>5.4 <a href="chap5.html#sec5-4">拟合指数和 Weibull 模型</a>
+<ul>
+<li>5.4.1 <a href="chap5.html#sec5-4-1">拟合指数分布</a>
+</li>
+<li>5.4.2 <a href="chap5.html#sec5-4-2">拟合 Weibull 分布</a>
+</li>
+<li>5.4.3 <a href="chap5.html#sec5-4-3">Weibull 分布百分位数的标准误</a>
+</li>
+</ul>
+</li>
+<li>5.5 <a href="chap5.html#sec5-5">用于两组比较的 Weibull 模型</a>
+<ul>
+<li>5.5.1 <a href="chap5.html#sec5-5-1">探索性分析</a>
+</li>
+<li>5.5.2 <a href="chap5.html#sec5-5-2">拟合模型</a>
+</li>
+</ul>
+</li>
+<li>5.6 <a href="chap5.html#sec5-6">Weibull 比例风险模型</a>
+<ul>
+<li>5.6.1 <a href="chap5.html#sec5-6-1">拟合模型</a>
+</li>
+<li>5.6.2 <a href="chap5.html#sec5-6-2">Weibull 模型百分位数的标准误</a>
+</li>
+<li>5.6.3 <a href="chap5.html#sec5-6-3">模型的对数线性形式</a>
+</li>
+<li>5.6.4 <a href="chap5.html#sec5-6-4">探索性分析</a>
+</li>
+</ul>
+</li>
+<li>5.7 <a href="chap5.html#sec5-7">比较替代的 Weibull 比例风险模型</a>
+</li>
+<li>5.8 <a href="chap5.html#sec5-8">Gompertz 比例风险模型</a>
+</li>
+<li>5.9 <a href="chap5.html#sec5-9">模型选择</a>
+</li>
+<li>5.10 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-10">用于两组比较的加速失效时间模型</a>
+<ul>
+<li>5.10.1 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-10-1">与比例风险模型的比较</a>
+</li>
+<li>5.10.2 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-10-2">百分位-百分位图</a>
+</li>
+</ul>
+</li>
+<li>5.11 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-11">用于两组比较的加速失效时间模型</a>
+<ul>
+<li>5.11.1 <a href="#sec5-11-1">加速失效时间模型的对数线性形式</a>
+</li>
+</ul>
+</li>
+<li>5.12 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12">参数加速失效时间模型</a>
+<ul>
+<li>5.12.1 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12-1">Weibull 加速失效时间模型</a>
+</li>
+<li>5.12.2 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-12-2">log-logistic 加速失效时间模型</a>
+</li>
+<li>5.12.3 <a href="#sec5-12-3">log-normal 加速失效时间模型</a>
+</li>
+</ul>
+</li>
+<li>5.13 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-13">拟合并比较加速失效时间模型</a>
+</li>
+<li>5.14 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-14">参数模型中解释的变异的度量</a>
+<ul>
+<li>5.14.1 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-14-1">参数模型的预测能力</a>
+</li>
+</ul>
+</li>
+<li>5.15 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-15">比例几率模型</a>
+<ul>
+<li>5.15.1 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-15-1">log-logistic 比例几率模型</a>
+</li>
+</ul>
+</li>
+<li>5.16 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-16">治愈率建模</a>
+</li>
+<li>5.17 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-17">协变量调整的影响</a>
+</li>
+<li>5.18 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-18">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap6.html#chap6">灵活的参数模型</a>
+<ul>
+<li>6.1 <a href="chap6.html#sec6-1">分段指数模型</a>
+</li>
+<li>6.2 <a href="chap6.html#sec6-2">使用样条函数建模</a>
+<ul>
+<li>6.2.1 <a href="chap6.html#sec6-2-1">B 样条</a>
+</li>
+<li>6.2.2 <a href="chap6.html#sec6-2-2">限制性立方样条</a>
+</li>
+<li>6.2.3 <a href="chap6.html#sec6-2-3">结数和位置</a>
+</li>
+</ul>
+</li>
+<li>6.3 <a href="chap6.html#sec6-3">风险函数的灵活模型</a>
+</li>
+<li>6.4 <a href="chap6.html#sec6-4">对数累积风险函数的灵活模型</a>
+</li>
+<li>6.5 <a href="chap6.html#sec6-5">灵活的比例几率模型</a>
+</li>
+<li>6.6 <a href="chap6.html#sec6-6">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap7.html#chap7">参数模型的模型检查</a>
+<ul>
+<li>7.1 <a href="chap7.html#sec7-1">参数模型的残差</a>
+<ul>
+<li>7.1.1 <a href="chap7.html#sec7-1-1">标准化残差</a>
+</li>
+<li>7.1.2 <a href="chap7.html#sec7-1-2">Cox-Snell 残差</a>
+</li>
+<li>7.1.3 <a href="chap7.html#sec7-1-3">鞅残差</a>
+</li>
+<li>7.1.4 <a href="chap7.html#sec7-1-4">偏差残差</a>
+</li>
+<li>7.1.5 <a href="chap7.html#sec7-1-5">得分残差</a>
+</li>
+</ul>
+</li>
+<li>7.2 <a href="chap7.html#sec7-2">特定参数模型的残差</a>
+<ul>
+<li>7.2.1 <a href="chap7.html#sec7-2-1">Weibull 分布</a>
+</li>
+<li>7.2.2 <a href="chap7.html#sec7-2-2">log-logistic 分布</a>
+</li>
+<li>7.2.3 <a href="#sec7-2-3">log-normal 分布</a>
+</li>
+<li>7.2.4 <a href="chap7.html#sec7-2-4">残差分析</a>
+</li>
+</ul>
+</li>
+<li>7.3 <a href="chap7.html#sec7-3">比较观测的和拟合的生存函数</a>
+</li>
+<li>7.4 <a href="chap7.html#sec7-4">识别有影响的观测</a>
+<ul>
+<li>7.4.1 <a href="chap7.html#sec7-4-1">观测对单个参数估计的影响</a>
+</li>
+<li>7.4.2 <a href="chap7.html#sec7-4-2">观测对参数估计集的影响</a>
+</li>
+</ul>
+</li>
+<li>7.5 <a href="chap7.html#sec7-5">检验 Weibull 模型的比例风险</a>
+</li>
+<li>7.6 <a href="chap7.html#sec7-6">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap8.html#chap8">时依变量</a>
+<ul>
+<li>8.1 <a href="chap8.html#sec8-1">时依变量的类型</a>
+<ul>
+<li>8.1.1 <a href="chap8.html#sec8-1-1">时依系数</a>
+</li>
+</ul>
+</li>
+<li>8.2 <a href="chap8.html#sec8-2">时依变量的建模</a>
+<ul>
+<li>8.2.1 <a href="chap8.html#sec8-2-1">拟合含时依变量的模型</a>
+</li>
+</ul>
+</li>
+<li>8.3 <a href="chap8.html#sec8-3">时依变量的编码</a>
+</li>
+<li>8.4 <a href="chap8.html#sec8-4">累积风险函数和生存函数的估计</a>
+</li>
+<li>8.5 <a href="chap8.html#sec8-5">模型比较和验证</a>
+<ul>
+<li>8.5.1 <a href="chap8.html#sec8-5-1">治疗的比较</a>
+</li>
+<li>8.5.2 <a href="chap8.html#sec8-5-2">评估模型的充分性</a>
+</li>
+</ul>
+</li>
+<li>8.6 <a href="chap8.html#sec8-6">时依变量的一些应用</a>
+<ul>
+<li>8.6.1 <a href="chap8.html#sec8-6-1">一些例子</a>
+</li>
+</ul>
+</li>
+<li>8.7 <a href="chap8.html#sec8-7">纵向数据和生存数据的联合建模</a>
+<ul>
+<li>8.7.1 <a href="chap8.html#sec8-7-1">纵向建模</a>
+</li>
+<li>8.7.2 <a href="chap8.html#sec8-7-2">联合模型</a>
+</li>
+<li>8.7.3 <a href="chap8.html#sec8-7-3">联合模型的一些扩展</a>
+</li>
+</ul>
+</li>
+<li>8.8 <a href="chap8.html#sec8-8">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap9.html#chap9">区间删失生存数据</a>
+<ul>
+<li>9.1 <a href="chap9.html#sec9-1">区间删失</a>
+<ul>
+<li>9.1.1 <a href="chap9.html#sec9-1-1">当前状态数据</a>
+</li>
+</ul>
+</li>
+<li>9.2 <a href="chap9.html#sec9-2">估计生存函数</a>
+<ul>
+<li>9.2.1 <a href="chap9.html#sec9-2-1">生存函数估计的推导</a>
+</li>
+</ul>
+</li>
+<li>9.3 <a href="chap9.html#sec9-3">半参数比例风险模型</a>
+<ul>
+<li>9.3.1 <a href="chap9.html#sec9-3-1">半参数 Turnbull 模型</a>
+</li>
+<li>9.3.2 <a href="chap9.html#sec9-3-2">区间删失数据的分段指数模型</a>
+</li>
+</ul>
+</li>
+<li>9.4 <a href="chap9.html#sec9-4">参数模型</a>
+</li>
+<li>9.5 <a href="chap9.html#sec9-5">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap10.html#chap10">脆弱模型</a>
+<ul>
+<li>10.1 <a href="chap10.html#sec10-1">脆弱性的介绍</a>
+<ul>
+<li>10.1.1 <a href="chap10.html#sec10-1-1">随机效应</a>
+</li>
+<li>10.1.2 <a href="chap10.html#sec10-1-2">个体脆弱性</a>
+</li>
+<li>10.1.3 <a href="chap10.html#sec10-1-3">共享脆弱性</a>
+</li>
+</ul>
+</li>
+<li>10.2 <a href="chap10.html#sec10-2">个体脆弱性建模</a>
+<ul>
+<li>10.2.1 <a href="chap10.html#sec10-2-1">脆弱性分布</a>
+</li>
+<li>10.2.2 <a href="chap10.html#sec10-2-2">可观测生存函数和风险函数</a>
+</li>
+</ul>
+</li>
+<li>10.3 <a href="chap10.html#sec10-3">gamma 脆弱性分布</a>
+<ul>
+<li>10.3.1 <a href="chap10.html#sec10-3-1">脆弱性对可观测风险函数的影响</a>
+</li>
+<li>10.3.2 <a href="chap10.html#sec10-3-2">脆弱性对可观测风险比的影响</a>
+</li>
+</ul>
+</li>
+<li>10.4 <a href="chap10.html#sec10-4">拟合参数脆弱模型</a>
+<ul>
+<li>10.4.1 <a href="chap10.html#sec10-4-1">gamma 脆弱性</a>
+</li>
+</ul>
+</li>
+<li>10.5 <a href="chap10.html#sec10-5">拟合半参数脆弱模型</a>
+<ul>
+<li>10.5.1 <a href="chap10.html#sec10-5-1">lognormal 脆弱效应</a>
+</li>
+<li>10.5.2 <a href="chap10.html#sec10-5-2">gamma 脆弱效应</a>
+</li>
+</ul>
+</li>
+<li>10.6 <a href="chap10.html#sec10-6">比较带脆弱性的模型</a>
+<ul>
+<li>10.6.1 <a href="chap10.html#sec10-6-1">脆弱性存在的检验</a>
+</li>
+</ul>
+</li>
+<li>10.7 <a href="chap10.html#sec10-7">共享脆弱模型</a>
+<ul>
+<li>10.7.1 <a href="chap10.html#sec10-7-1">拟合共享脆弱模型</a>
+</li>
+<li>10.7.2 <a href="chap10.html#sec10-7-2">比较共享脆弱模型</a>
+</li>
+</ul>
+</li>
+<li>10.8 <a href="chap10.html#sec10-8">脆弱建模的其他方面</a>
+<ul>
+<li>10.8.1 <a href="chap10.html#sec10-8-1">模型检查</a>
+</li>
+<li>10.8.2 <a href="chap10.html#sec10-8-2">相关脆弱模型</a>
+</li>
+<li>10.8.3 <a href="chap10.html#sec10-8-3">依赖性度量</a>
+</li>
+<li>10.8.4 <a href="chap10.html#sec10-8-4">模型拟合中的数值问题</a>
+</li>
+</ul>
+</li>
+<li>10.9 <a href="chap10.html#sec10-9">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap11.html#chap11">非比例风险和机构的比较</a>
+<ul>
+<li>11.1 <a href="chap11.html#sec11-1">非比例风险</a>
+<ul>
+<li>11.1.1 <a href="chap11.html#sec11-1-1">对给定时间的事件概率建模</a>
+</li>
+</ul>
+</li>
+<li>11.2 <a href="chap11.html#sec11-2">分层比例风险模型</a>
+<ul>
+<li>11.2.1 <a href="chap11.html#sec11-2-1">治疗之间的非比例风险</a>
+</li>
+</ul>
+</li>
+<li>11.3 <a href="chap11.html#sec11-3">限制性平均生存</a>
+<ul>
+<li>11.3.1 <a href="chap11.html#sec11-3-1">伪值的使用</a>
+</li>
+</ul>
+</li>
+<li>11.4 <a href="chap11.html#sec11-4">机构的比较</a>
+<ul>
+<li>11.4.1 <a href="chap11.html#sec11-4-1"><span class="math inline">\(RAFR\)</span> 的区间估计</a>
+</li>
+<li>11.4.2 <a href="chap11.html#sec11-4-2">泊松回归模型的使用</a>
+</li>
+<li>11.4.3 <a href="chap11.html#sec11-4-3">随机机构效应</a>
+</li>
+</ul>
+</li>
+<li>11.5 <a href="chap11.html#sec11-5">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap12.html#chap12">竞争风险</a>
+<ul>
+<li>12.1 <a href="chap12.html#sec12-1">竞争风险的介绍</a>
+</li>
+<li>12.2 <a href="chap12.html#sec12-2">总结竞争风险数据</a>
+<ul>
+<li>12.2.1 <a href="chap12.html#sec12-2-1">生存函数的 Kaplan-Meier 估计</a>
+</li>
+</ul>
+</li>
+<li>12.3 <a href="chap12.html#sec12-3">风险和累积发生率函数</a>
+<ul>
+<li>12.3.1 <a href="chap12.html#sec12-3-1">原因别风险函数</a>
+</li>
+<li>12.3.2 <a href="chap12.html#sec12-3-2">原因别累计发生率函数</a>
+</li>
+<li>12.3.3 <a href="chap12.html#sec12-3-3">关注的其他函数</a>
+</li>
+</ul>
+</li>
+<li>12.4 <a href="chap12.html#sec12-4">原因别风险建模</a>
+<ul>
+<li>12.4.1 <a href="chap12.html#sec12-4-1">竞争风险模型的似然函数</a>
+</li>
+<li>12.4.2 <a href="chap12.html#sec12-4-2">累积发生率函数的参数模型</a>
+</li>
+</ul>
+</li>
+<li>12.5 <a href="chap12.html#sec12-5">原因别发生率建模</a>
+<ul>
+<li>12.5.1 <a href="chap12.html#sec12-5-1">Fine and Gray 竞争风险模型</a>
+</li>
+</ul>
+</li>
+<li>12.6 <a href="chap12.html#sec12-6">模型检查</a>
+</li>
+<li>12.7 <a href="chap12.html#sec12-7">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap13.html#chap13">多次事件和事件史分析</a>
+<ul>
+<li>13.1 <a href="chap13.html#sec13-1">计数过程的介绍</a>
+<ul>
+<li>13.1.1 <a href="chap13.html#sec13-1-1">强度函数建模</a>
+</li>
+<li>13.1.2 <a href="chap13.html#sec13-1-2">作为计数过程的生存数据</a>
+</li>
+<li>13.1.3 <a href="chap13.html#sec13-1-3">方差-协方差阵的稳健估计</a>
+</li>
+</ul>
+</li>
+<li>13.2 <a href="chap13.html#sec13-2">复发事件建模</a>
+<ul>
+<li>13.2.1 <a href="chap13.html#sec13-2-1">Anderson and Gill 模型</a>
+</li>
+<li>13.2.2 <a href="chap13.html#sec13-2-2">Prentice, Williams, and Peterson 模型</a>
+</li>
+</ul>
+</li>
+<li>13.3 <a href="chap13.html#sec13-3">多种事件</a>
+<ul>
+<li>13.3.1 <a href="chap13.html#sec13-3-1">Wei, Lin and Weissfeld 模型</a>
+</li>
+</ul>
+</li>
+<li>13.4 <a href="chap13.html#sec13-4">事件史分析</a>
+<ul>
+<li>13.4.1 <a href="chap13.html#sec13-4-1">事件史分析模型</a>
+</li>
+</ul>
+</li>
+<li>13.5 <a href="chap13.html#sec13-5">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap14.html#chap14">相依删失</a>
+<ul>
+<li>14.1 <a href="chap14.html#sec14-1">识别相依删失</a>
+</li>
+<li>14.2 <a href="chap14.html#sec14-2">对相依删失的敏感性</a>
+<ul>
+<li>14.2.1 <a href="chap14.html#sec14-2-1">敏感性分析</a>
+</li>
+<li>14.2.2 <a href="chap14.html#sec14-2-2">相依删失的影响</a>
+</li>
+</ul>
+</li>
+<li>14.3 <a href="chap14.html#sec14-3">相依删失建模</a>
+<ul>
+<li>14.3.1 <a href="chap14.html#sec14-3-1">相依删失的 Cox 回归模型</a>
+</li>
+</ul>
+</li>
+<li>14.4 <a href="chap14.html#sec14-4">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap15.html#chap15">生存研究的样本量要求</a>
+<ul>
+<li>15.1 <a href="chap15.html#sec15-1">区分两个治疗组</a>
+</li>
+<li>15.2 <a href="chap15.html#sec15-2">计算所需的死亡人数</a>
+<ul>
+<li>15.2.1 <a href="chap15.html#sec15-2-1">所需死亡人数的推导</a>
+</li>
+</ul>
+</li>
+<li>15.3 <a href="chap15.html#sec15-3">计算所需的患者人数</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap16.html#chap16">贝叶斯生存分析</a>
+<ul>
+<li>16.1 <a href="chap16.html#sec16-1">贝叶斯定理</a>
+</li>
+<li>16.2 <a href="chap16.html#sec16-2">贝叶斯推断</a>
+</li>
+<li>16.3 <a href="chap16.html#sec16-3">生存数据的贝叶斯模型</a>
+<ul>
+<li>16.3.1 <a href="chap16.html#sec16-3-1">简单指数模型的贝叶斯版本</a>
+</li>
+</ul>
+</li>
+<li>16.4 <a href="chap16.html#sec16-4">纳入先验信息</a>
+<ul>
+<li>16.4.1 <a href="chap16.html#sec16-4-1">无信息先验信息</a>
+</li>
+<li>16.4.2 <a href="chap16.html#sec16-4-2">模糊先验信息</a>
+</li>
+<li>16.4.3 <a href="chap16.html#sec16-4-3">实质的先验信息</a>
+</li>
+</ul>
+</li>
+<li>16.5 <a href="chap16.html#sec16-5">总结后验信息</a>
+<ul>
+<li>16.5.1 <a href="chap16.html#sec16-5-1">点估计</a>
+</li>
+<li>16.5.2 <a href="chap16.html#sec16-5-2">区间估计</a>
+</li>
+<li>16.5.3 <a href="chap16.html#sec16-5-3">贝叶斯假设检验</a>
+</li>
+</ul>
+</li>
+<li>16.6 <a href="chap16.html#sec16-6">计算后验分布</a>
+<ul>
+<li>16.6.1 <a href="chap16.html#sec16-6-1">拒绝采样</a>
+</li>
+<li>16.6.2 <a href="chap16.html#sec16-6-2">使用 MCMC 从后验分布中采样</a>
+</li>
+</ul>
+</li>
+<li>16.7 <a href="chap16.html#sec16-7">预测分布</a>
+</li>
+<li>16.8 <a href="chap16.html#sec16-8">贝叶斯模型比较</a>
+<ul>
+<li>16.8.1 <a href="chap16.html#sec16-8-1">用于比较模型的 DIC 统计量</a>
+</li>
+<li>16.8.2 <a href="chap16.html#sec16-8-2">用于比较模型的 WAIC 统计量</a>
+</li>
+</ul>
+</li>
+<li>16.9 <a href="chap16.html#sec16-9">注释</a>
+</li>
+<li>16.10 <a href="chap16.html#sec16-10">延伸阅读</a>
+</li>
+</ul>
+</li>
+<li>
+<a href="chap17.html#chap17">使用 R 进行生存分析</a>
+<ul>
+<li>17.1 <a href="chap17.html#sec17-1">R 的介绍</a>
+</li>
+<li>17.2 <a href="chap17.html#sec17-2">数据输入和编辑</a>
+<ul>
+<li>17.2.1 <a href="chap17.html#sec17-2-1">从文件中读取和操作数据</a>
+</li>
+<li>17.2.2 <a href="chap17.html#sec17-2-2">R 包</a>
+</li>
+</ul>
+</li>
+<li>17.3 <a href="chap17.html#sec17-3">非参数程序</a>
+</li>
+<li>17.4 <a href="chap17.html#sec17-4">Cox 回归模型</a>
+<ul>
+<li>17.4.1 <a href="chap17.html#sec17-4-1">变量选择和 lasso</a>
+</li>
+<li>17.4.2 <a href="chap17.html#sec17-4-2">预测能力和解释的变异的度量</a>
+</li>
+<li>17.4.3 <a href="chap17.html#sec17-4-3">时依 ROC 曲线</a>
+</li>
+</ul>
+</li>
+<li>17.5 <a href="chap17.html#sec17-5">Cox 回归模型中的模型检查</a>
+<ul>
+<li>17.5.1 <a href="chap17.html#sec17-5-1">残差分析</a>
+</li>
+<li>17.5.2 <a href="chap17.html#sec17-5-2">识别有影响的观测</a>
+</li>
+<li>17.5.3 <a href="chap17.html#sec17-5-3">检验比例风险假设</a>
+</li>
+</ul>
+</li>
+<li>17.6 <a href="chap17.html#sec17-6">参数生存模型</a>
+</li>
+<li>17.7 <a href="chap17.html#sec17-7">灵活的参数模型</a>
+<ul>
+<li>17.7.1 <a href="chap17.html#sec17-7-1">分段指数模型</a>
+</li>
+<li>17.7.2 <a href="chap17.html#sec17-7-2">风险函数的模型</a>
+</li>
+<li>17.7.3 <a href="chap17.html#sec17-7-3">对数累积风险函数的模型</a>
+</li>
+</ul>
+</li>
+<li>17.8 <a href="chap17.html#sec17-8">参数模型中的模型检查</a>
+<ul>
+<li>17.8.1 <a href="chap17.html#sec17-8-1">有影响的值</a>
+</li>
+<li>17.8.2 <a href="chap17.html#sec17-8-2">比较观测的和拟合的生存函数</a>
+</li>
+</ul>
+</li>
+<li>17.9 <a href="chap17.html#sec17-9">时依变量</a>
+<ul>
+<li>17.9.1 <a href="chap17.html#sec17-9-1">时变系数</a>
+</li>
+<li>17.9.2 <a href="chap17.html#sec17-9-2">纵向数据和生存数据的联合建模</a>
+</li>
+</ul>
+</li>
+<li>17.10 <a href="chap17.html#sec17-10">区间删失数据</a>
+<ul>
+<li>17.10.1 <a href="chap17.html#sec17-10-1">生存函数的非参数最大似然估计</a>
+</li>
+<li>17.10.2 <a href="chap17.html#sec17-10-2">区间删失数据的半参数模型</a>
+</li>
+<li>17.10.3 <a href="chap17.html#sec17-10-3">区间删失数据的参数模型</a>
+</li>
+</ul>
+</li>
+<li>17.11 <a href="chap17.html#sec17-11">脆弱模型</a>
+<ul>
+<li>17.11.1 <a href="chap17.html#sec17-11-1">拟合具有个体脆弱性的参数脆弱模型</a>
+</li>
+<li>17.11.2 <a href="chap17.html#sec17-11-2">拟合具有共享脆弱性的参数脆弱模型</a>
+</li>
+<li>17.11.3 <a href="chap17.html#sec17-11-3">拟合具有个体 lognormal 脆弱性的半参数模型</a>
+</li>
+<li>17.11.4 <a href="chap17.html#sec17-11-4">拟合具有个体 gamma 脆弱性的半参数模型</a>
+</li>
+<li>17.11.5 <a href="chap17.html#sec17-11-5">拟合具有共享脆弱性的半参数模型</a>
+</li>
+</ul>
+</li>
+<li>17.12 <a href="chap17.html#sec17-12">竞争风险</a>
+<ul>
+<li>17.12.1 <a href="chap17.html#sec17-12-1">原因别的风险函数的估计和建模</a>
+</li>
+<li>17.12.2 <a href="chap17.html#sec17-12-2">估计累计发生率函数</a>
+</li>
+<li>17.12.3 <a href="chap17.html#sec17-12-3">累积发生率的 Fine and Gray 模型</a>
+</li>
+</ul>
+</li>
+<li>17.13 <a href="chap17.html#sec17-13">多次事件和事件历史建模</a>
+</li>
+<li>17.14 <a href="chap17.html#sec17-14">相依删失</a>
+</li>
+<li>17.15 <a href="chap17.html#sec17-15">贝叶斯生存分析</a>
+<ul>
+<li>17.15.1 <a href="chap17.html#sec17-15-1">贝叶斯参数建模</a>
+</li>
+<li>17.15.2 <a href="chap17.html#sec17-15-2">贝叶斯半参数建模</a>
+</li>
+<li>17.15.3 <a href="chap17.html#sec17-15-3">风险函数的灵活模型</a>
+</li>
+</ul>
+</li>
+<li>17.16 <a href="chap17.html#sec17-16">延伸阅读</a>
+</li>
+</ul>
+</li>
+</ol>
+<ul>
+<li>附录 A <a href="A.html#A">最大似然估计</a>
+<ul>
+<li>A.1 <a href="A.html#secA-1">关于单个未知参数的推断</a>
+</li>
+<li>A.2 <a href="A.html#secA-2">关于未知参数向量的推断</a>
+</li>
+</ul>
+</li>
+<li>附录 B <a href="B.html#B">额外数据集</a>
+<ul>
+<li>B.1 <a href="B.html#secB-1">慢性活动性肝炎</a>
+</li>
+<li>B.2 <a href="B.html#secB-2">膀胱癌的复发</a>
+</li>
+<li>B.3 <a href="B.html#secB-3">黑鸭的生存</a>
+</li>
+<li>B.4 <a href="B.html#secB-4">骨髓移植</a>
+</li>
+<li>B.5 <a href="B.html#secB-5">慢性肉芽肿病</a>
+</li>
+</ul>
+</li>
+<li><a href="bib.html#bib">参考书目</a></li>
+</ul>
+</div>
+
+
+
+  <div class="chapter-nav">
+<div class="prev"><a href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></div>
+<div class="next"><a href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav"><li><a class="nav-link" href="#%E7%9B%AE%E5%BD%95">目录</a></li></ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

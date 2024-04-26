@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 6 章 灵活的参数模型 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="第 5 章描述的生存分析参数模型的基线风险函数仅依赖于少量未知参数，因此捕获基线风险潜在形式的能力有限。相比之下，Cox 回归模型的主要优点通常被认为是基线风险函数的灵活性，因为它可以适应任何特定数据集所需的模式。Cox 模型的这一优势常常被夸大了。由于 Cox 模型中的基线风险函数是根据数据估计的，以给出在每个事件时间都有跳跃的阶跃函数，因此它的表现可能非常不稳定，如第 3 章的示例...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 6 章 灵活的参数模型 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="第 5 章描述的生存分析参数模型的基线风险函数仅依赖于少量未知参数，因此捕获基线风险潜在形式的能力有限。相比之下，Cox 回归模型的主要优点通常被认为是基线风险函数的灵活性，因为它可以适应任何特定数据集所需的模式。Cox 模型的这一优势常常被夸大了。由于 Cox 模型中的基线风险函数是根据数据估计的，以给出在每个事件时间都有跳跃的阶跃函数，因此它的表现可能非常不稳定，如第 3 章的示例...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 6 章 灵活的参数模型 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="第 5 章描述的生存分析参数模型的基线风险函数仅依赖于少量未知参数，因此捕获基线风险潜在形式的能力有限。相比之下，Cox 回归模型的主要优点通常被认为是基线风险函数的灵活性，因为它可以适应任何特定数据集所需的模式。Cox 模型的这一优势常常被夸大了。由于 Cox 模型中的基线风险函数是根据数据估计的，以给出在每个事件时间都有跳跃的阶跃函数，因此它的表现可能非常不稳定，如第 3 章的示例...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="active" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap6" class="section level1" number="6">
+<h1>
+<span class="header-section-number">第 6 章</span> 灵活的参数模型<a class="anchor" aria-label="anchor" href="#chap6"><i class="fas fa-link"></i></a>
+</h1>
+<p>第 <a href="chap5.html#chap5">5</a> 章描述的生存分析参数模型的基线风险函数仅依赖于少量未知参数，因此捕获基线风险潜在形式的能力有限。相比之下，Cox 回归模型的主要优点通常被认为是基线风险函数的灵活性，因为它可以适应任何特定数据集所需的模式。Cox 模型的这一优势常常被夸大了。由于 Cox 模型中的基线风险函数是根据数据估计的，以给出在每个事件时间都有跳跃的阶跃函数，因此它的表现可能非常不稳定，如第 3 章的<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-14">示例 3.14</a>. 此外，个体的生存函数估计在事件时间之间是恒定的，因此可能无法估计精确时间处的生存率。此外，无法估计超过数据集最远事件时间的生存率。灵活的参数模型弥补了 Cox 半参数模型和全参数模型之间的差距，当标准参数模型不能令人满意地描述潜在的基线风险或生存函数时，该模型可能具有很大的价值。</p>
+<div id="sec6-1" class="section level2" number="6.1">
+<h2>
+<span class="header-section-number">6.1</span> 分段指数模型<a class="anchor" aria-label="anchor" href="#sec6-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>在 Cox 回归模型中，第 <span class="math inline">\(i\)</span> 个个体的风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的值向量，<span class="math inline">\(\boldsymbol \beta\)</span> 是它们的系数向量，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。通过最大化不依赖于 <span class="math inline">\(h_0(t)\)</span> 的偏似然函数来拟合模型，这得到了 <span class="math inline">\(\boldsymbol \beta\)</span> 的估计。随后，可以通过随事件时间变化的阶跃函数来估计风险、累积风险和生存函数。我们现在考虑该模型的一个版本：基线风险函数通过使用每个事件时间区间的参数进行显式建模。</p>
+<p>假设 <span class="math inline">\(n\)</span> 个个体的生存时间由 <span class="math inline">\(r\)</span> 个有序事件时间 <span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;\cdots&lt;t_{(r)}\)</span> 和 <span class="math inline">\(n − r\)</span> 个右删失时间组成。在相邻事件时间之间基线风险恒定的模型中，我们可以设</p>
+<p><span class="math display" id="eq:6-1">\[\begin{align}
+h_0(t)=\lambda_j
+\tag{6.1}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(t_{(j-1)}\leqslant t&lt;t_{(j)},\lambda_j&gt;0,j=1,2,\ldots,r\)</span> 且 <span class="math inline">\(t_{(0)}=0\)</span>。因为 <span class="math inline">\(\lambda_j&gt;0\)</span>，该模型通常通过设 <span class="math inline">\(\lambda_j=\exp(\phi_j)\)</span> 并将 <span class="math inline">\(\phi\)</span> 视为基线风险中的未知参数来进行参数化。式 <a href="chap6.html#eq:6-1">(6.1)</a> 中的风险函数在每个时间区间内是分段常数，因此对应于在每个时间区间内拟合单个指数模型。因此，该模型称为<strong>分段指数模型</strong> (piecewise exponential model). 风险函数变化的时间点是 <span class="math inline">\(t_{(1)},t_{(2)},\ldots,t_{(r-1)}\)</span>，这些点称为分割点或<strong>结</strong> (cut points or knots).</p>
+<p>为估计该模型的未知参数，我们可以使用最大似然法，如第 3 章 <a href="chap3.html#sec3-3">3.3</a> 节所述。全参数模型 (fully parametric model) 的似然函数为</p>
+<p><span class="math display" id="eq:6-2">\[\begin{align}
+\prod_{i=1}^n\left\{h_i(t_i)\right\}^{\delta_i}S_i(t_i)
+\tag{6.2}
+\end{align}\]</span></p>
+<p>这首次在第 4 章的式 <a href="chap5.html#eq:5-15">(5.15)</a> 中给出，其中 <span class="math inline">\(h_i(t_i)\)</span> 和 <span class="math inline">\(S_i(t_i)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t_i\)</span> 的风险和生存函数，<span class="math inline">\(i=1,2,\ldots,n\)</span>，<span class="math inline">\(\delta_i\)</span> 是事件指示符。在式 <a href="chap6.html#eq:6-1">(6.1)</a> 中对基线风险函数进行积分后，累积基线风险为</p>
+<p><span class="math display" id="eq:6-3">\[\begin{align}
+H_0(t)=\sum_{j=1}^r\lambda_j\Delta_j(t)
+\tag{6.3}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\left.\Delta_j(t)=\left\{\begin{array}{ll}0&amp;t&lt;t_{(j-1)},\\t-t_{(j-1)}&amp;t_{(j-1)}\leqslant t&lt;t_{(j)},\\t_{(j)}-t_{(j-1)}&amp;t\geqslant t_{(j)}\end{array}\right.\right.\]</span></p>
+<p>该累积风险函数由每个区间内的直线段组成。第 <span class="math inline">\(i\)</span> 个个体的相应累积风险函数为 <span class="math inline">\(H_{{i}}(t)=\operatorname{exp}(\boldsymbol{\beta'x}_{{i}})H_{0}(t)\)</span>，然后可以使用第 1 章的式 <a href="chap1.html#eq:1-6">(1.6)</a> 中给出的关系式 <span class="math inline">\(S_{{i}}(t)=\operatorname{exp}\{-H_{i}(t)\}\)</span> 来得到生存函数。</p>
+<p>原则上，基线风险函数的未知参数 <span class="math inline">\(\lambda_1,\lambda_2,\ldots,\lambda_r\)</span> 可以通过最大化式 <a href="chap6.html#eq:6-2">(6.2)</a> 中似然函数的对数与 <span class="math inline">\(\beta\)</span> 一起估计。当数据中的每个区间都有一个单独的参数 <span class="math inline">\(\lambda\)</span>，试图最大化该对数似然函数时可能会出现实质性的数值问题，尤其是有较多的事件时间时。然而，现在可以使用快速有效的算法来完成计算。这些算法主要是为处理区间删失数据而开发的（如第 <a href="chap9.html#chap9">9</a> 章所述），但由于右删失是区间删失的特殊情况，因此这里可以使用相同的算法。即便如此，这些方法对计算的要求仍然很高。此外，基于信息矩阵、在附录 <a href="A.html#A">A</a> 中描述的构建估计的标准误的通常方法是不稳定的，因此通常使用模拟方法。被称为 bootstrapping 的模拟过程涉及从数据集中有放回地抽取 <span class="math inline">\(n\)</span> 个观测值，并为该样本估计未知参数。该过程会重复很多次，可能是 500 或更多次，根据各个 bootstrap 估计来计算每个估计的样本标准差。然后使用这些标准差来总结参数估计的精度。</p>
+<p>除了计算困难之外，为每个区间提供一个单独的参数并不能真正有效地总结潜在的风险。在构建分段恒定基线风险时，采用更少的时间区间是优选的且更简单的。实际区间数将取决于数据集的大小，但通常不需要超过 10 个区间。另一个问题是将区间的端点定位于何处。一种常用的方法是将研究的时间段划分为这些区间：每个区间包含相似数量的事件时间。或者，也可以选择这样一种方式来划分时间区间：风险变化较快时，时间区间较窄；风险变化较慢时，时间区间较宽。合理选择区间边界应能为任何基线风险提供合理的近似值。</p>
+<p>下面的示例说明了分段指数模型的使用。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex6-1" class="example"><strong>示例 6.1  (肾癌的治疗) </strong></span><br></p>
+<p>第 3 章<a href="chap3.html#exm:ex3-4">示例 3.4</a> 中描述了一项涉及 36 名肾癌患者生存时间数据的研究。拟合了包括年龄组和肾切除术状态的 Cox 回归模型，并在<a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#exm:ex3-14">示例 3.14</a> 中给出了风险函数的估计。肾切除术状态的风险比为 <span class="math inline">\(\exp(−1.412)=0.244\)</span>，60 - 70 岁人群和 70 岁以上人群相对于 60 岁以下人群的风险比分别为 <span class="math inline">\(\exp(0.013)=1.013\)</span> 和 <span class="math inline">\(\exp(1.342)=3.825\)</span>。</p>
+<p>在 23 个有序事件时间之间拟合具有恒定风险的分段指数模型时，所得肾切除状态和年龄组的风险比分别为 0.215, 1.124 和 4.518，这与根据 Cox 回归模型获得的风险比非常相似。基线风险函数中 <span class="math inline">\(\lambda\)</span> 参数的估计与第 3 章表 3.19 给出的值大致相似，尽管两组估计都非常不精确。拟合的分段指数模型的风险函数如图 6.1 所示。这与 Cox 模型的模式类似，如第 3 章图 3.4 所示。</p>
+<details><summary><font color="#8B2232">表 3.19</font>
+</summary><img src="figure/table%203.19.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 6.1</font>
+</summary><img src="figure/figure%206.1.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 3.4</font>
+</summary><img src="figure/figure%203.4.png#center" style="width:80.0%"></details><p><br>
+估计的基线风险函数有 22 个不同的参数，对于这种规模的数据集来说，它被严重地过度参数化了。为了说明，还拟合了仅具有五个区间的分段指数模型，其中以时间 12, 26, 56 和 84 个月为划分定义了区间。 这四个分割点或结，介于最短事件时间 5 个月和最长事件时间 115 个月之间，大致对应于事件时间的五分位数。肾切除术状态和年龄组的风险比现在分别为 0.236, 1.179 和 4.944，这与具有 22 个区间的模型所得结果非常相似。</p>
+<p>可以使用第 3 章式 <a href="chap3.html#eq:3-14">(3.14)</a> 中定义的 AIC 统计量来比较这两个分段指数模型。具有 22 个区间的模型的未知参数数量 <span class="math inline">\(q\)</span> 为 22+3=25，该模型的 AIC 值为 298.70. 对于具有五个区间的模型，参数数量为 8，AIC 值为 283.48. 因此，应优选更简单的模型。请注意，拟合的 Cox 回归模型的 AIC 统计量是基于最大偏似然值构建的，因此不能与基于完全似然值的分段指数模型的 AIC 值进行比较。</p>
+<p>图 6.1 表明每个区间内的五个单独的风险非常相似，因此基线风险实际上可能是恒定的。那么数据将呈指数分布，拟合该模型后得到的恒定基线风险为 0.058. 相应的 AIC 统计量值为 298.76，因此该模型无法像具有五个区间的更复杂的分段模型一样拟合这些数据。</p>
+</div>
+</div>
+<p>在拟合的 Cox 回归模型中，很难识别出基线风险函数估计的模式，因为每个事件时间的风险是由该时间的事件数量和风险数量确定的。潜在的风险函数是阶梯式的可能性很小，因此需要对该函数进行平滑估计，这可以通过对累积基线风险估计应用平滑过程来实现，然后进行数值微分从而给出风险函数本身的平滑估计。尽管该估计在描述性分析中很有用，但使用拟合曲线来估计（或验证）拟合模型的生存率并不简单，更令人满意的方法是使用基于平滑参数函数的风险模型，并且这些将在随后的部分中描述。</p>
+</div>
+<div id="sec6-2" class="section level2" number="6.2">
+<h2>
+<span class="header-section-number">6.2</span> 使用样条函数建模<a class="anchor" aria-label="anchor" href="#sec6-2"><i class="fas fa-link"></i></a>
+</h2>
+<p><strong>样条函数</strong> (spline functions) 在生物医学研究中广泛应用，以为时间的非线性函数建模。它们是通过将时间尺度划分为若干个区间，并在每个区间内拟合生存时间 <span class="math inline">\(t\)</span> 的多项式函数来构建的。这样做的目的是使函数在区间边界处（结, knot）能够平滑连接。定义区间的结的集合称为<strong>结序列</strong> (knot sequence). 在最简单的情况下，我们取 <span class="math inline">\(t\)</span> 的最小值和最大值，并将时间范围分为两半。那么在 <span class="math inline">\(t\)</span> 的极值处会有两个<strong>边界结</strong> (boundary knots)，以及在它们之间有一个<strong>内部结</strong> (internal knot). 增加内部结的数量会得到更复杂的曲线。样条函数的阶定义为构成它的多项式函数的阶。通常使用<strong>三次样条函数</strong> (spline functions of degree three)，也称为<strong>立方样条</strong> (cubic splines)，因为它们是简单性和灵活性的折衷。它们还易于计算，数值稳定，并产生平滑的曲线，因此我们将重点关注这些函数。</p>
+<p>为了说明样条函数，假设 <span class="math inline">\(t\)</span> 的取值范围是从 <span class="math inline">\(t_{\text{min}}\)</span> 到 <span class="math inline">\(t_{\text{max}}\)</span>，并在 <span class="math inline">\(t=t_1\)</span> 的点上指定了一个内部结。那么，可为 <span class="math inline">\(t_{\min}\leqslant t\leqslant t_1\)</span> 和 <span class="math inline">\(t_1\leqslant t\leqslant t_{\max}\)</span> 定义 <span class="math inline">\(t\)</span> 的三次表达式。然后，约束这两个三次表达式在内部结 <span class="math inline">\(t_1\)</span> 处平滑连接，从而得到一个立方样条。现考虑一个在变量 <span class="math inline">\(t\)</span> 取值范围内定义的立方样条函数，其中 <span class="math inline">\(m\)</span> 个内部结定义在 <span class="math inline">\(t_1,t_2,\ldots,t_m\)</span> 处，且 <span class="math inline">\(t\)</span> 的最小值和最大值分别为边界结 <span class="math inline">\(t_{\text{min}}\)</span> 和 <span class="math inline">\(t_{\text{max}}\)</span>。那么将有 <span class="math inline">\(m+1\)</span> 个区间，并在这些区间上拟合三次表达式。每个单独的三次函数，称为<strong>基函数</strong> (basis function)，被约束：在内部结处平滑地连接相邻函数。所需的基函数数量随着内部结数量的增加而增加，这些基函数的线性组合就是样条函数。在模型拟合过程中，对构成样条函数的基函数的未知系数进行估计。</p>
+<p>样条函数有许多不同类型，但我们只关注那些最常用于生存数据建模的函数上。</p>
+<div id="sec6-2-1" class="section level3" number="6.2.1">
+<h3>
+<span class="header-section-number">6.2.1</span> B 样条<a class="anchor" aria-label="anchor" href="#sec6-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>具有 <span class="math inline">\(m\)</span> 个内部结的 <span class="math inline">\(k\)</span> 阶 B 样条函数由 <span class="math inline">\(m + k + 1\)</span> 个基函数（每个基函数都为 <span class="math inline">\(k\)</span> 阶）构造而成。这些基函数的任何线性组合都会产生一条平滑曲线，可用于对 <span class="math inline">\(t\)</span> 的特定函数进行建模，例如风险函数或生存函数。<span class="math inline">\(t\)</span> 的 B 样条函数由下式给出</p>
+<p><span class="math display" id="eq:6-4">\[\begin{align}
+B(t)=\sum_{j=1}^{m+k+1}\alpha_jB_{j,k}(t),\quad t_{\min}\leqslant t\leqslant t_{\max}
+\tag{6.4}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(B_{j,k}(t)\)</span> 为 <span class="math inline">\(k\)</span> 阶基函数，系数为 <span class="math inline">\(\alpha_j,j=1,2,\ldots,m+k+1\)</span>。</p>
+<p>当式 <a href="chap6.html#eq:6-4">(6.4)</a> 中的 <span class="math inline">\(k = 3\)</span>，得到一个立方样条函数</p>
+<p><span class="math display" id="eq:6-5">\[\begin{align}
+B(t)=\sum_{j=1}^{m+4}\alpha_jB_{j,3}(t),\quad t_{\min}\leqslant t\leqslant t_{\max}
+\tag{6.5}
+\end{align}\]</span></p>
+<p>其具有 <span class="math inline">\(m + 4\)</span> 个三阶基函数 <span class="math inline">\(B_{j,3}(t)\)</span>。通过为观测数据拟合该函数来估计该函数中的 <span class="math inline">\(m + 4\)</span> 个未知 <span class="math inline">\(\alpha\)</span> 参数。</p>
+<p>立方样条的第 <span class="math inline">\(j\)</span> 个基函数 <span class="math inline">\(B_{j,3}(t)\)</span> 是通过递归关系 (recurrence relationship) 来定义的。但首先，为了让递归关系得到完全定义，需在结序列中添加三个下边界结和三个上边界结。那么完全结序列 (full knot sequence) 为</p>
+<p><span class="math display">\[t_{\min},t_{\min},t_{\min},t_{\min},t_{1},t_{2},\ldots,t_{m},t_{\max},t_{\max},t_{\max},t_{\max}\]</span></p>
+<p>这些 <span class="math inline">\(m+8\)</span> 个扩展后的结现在表示为 <span class="math inline">\(\tau_{1},\tau_{2},\ldots,\tau_{m+8}\)</span>。对于该序列中的每个结，使用递归关系来获得 B 样条基函数 <span class="math inline">\(B_{j,3}(t)\)</span>。首先，令</p>
+<p><span class="math display">\[\left.B_{j,0}(t)=\left\{\begin{array}{ll}1&amp;&amp;\text{if }\tau_j\leqslant t&lt;\tau_{j+1},\\0&amp;&amp;\text{otherwise},\end{array}\right.\right.\]</span></p>
+<p>以给出第 <span class="math inline">\(j\)</span> 个零阶基函数。然后，利用递归关系得到 1, 2 和 3 阶基函数</p>
+<p><span class="math display" id="eq:6-6">\[\begin{align}
+B_{j,k+1}(t)=\omega_{j,k+1}(t)B_{j,k}(t)+\{1-\omega_{j+1,k+1}(t)\}B_{j+1,k}(t)
+\tag{6.6}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\left.\omega_{j,k}(t)=\left\{\begin{array}{ll}(t-\tau_j)/(\tau_{j+k}-\tau_j)&amp;\quad\text{if }\tau_{j+k}\neq\tau_j\\0&amp;\quad\text{otherwise},\end{array}\right.\right.\]</span></p>
+<p><span class="math inline">\(j=1,2,\ldots,m+4\)</span>。通过在式 <a href="chap6.html#eq:6-6">(6.6)</a> 中依次设 <span class="math inline">\(k = 0, 1, 2\)</span>，该递归过程得到 <span class="math inline">\(m + 4\)</span> 个三阶 B 样条基函数 <span class="math inline">\(B_{j,3}(t),j=1,2,\ldots,m+4\)</span>。将这些函数代入式 <a href="chap6.html#eq:6-5">(6.5)</a> 中，我们就得到了可拟合观测数据的三次 B 样条函数。该递归参数如<a href="chap6.html#exm:ex6-2">示例 6.2</a> 所示。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex6-2" class="example"><strong>示例 6.2  (一个样条函数的说明) </strong></span><br></p>
+<p>为了说明构建 B 样条的过程，假设数据集包含范围为 0 到 10 个单位的生存时间。此外，假设时间 <span class="math inline">\(t\)</span> 的三次 B 样条函数仅用一个内部结来构造，即在式 <a href="chap6.html#eq:6-5">(6.5)</a> 中 <span class="math inline">\(m=1\)</span>。将该结置于时间尺度的中点 <span class="math inline">\(t = 5\)</span>。边界结置于 0 和 10 处，重复边界结以给出扩展的结序列 <span class="math inline">\((0,0,0,0,5,10,10,10,10)\)</span>。</p>
+<p>样条函数将有五个基函数 <span class="math inline">\(B_{j,3}(t)\)</span>，使用式 <a href="chap6.html#eq:6-6">(6.6)</a> 中的递归关系，通过取 <span class="math inline">\(k = 0,1,2\)</span> 和 <span class="math inline">\(j = 1,2,\ldots,5\)</span> 来构造。经过大量代数运算，得到如下的基函数</p>
+<p><span class="math display">\[
+\left.
+\begin{aligned}
+B_{1,3}(t)&amp;=\left\{\begin{array}{ll}(-t^3+15t^2-75t+125)/125&amp;\quad\quad\:\:\:\:\:0\leqslant t&lt;5\\0&amp;\quad\quad\:\:\:\:\:5\leqslant t&lt;10\end{array}\right.\\
+B_{2,3}(t)&amp;=\left\{\begin{array}{ll}t(7t^2-90t+300)/500&amp;\quad\:\:\:\:\:0\leqslant t&lt;5\\(-t^3+30t^2-300t+1000)/500&amp;\quad\:\:\:\:\:5\leqslant t&lt;10\end{array}\right.\\
+B_{3,3}(t)&amp;=\left\{\begin{array}{ll}t^2(-2t+15)/250&amp;\quad\quad\,\,\,\,\:0\leqslant t&lt;5\\(2t^3-45t^2+300t-500)/250&amp;\quad\quad\,\,\,\,\:5\leqslant t&lt;10\end{array}\right.\\
+B_{4,3}(t)&amp;=\left\{\begin{array}{ll}t^3/500&amp;\,\quad0\leqslant t&lt;5\\(-7t^3+120t^2-600t+1000)/500&amp;\quad\,5\leqslant t&lt;10\end{array}\right.\\
+B_{5,3}(t)&amp;=\left\{\begin{array}{ll}0&amp;\quad\quad\quad\quad0\leqslant t&lt;5\\(t^3-15t^2+75t-125)/125&amp;\quad\quad\quad\quad5\leqslant t&lt;10\end{array}\right.
+\end{aligned}\right.
+\]</span></p>
+<p>每个基函数都是定义在范围 <span class="math inline">\((0,10)\)</span> 内的 <span class="math inline">\(t\)</span> 的三次表达式，在内部结的位置有光滑的连接，这些基函数在图 6.2 中以虚线表示，该图显示了三次表达式在内部结 <span class="math inline">\(t = 5\)</span> 两侧如何光滑相连。</p>
+<details><summary><font color="#8B2232">图 6.2</font>
+</summary><img src="figure/figure%206.2.png#center" style="width:80.0%"></details><p><br>
+现假设使用样条函数 <span class="math inline">\(B(t)=\sum_{j=1}^5\alpha_jB_{j,3}(t)\)</span> 对 <span class="math inline">\(t\)</span> 的函数进行建模，样条基函数的五个系数 <span class="math inline">\(\alpha_1,\alpha_2,\ldots,\alpha_5\)</span> 的估计分别为 0.8, -0.3, 1.2, 0.5 和 0.4. 所得的拟合函数如图 6.2 中的实线所示。该图所示的 B 样条函数先减小后增大，在 <span class="math inline">\(t = 6\)</span> 左右到达峰值，然后缓慢减小。该图还说明了基函数值的线性组合如何产生平滑的样条函数。不同的 <span class="math inline">\(\alpha\)</span> 系数值的集合将得到不同的样条曲线。以这种方式构造的样条函数可用于表示各种函数形式，并且在对基线风险函数或其对数进行建模时特别有用。</p>
+</div>
+</div>
+</div>
+<div id="sec6-2-2" class="section level3" number="6.2.2">
+<h3>
+<span class="header-section-number">6.2.2</span> 限制性立方样条<a class="anchor" aria-label="anchor" href="#sec6-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>多项式样条，如 B 样条，在生存时间 <span class="math inline">\(t\)</span> 的观测值范围极值处（即边界结附近）可能会表现得不稳定。此外，B 样条函数在这些边界结之外是未定义的。这限制了模型在观测值范围之外预测的有效性。这可以通过使用<strong>限制性</strong>或自然 (restricted or nature) 立方样条来解决：使用 <span class="math inline">\(m\)</span> 个内部结将 <span class="math inline">\(t\)</span> 值的范围再次划分为 <span class="math inline">\(m+1\)</span> 个区间，并在每个区间内拟合一个三次表达式，同时在结处平滑连接。此外，当 <span class="math inline">\(t&lt;k_{\min}\)</span> 和 <span class="math inline">\(t&gt;k_{\max}\)</span> 时，假设 <span class="math inline">\(t\)</span> 有一个线性项。这得到了比 B 样条模型更简单的表示，因为对于给定数量的内部结，所需基函数的数量减少了。图 6.3 显示了一个限制性立方样条，其边界结位于 <span class="math inline">\(k_\min\)</span> 和 <span class="math inline">\(k_\max\)</span>，内部结位于 <span class="math inline">\(k_1\)</span>。</p>
+<details><summary><font color="#8B2232">图 6.3</font>
+</summary><img src="figure/figure%206.3.png#center" style="width:80.0%"></details><p><br>
+当有 <span class="math inline">\(m\)</span> 个内部结时，限制性立方样条具有 <span class="math inline">\(m\)</span> 个基函数，记为 <span class="math inline">\(\nu_1(t),\nu_2(t),\ldots,\nu_m(t)\)</span>。此限制性立方样条为</p>
+<p><span class="math display" id="eq:6-7">\[\begin{align}
+\gamma_0+\gamma_1t+\sum_{j=1}^m\gamma_{j+1}\nu_j(t)
+\tag{6.7}
+\end{align}\]</span></p>
+<p>在该表达式中，第 <span class="math inline">\(j\)</span> 个基函数 <span class="math inline">\(\nu_j(t)\)</span> 由下式给出</p>
+<p><span class="math display" id="eq:6-8">\[\begin{align}
+\nu_j(t)=(t-k_j)_+^3-\lambda_j(t-k_{\min})_+^3-(1-\lambda_j)(t-k_{\max})_+^3
+\tag{6.8}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(k_j\)</span> 是第 <span class="math inline">\(j\)</span> 个内部结，<span class="math inline">\(j = 1,2,\ldots,m\)</span></p>
+<p><span class="math display" id="eq:6-9">\[\begin{align}
+\lambda_j=\frac{k_{\max}-k_j}{k_{\max}-k_{\min}}
+\tag{6.9}
+\end{align}\]</span></p>
+<p>以及对于 <span class="math inline">\(a\)</span> 的任意值 <span class="math inline">\((t-a)_+^3=\max\{0,(t-a)^3\}\)</span>，即 <span class="math inline">\((t-a)_+^3\)</span> 为 <span class="math inline">\(0\)</span> 和 <span class="math inline">\((t-a)^3\)</span> 中的较大者。该样条函数有 <span class="math inline">\(m + 2\)</span> 个未知的 <span class="math inline">\(\gamma\)</span> 参数，通过为观测数据拟合样条函数来估计。在 <span class="math inline">\(m = 0\)</span> 的特殊情况下，即没有内部结的情况下，得到的限制性立方样条只是 <span class="math inline">\(t\)</span> 的线性函数 <span class="math inline">\(\gamma_0+\gamma_1t\)</span>。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex6-3" class="example"><strong>示例 6.3  (一个样条函数的说明) </strong></span><br></p>
+<p>在<a href="chap6.html#exm:ex6-2">示例 6.2</a> 中，为由范围在 0 到 10 个单位的生存时间 <span class="math inline">\(t\)</span> 组成的数据构造了一个 B 样条函数，其中在 <span class="math inline">\(t = 5\)</span> 处有一个内部结。本实例得到了相应的限制性立方样条函数的表达式。边界结分别为 <span class="math inline">\(k_\min = 0\)</span> 和 <span class="math inline">\(k_\max = 10\)</span>，内部结位于 <span class="math inline">\(k_1 = 5\)</span> 处。具有一个内部结的限制性立方样条只有一个基函数，根据式 <a href="chap6.html#eq:6-8">(6.8)</a>，这由下式给出：</p>
+<p><span class="math display">\[\begin{aligned}\nu_1(t)=(t-5)_+^3-\lambda_1(t-0)_+^3-(1-\lambda_1)(t-10)_+^3\end{aligned}\]</span></p>
+<p>其中根据式 <a href="chap6.html#eq:6-9">(6.9)</a></p>
+<p><span class="math display">\[\begin{aligned}\lambda_1=(10-5)/(10-0)=0.5\end{aligned}\]</span></p>
+<p>因此当 <span class="math inline">\(t\leqslant10\)</span> 时，基函数为</p>
+<p><span class="math display">\[\begin{aligned}\nu_1(t)=(t-5)_+^3-0.5t^3-0.5(t-10)_+^3\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\left.\nu_1(t)=\left\{\begin{array}{ll}-0.5t^3&amp;\quad0\leqslant t&lt;5\\(t-5)^3-0.5t^3&amp;\quad5\leqslant t&lt;10\end{array}\right.\right.\]</span></p>
+<p>对于 <span class="math inline">\(t&gt;10\)</span></p>
+<p><span class="math display">\[\begin{aligned}\nu_1(t)=(t-5)^3-0.5t^3-0.5(t-10)^3\end{aligned}\]</span></p>
+<p>它可化简为 <span class="math inline">\(\nu_1(t)=375-75t\)</span>，因此 <span class="math inline">\(\nu_1(t)\)</span>，即限制性样条函数，对于上边界结之外的 <span class="math inline">\(t\)</span> 是线性的。</p>
+<p>对于式 <a href="chap6.html#eq:6-7">(6.7)</a> 中的 <span class="math inline">\(\gamma_{0},\gamma_{1}\)</span> 和 <span class="math inline">\(\gamma_2\)</span> 的任何值，限制性立方样条函数为 <span class="math inline">\(\gamma_0+\gamma_1t+\gamma_2\nu_1(t)\)</span>，它在 <span class="math inline">\(t &gt; 10\)</span> 时是线性的，在 <span class="math inline">\(0 \leqslant t &lt; 5\)</span> 和 <span class="math inline">\(5 \leqslant t &lt; 10\)</span> 时是三次表达式。与 B 样条函数不同，限制性立方样条函数为所有 <span class="math inline">\(t\)</span> 值都有定义，而不仅仅是边界结之间的值。</p>
+</div>
+</div>
+<p>此处描述的样条函数可用于对风险或累积风险函数建模，并为生存数据生成极其灵活的参数模型。</p>
+</div>
+<div id="sec6-2-3" class="section level3" number="6.2.3">
+<h3>
+<span class="header-section-number">6.2.3</span> 结数和位置<a class="anchor" aria-label="anchor" href="#sec6-2-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>无论使用什么样条函数，结数和位置都会对拟合函数的形式产生一些影响。尽管一些作者建议使用自动或数据驱动的程序来确定结的放置位置，但也有其他人对此提出警告，因为它们可能会受到数据集局部特征的过度影响，在构造参数估计的标准误时很难考虑到这一点。相反，通常建议边界结是数据集中观测事件时间的最小值和最大值，内部结则按照未删失事件时间分布的百分位数进行等距分布。具体来说，一个内部结应位于观测生存时间的未删失值的中位数，两个内部结应分别位于 33% 和 67% 的百分位数，三个内部结应位于四分位数，以此类推。在实际应用中，通常不需要超过 4 或 5 个结。</p>
+<p>为了确定要使用的结数，我们首先从两个边界结开始。然后拟合一个具有一个内部结的模型，并将其与没有内部结的模型进行比较。接下来，拟合一个具有两个内部结的模型，并将其与具有一个内部结的模型进行比较，以此类推。由于结的位置会随着其数量的增加而改变，例如从一个内部结到两个内部结，其位置从事件时间分布的中位数变为分布的 33% 和 67% 的百分位数，因此具有不同结数的模型并不一定是嵌套的。这意味着 <span class="math inline">\(−2 \log \hat L\)</span> 统计量通常不能用于确定增加结数是否能显著提高模型的拟合度。相反，可以使用第 3 章 <a href="chap3.html#sec3-6-1">3.6.1</a> 节中介绍的 AIC 统计量。AIC 统计量为 <span class="math inline">\(−2 \log \hat L + 2q\)</span>，其中 <span class="math inline">\(q\)</span> 是拟合模型中未知参数的总数，包括与样条函数相关的参数。例如，当在包含 <span class="math inline">\(p\)</span> 个解释变量的生存时间模型中使用具有 <span class="math inline">\(m\)</span> 个内部结的限制性立方样条模型时，样条函数中将有 <span class="math inline">\(p\)</span> 个 <span class="math inline">\(\beta\)</span> 参数和 <span class="math inline">\(m + 2\)</span> 个 <span class="math inline">\(\gamma\)</span> 系数，因此 <span class="math inline">\(q=p+m+2\)</span>。AIC 统计量最小的模型通常是最合适的，因此增加结数直到 AIC 统计量无法进一步减小。也可以使用 BIC 统计量以类似的方式比较模型，该统计量也在第 3 章的 <a href="chap3.html#sec3-6-1">3.6.1</a> 节中定义。</p>
+</div>
+</div>
+<div id="sec6-3" class="section level2" number="6.3">
+<h2>
+<span class="header-section-number">6.3</span> 风险函数的灵活模型<a class="anchor" aria-label="anchor" href="#sec6-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>基线风险函数的样条模型为参数建模提供了一种灵活的方法。考虑一个比例风险模型，其中第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 发生事件的风险为</p>
+<p><span class="math display">\[h_i(t)=\exp(\eta_i)h_0(t)\]</span></p>
+<p>以及 <span class="math inline">\(\eta_i=\boldsymbol \beta'\boldsymbol x_i\)</span>，其中 <span class="math inline">\(\boldsymbol\beta\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的系数。为了确保拟合的风险函数始终非负，模型是根据基线风险函数的对数构建的。如果将具有 <span class="math inline">\(m\)</span> 个内部结的时间的三次 B 样条函数用于对数基线风险 <span class="math inline">\(\log h_0(t)\)</span>，那么使用的式 <a href="chap6.html#eq:6-5">(6.5)</a> 中样条函数</p>
+<p><span class="math display">\[\begin{aligned}\log h_0(t)=\sum_{j=1}^{m+4}\alpha_jB_{j,3}(t)\end{aligned}\]</span></p>
+<p>第 <span class="math inline">\(i\)</span> 个个体对数风险函数的样条模型为</p>
+<p><span class="math display" id="eq:6-10">\[\begin{align}
+\log h_i(t)=\eta_i+\sum_{j=1}^{m+4}\alpha_jB_{j,3}(t)
+\tag{6.10}
+\end{align}\]</span></p>
+<p>该模型可以通过最大化观测数据的似然函数来拟合，如式 <a href="chap6.html#eq:6-2">(6.2)</a> 所示。为此，可以通过首先对基线风险函数进行积分来获得累积基线风险 <span class="math inline">\(H_0(t)\)</span>，然后得到生存函数 <span class="math inline">\(S_i(t)\)</span>。这必须以数值方式完成，因为使用的是对数风险尺度上的 B 样条曲线。那么 <span class="math inline">\(S_i(t) = \exp\{−e^{\eta_i}H_0(t)\}\)</span>。</p>
+<p>如 <a href="chap6.html#sec6-2-3">6.2.3</a> 节所述，通过用不断增加的结数来拟合模型，以实现建模程序。对于每个模型，使用诸如 AIC 或 BIC 统计量之类的模型充分性的度量来识别具有这些最小统计量值的模型。</p>
+<p>该模型的一个重要特例是使用零阶 B 样条基函数，即式 <a href="chap6.html#eq:6-4">(6.4)</a> 中的 <span class="math inline">\(k = 0\)</span>。此时，有 <span class="math inline">\(m + 1\)</span> 个样条基函数 <span class="math inline">\(B_{j,0}(t)\)</span>，对于 <span class="math inline">\(t_j\leqslant t&lt;t_{j+1},j=1,2,\ldots,m+1\)</span> 它们为 1，其中 <span class="math inline">\(t_1=t_{\min},t_{m+2}=t_\max\)</span>，否则为 0. 那么，B 样条函数在 <span class="math inline">\(m+1\)</span> 个时间区间中的每个时间区间中是恒定的。风险函数的相应模型为</p>
+<p><span class="math display">\[h_0(t)=\exp\left\{\sum_{j=1}^{m+1}\alpha_jB_{j,0}(t)\right\}\]</span></p>
+<p>因此在第 <span class="math inline">\(j(j=1,2,\ldots,m+1)\)</span> 个时间区间中 <span class="math inline">\(h_0(t)=\exp(\alpha_j)\)</span>。这是 <a href="chap6.html#sec6-1">6.1</a> 节描述的分段指数模型的另一种形式，并且当结数和位置为事件时间数及其位置时，该模型就是 Cox 回归模型。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex6-4" class="example"><strong>示例 6.4  (肾癌的治疗) </strong></span><br></p>
+<p>在<a href="chap6.html#exm:ex6-1">示例 6.1</a> 中，为肾癌患者数据拟合了分段指数风险函数，现在我们考虑使用式 <a href="chap6.html#eq:6-10">(6.10)</a> 中的模型，用基于样条函数的参数模型对基线风险进行建模，拟合包含年龄组和肾切除状态的比例风险模型，其中对数基线风险函数是三次 B 样条函数。</p>
+<p>在拟合模型时，如果模型中的内部结书不断增加，位于事件时间的百分位数，我们发现，对于具有两个内部结的模型，AIC 统计量的值最小。拟合的基线风险函数是六个基函数的线性组合的指数，由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_0(t)=\exp\{\hat{\alpha}_1B_{1,3}(t)+\hat{\alpha}_2B_{2,3}(t)+\cdots+\hat{\alpha}_6B_{6,3}(t)\}\end{aligned}\]</span></p>
+<p>其中函数 <span class="math inline">\(B_{j,3}(t),j=1,2,\ldots,6\)</span> 为 <span class="math inline">\(t\)</span> 的三次表达式。这得到了一个相当复杂的关于 <span class="math inline">\(t\)</span> 的函数，如图 6.4 所示。</p>
+<details><summary><font color="#8B2232">图 6.4</font>
+</summary><img src="figure/figure%206.4.png#center" style="width:80.0%"></details><p><br>
+该图中的基线风险函数估计在 10 天和 40 天左右达到峰值，此后下降。在图 6.1 的分段指数回归模型的基线风险函数图中，这两个峰值也隐约可见。对于该模型，肾切除状态的风险比为 0.250，60 - 70 岁和 70 岁以上患者相对于 60 岁以下患者的风险比分别为 0.962 和 3.974。这些与<a href="chap6.html#exm:ex6-1">示例 6.1</a> 中拟合的分段指数模型发现的结果非常相似，因此基线风险函数估计的精确形式对估计风险比几乎没有影响。然而，具有两个内部结的 B 样条模型的 AIC 统计量值为 292.83，该值大于<a href="chap6.html#exm:ex6-1">示例 6.1</a> 中拟合的具有四个内部结的分段指数模型的相应值。因此，基于样条的风险函数不能改进拟合。</p>
+</div>
+</div>
+</div>
+<div id="sec6-4" class="section level2" number="6.4">
+<h2>
+<span class="header-section-number">6.4</span> 对数累积风险函数的灵活模型<a class="anchor" aria-label="anchor" href="#sec6-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>当使用样条模型对风险函数进行建模时，在最短和最长事件时间附近总是存在异常表现的风险。为对数累积风险或生存函数开发的模型不太容易受到这种影响。</p>
+<p>对数累积风险函数的灵活模型通常基于 <a href="chap6.html#sec6-2-2">6.2.2</a> 节中描述的限制性立方样条，并且在没有内部结的特定情况下模型简化为 Weibull 模型。为了看出这一点，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的 Weibull 风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的值向量，系数为 <span class="math inline">\(\boldsymbol \beta\)</span>，基线风险函数为 <span class="math inline">\(h_0(t)=\lambda\gamma t^{\gamma-1}\)</span>。参数 <span class="math inline">\(\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 确定了基线 Weibull 分布的尺度和形状。对应的累积风险函数为</p>
+<p><span class="math display">\[H_i(t)=\int_0^th_i(u)\mathrm{d}u=\exp(\eta_i)\lambda t^\gamma \]</span></p>
+<p>其中 <span class="math inline">\(\eta_i=\boldsymbol\beta'\boldsymbol x_i\)</span>，对数累积风险函数为</p>
+<p><span class="math display">\[\log H_i(t)=\eta_i+\log\lambda+\gamma\log t\]</span></p>
+<p>设 <span class="math inline">\(\gamma_{0}=\operatorname{log}\lambda,\gamma_{1}=\gamma\)</span> 以及 <span class="math inline">\(y=\log t\)</span>，Weibull 模型的对数累积风险函数可以写成</p>
+<p><span class="math display">\[\log H_i(t)=\eta_i+\gamma_0+\gamma_1y\]</span></p>
+<p>该式表明，对数累积风险函数关于 <span class="math inline">\(y = \log t\)</span> 呈线性。</p>
+<p>根据式 <a href="chap6.html#eq:6-7">(6.7)</a>，具有 <span class="math inline">\(m\)</span> 个内部结的对数基线累积风险的限制性立方样条模型可用 <span class="math inline">\(y = \log t\)</span> 表示为</p>
+<p><span class="math display" id="eq:6-11">\[\begin{align}
+\operatorname{log}H_{0}(t)=\gamma_{0}+\gamma_{1}y+\sum_{j=1}^{m}\gamma_{j+1}\nu_{j}(y)
+\tag{6.11}
+\end{align}\]</span></p>
+<p>在此式中，对于 <span class="math inline">\(k_j\)</span> 处的第 <span class="math inline">\(j(j = 1, 2,...,m)\)</span> 个内部结，</p>
+<p><span class="math display" id="eq:6-12">\[\begin{align}
+\nu_j(y)=(y-k_j)_+^3-\lambda_j(y-k_{\min})_+^3-(1-\lambda_j)(y-k_{\max})_+^3
+\tag{6.12}
+\end{align}\]</span></p>
+<p><span class="math inline">\(k_\min,k_\max\)</span> 为边界结，<span class="math inline">\((y-a)_+^3=\max\{0,(y-a)^3\}\)</span> 以及</p>
+<p><span class="math display">\[\lambda_j=\frac{k_{\max}-k_j}{k_{\max}-k_{\min}}\]</span></p>
+<p>第 <span class="math inline">\(j\)</span> 个基函数 <span class="math inline">\(\nu_j (y)\)</span> 可以详细表示为</p>
+<p><span class="math display">\[\left.\nu_j(y)=\begin{cases}0&amp;y&lt;k_{\min},\\-\lambda_j(y-k_{\min})^3&amp;k_{\min}\leqslant y\leqslant k_j,\\(y-k_j)^3-\lambda_j(y-k_{\min})^3&amp;k_j\leqslant y\leqslant k_{\max},\\(y-k_j)^3-\lambda_j(y-k_{\min})^3-(1-\lambda_j)(y-k_{\max})^3&amp;y&gt;k_{\max}\end{cases}\right.\]</span></p>
+<p>当 <span class="math inline">\(y&gt;k_\max\)</span> 时，<span class="math inline">\(\nu_j (y)\)</span> 的表达式简化为</p>
+<p><span class="math display">\[(k_\mathrm{max}-k_j)(k_\mathrm{min}-k_j)(3y-k_\mathrm{min}-k_j-k_\mathrm{max})\]</span></p>
+<p>这证实了当 <span class="math inline">\(y&gt;k_\max\)</span> 时基函数是 <span class="math inline">\(y\)</span> 的线性函数，对于在 <span class="math inline">\(k_\min\)</span> 和 <span class="math inline">\(k_\max\)</span> 之间的 <span class="math inline">\(y\)</span> 值的基函数是 <span class="math inline">\(y\)</span> 的三次函数。</p>
+<p>比例风险模型中第 <span class="math inline">\(i\)</span> 个个体的累积风险函数为</p>
+<p><span class="math display">\[\begin{aligned}H_i(t)=\int_0^t\exp(\eta_i)h_0(u)\mathrm{d}u=\exp(\eta_i)H_0(t)\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(\log H_i(t)\)</span> 的限制性立方样条模型由下式给出</p>
+<p><span class="math display" id="eq:6-13">\[\begin{align}
+\log H_i(t)=\eta_i+\gamma_0+\gamma_1y+\sum_{j=1}^m\gamma_{j+1}\nu_j(y)
+\tag{6.13}
+\end{align}\]</span></p>
+<p>其中，当为观测数据拟合模型时，<span class="math inline">\(\gamma\)</span> 参数与 <span class="math inline">\(\beta\)</span> 参数一起估计。式 <a href="chap6.html#eq:6-13">(6.13)</a> 定义的模型首先由 Royston and Parmar (2002) 提出，通常称为 <strong>Royston and Parmar 模型</strong>。对数累积风险函数的这种扩展参数形式意味着该模型下的生存时间不再具有 Weibull 分布，也不再具有任何其他可识别的分布，尽管该模型仍然假设解释变量之间存在比例风险。</p>
+<p>式 <a href="chap6.html#eq:6-13">(6.13)</a> 中的模型也可以用生存函数 <span class="math inline">\(S_i(t)\)</span> 来表示，使用 <span class="math inline">\(S_i(t)=\exp\{-H_i(t)\}\)</span> 这一结果给出</p>
+<p><span class="math display" id="eq:6-14">\[\begin{align}
+S_i(t)=\exp\{-\exp[\eta_i+\gamma_0+\gamma_1y+\sum_{j=1}^m\gamma_{j+1}\nu_j(y)]\}
+\tag{6.14}
+\end{align}\]</span></p>
+<p>等价地</p>
+<p><span class="math display">\[S_i(t)=\{S_0(t)\}^{\exp(\eta_i)}\]</span></p>
+<p>其中 <span class="math inline">\(S_0(t)=\exp\{-H_0(t)\}\)</span> 为基线生存函数，<span class="math inline">\(H_0(t)\)</span> 根据式 <a href="chap6.html#eq:6-11">(6.11)</a> 得出。在对数累积风险尺度上使用样条的一个优势在于，可以很容易地获得相应的生存函数。</p>
+<p>风险函数的模型 <span class="math inline">\(h_i(t)=\exp(\eta_i)h_0(t)\)</span> 也可以根据基线风险函数 <span class="math inline">\(h_0(t)\)</span> 的相应参数模型得到。对 <span class="math inline">\(\log H_0(t)\)</span>关于 <span class="math inline">\(t\)</span> 求导，给出</p>
+<p><span class="math display">\[\frac{\operatorname{d}\log H_0(t)}{\operatorname{d}t}=\frac1{H_0(t)}\frac{\operatorname{d}H_0(t)}{\operatorname{d}t}=\frac1{H_0(t)}h_0(t)\]</span></p>
+<p>因此基线风险函数为</p>
+<p><span class="math display">\[h_0(t)=H_0(t)\frac{\operatorname{d}\log H_0(t)}{\operatorname{d}t}\]</span></p>
+<p>式 <a href="chap6.html#eq:6-11">(6.11)</a> 中的 <span class="math inline">\(\log H_0(t)\)</span> 关于 <span class="math inline">\(t\)</span> 的导数为</p>
+<p><span class="math display">\[\frac{\operatorname{d}\log H_0(t)}{\operatorname{d}t}=\frac{\operatorname{d}\log H_0(t)}{\operatorname{d}y}\frac{\operatorname{d}y}{\operatorname{d}t}=\{\gamma_1+\gamma_2\nu_1^{\prime}(y)+\cdots+\gamma_{m+1}\nu_m^{\prime}(y)\}t^{-1}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\nu_j^{\prime}(y)=\begin{cases}0&amp;y\leqslant k_{\min},\\-3\lambda_j(y-k_{\min})^2&amp;k_{\min}\leqslant y\leqslant k_j,\\3(y-k_j)^2-3\lambda_j(y-k_{\min})^2&amp;k_j\leqslant y\leqslant k_{\max},\\3(y-k_j)^2-3\lambda_j(y-k_{\min})^2-3(1-\lambda_j)(y-k_{\max})^2&amp;y\geqslant k_{\max}\end{cases}\]</span></p>
+<p>是 <span class="math inline">\(\nu_j(y)\)</span> 关于 <span class="math inline">\(y=\log t,j=1,2,\ldots,m\)</span> 的一阶导数。因此，</p>
+<p><span class="math display" id="eq:6-15">\[\begin{align}
+h_i(t)=e^{\eta_i}h_0(t)=e^{\eta_i}\left\{\gamma_1+\sum_{j=1}^m\gamma_{j+1}\nu_j^{\prime}(y)\right\}t^{-1}H_0(t)
+\tag{6.15}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(H_0(t)\)</span> 为全参数比例风险模型，由式 <a href="chap6.html#eq:6-11">(6.11)</a> 给出，其中基线风险是 <span class="math inline">\(t=e^y\)</span> 的光滑函数，具有 <span class="math inline">\(m+2\)</span> 个未知参数 <span class="math inline">\(\gamma_0,\gamma_1,\ldots,\gamma_{m+1}\)</span>。</p>
+<p>式 <a href="chap6.html#eq:6-13">(6.13)</a> 中的对数累积风险函数模型可用最大似然法进行拟合。似然函数是式 <a href="chap6.html#eq:6-2">(6.2)</a> 中的函数，并且在式 <a href="chap6.html#eq:6-14">(6.14)</a> 和 <a href="chap6.html#eq:6-15">(6.15)</a> 中给出了第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t_i\)</span> 处的生存函数和风险函数 <span class="math inline">\(S_i(t_i),h_i(t_i)\)</span>。该似然函数的对数可以使用标准优化程序来最大化，这得到了拟合的生存和风险函数，它们是生存时间 <span class="math inline">\(t\)</span> 的平滑函数。拟合过程还得到参数估计及其标准误，还有它们的函数，例如在任何给定时间的风险和生存函数的估计。</p>
+<p>使用这些参数模型的经验表明，结数几乎不受协变量调整的影响。这意味着变量选择过程可以基于标准 Weibull 或 Cox 模型。一旦确定了 Royston and Parmar 模型中包含的解释变量，就可以拟合包含这些变量的限制性三次样条模型。同样，随着内部结数不断增加，首选模型是具有最小 AIC 或 BIC 统计量值的模型。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex6-5" class="example"><strong>示例 6.5  (乳腺癌患者的无复发生存) </strong></span><br></p>
+<p>German Breast Cancer Study Group 在大量医院进行了一项针对乳腺癌的队列研究，目的是比较三个周期与六个周期的化疗效果，并调查额外激素治疗（每日服用 30mg 他莫昔芬 (tamoxifen) ，持续两年）的影响。研究中的患者均为经组织学证实为非转移性、淋巴结阳性的原发性乳腺癌患者，且已接受乳房切除术治疗。感兴趣的响应变量是无复发生存期 (recurrence-free survival)，即从研究入组到癌症复发或死亡的时间。早期的数据分析表明，无复发生存期不受化疗周期数的影响，因此本例中仅包含与患者是否接受他莫昔芬相关的因素。除了这一治疗因素外，还提供了患者年龄、绝经状态、肿瘤大小和分级、阳性淋巴结数、孕酮和雌激素受体状态的数据。Schumacher et al. (1994) 给出了这项研究的背景信息。</p>
+<p>本例中的数据涉及来自 41 个中心和 686 名患者的完整数据，并包含在 Sauerbrei and Royston (1999) 中。该数据集中的变量如下：</p>
+<ul>
+<li>
+<span class="math inline">\(Id\)</span>：患者编号</li>
+<li>
+<span class="math inline">\(Treat\)</span>：激素治疗（0 = 无他莫昔芬，1 = 他莫昔芬）</li>
+<li>
+<span class="math inline">\(Age\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Men\)</span>：绝经状态（1 = 绝经前，2 = 绝经后）</li>
+<li>
+<span class="math inline">\(Size\)</span>：肿瘤大小（mm）</li>
+<li>
+<span class="math inline">\(Grade\)</span>：肿瘤分级（1, 2, 3）</li>
+<li>
+<span class="math inline">\(Nodes\)</span>：阳性淋巴结数</li>
+<li>
+<span class="math inline">\(Prog\)</span>：孕酮受体状态（毫飞摩尔，femtomole = 10<sup>-15</sup> mol）</li>
+<li>
+<span class="math inline">\(Oest\)</span>：雌激素受体状态（毫飞摩尔，femtomole = 10<sup>-15</sup> mol）</li>
+<li>
+<span class="math inline">\(Time\)</span>：无复发生存时间（天）</li>
+<li>
+<span class="math inline">\(Status\)</span>：事件指示符（0 = 删失，1 = 复发或死亡）</li>
+</ul>
+<p>这项研究共 686 名患者，其中 20 名患者的数据显示在表 6.1 中。在分析这些数据时，我们可能感兴趣的是在调整其他解释变量后的治疗效应，并估计两个治疗组调整的风险函数。</p>
+<details><summary><font color="#8B2232">表 6.1</font>
+</summary><img src="figure/table%206.1.png#center" style="width:80.0%"></details><p><br>
+作为分析这些数据的第一步，使用按治疗组分层的对数累积风险图来研究 Weibull 模型的适用性。虽然其他解释变量的存在阻碍了对只有一个因素的此类曲线图的解释，但两个处理组的对数累计风险图（图 6.5）并没有显示两条直线。因此，生存时间服从 Weibull 分布的假设是不合适的。然而，图中两条曲线的垂直间隔似乎是恒定的，这表明关于治疗效应的比例风险假设是有效的。</p>
+<details><summary><font color="#8B2232">图 6.5</font>
+</summary><img src="figure/figure%206.5.png#center" style="width:80.0%"></details><p><br>
+在这一阶段，可以使用变量选择过程来确定除了治疗因素（Treat）外，还需要哪些其他解释因素（如 Age, Men, Size, Grade, Nodes, Prog 和 Oest）纳入模型，但在这个例子中，我们将把它们全部包括在内。然后拟合具有不断增加的内部结的 Royston and Parmar 模型。表 6.2 给出了拟合模型的 AIC 统计量，其中零结点的模型为标准 Weibull 模型。在拟合具有一个内部结的限制性立方样条时，AIC 统计量的值大幅减小，这表明该模型相对于标准 Weibull 模型有了实质性的改进。在添加第二个和第三个结时，AIC 统计量进一步减小，但减小的幅度远小于添加第一个结时。在添加第四个内部结时，AIC 统计量增加。这一分析表明，最好的拟合模型有三个结，尽管这与只有一个结的模型相比并没有明显的改善。该模型最简单的表示方式是以第 <span class="math inline">\(i\)</span> 个患者的对数累积风险函数估计来表示，由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\log\hat{H}_i(t)=&amp;\,\hat{\beta}_1Treat_i+\hat{\beta}_2Age_i+\hat{\beta}_3Men_i+\hat{\beta}_4Size_i+\hat{\beta}_5Grade_i\\&amp;+\hat{\beta}_6Nodes_i+\hat{\beta}_7Prog_i+\hat{\beta}_8Oest_i+\log\hat{H}_0(t)\end{aligned}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\log\hat{H}_0(t)=\hat{\gamma}_0+\hat{\gamma}_1y+\hat{\gamma}_2\nu_1(y)+\hat{\gamma}_3\nu_2(y)+\hat{\gamma}_4\nu_3(y)\]</span></p>
+<p>是具有三个内部结的模型的基线累积风险函数，<span class="math inline">\(y=\log t\)</span> 以及函数 <span class="math inline">\(\nu_1(y),\nu_2(y),\nu_3(y)\)</span> 在式 <a href="chap6.html#eq:6-12">(6.12)</a> 中定义。</p>
+<details><summary><font color="#8B2232">表 6.2</font>
+</summary><img src="figure/table%206.2.png#center" style="width:80.0%"></details><p><br>
+Royston and Parmar 模型拟合的直观总结如图 6.6 所示。该图展示了在拟合包含 8 个解释变量的 Cox 回归模型时调整的基线生存函数，显示为阶跃函数。此外，还展示了 Weibull 模型调整的基线生存函数，以及具有一个和三个内部结的模型的调整的基线生存函数。该图证实了 Cox 模型中的风险调整的基线生存函数无法很好地用 Weibull 模型来拟合。具有一个结的 Royston and Parmar 模型更紧密地追踪了 Cox 基线生存函数估计，而具有三个结的模型在远期生存时间提供了更好的性能。</p>
+<details><summary><font color="#8B2232">图 6.6</font>
+</summary><img src="figure/figure%206.6.png#center" style="width:80.0%"></details><p><br>
+具有三个结的 Royston and Parmar 模型的参数估计及其标准误如表 6.3 所示。该表还显示了拟合的 Cox 模型中的 <span class="math inline">\(\beta\)</span> 参数估计及其标准误。两个模型的估计及其标准误差非常相似。在两种模型下，服用他莫昔芬的患者与未服用他莫昔芬的患者相比，调整的风险比均为 0.71，因此服用他莫昔芬的患者癌症复发或死亡的风险较低。</p>
+<details><summary><font color="#8B2232">表 6.3</font>
+</summary><img src="figure/table%206.3.png#center" style="width:80.0%"></details><p><br>
+Royston and Parmar 模型的优点是提供基线风险的参数估计。对于 Weibull 模型以及具有一个和三个结的 Royston and Parmar 样条模型，针对八个解释变量进行调整后的拟合基线风险函数如图 6.7 所示。 Royston and Parmar 模型表明潜在的风险函数是单峰的，因此 Weibull 模型拟合不佳也就不足为奇了。</p>
+<details><summary><font color="#8B2232">图 6.7</font>
+</summary><img src="figure/figure%206.7.png#center" style="width:80.0%"></details>
+</div>
+</div>
+</div>
+<div id="sec6-5" class="section level2" number="6.5">
+<h2>
+<span class="header-section-number">6.5</span> 灵活的比例几率模型<a class="anchor" aria-label="anchor" href="#sec6-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>基于三次样条的参数模型也可以与第 5 章 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-15">5.15</a> 节中描述的比例几率模型结合使用。关于生存超过时间 <span class="math inline">\(t\)</span> 的几率的<strong>一般比例几率模型</strong> (general proportional odds model) <span class="math inline">\(S_i(t)/\{1-S_i(t)\}\)</span> 满足</p>
+<p><span class="math display">\[\frac{S_i(t)}{1-S_i(t)}=\exp\{\boldsymbol{\beta}'\boldsymbol{x}_i\}\frac{S_0(t)}{1-S_0(t)}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的解释变量的值向量，<span class="math inline">\(S_0(t)\)</span> 是基线生存函数，即解释变量全部取零值的个体的生存函数。如果假设生存时间采用参数为 <span class="math inline">\(\theta,\kappa\)</span> 的 log-logistic 模型（如 <a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec5-15-1">5.15.1</a> 节所示），则根据生存超过时间 <span class="math inline">\(t\)</span> 的对数几率为，根据式 <a href="chap5.html#eq:5-9">(5.9)</a>，<span class="math inline">\(S(t)=\left\{1+e^\theta t^\kappa\right\}^{-1}\)</span>。令 <span class="math inline">\(S_0(t)\)</span> 为基线生存函数，其满足</p>
+<p><span class="math display">\[\log\left(\frac{S_0(t)}{1-S_0(t)}\right)=-\theta-\kappa\log t=\gamma_0+\gamma_1y\]</span></p>
+<p>其中 <span class="math inline">\(\gamma_0=-\theta,\gamma_1=-\kappa\)</span>，模型关于 <span class="math inline">\(y = \log t\)</span> 呈线性。通过纳入非线性项来扩展该模型，以给出具有 <span class="math inline">\(m\)</span> 个内部结的限制性立方样条，并使用与式 <a href="chap6.html#eq:6-13">(6.13)</a> 中相同的符号，我们得到</p>
+<p><span class="math display">\[\log\left(\frac{S_0(t)}{1-S_0(t)}\right)=\gamma_0+\gamma_1y+\sum_{j=1}^m\gamma_{j+1}\nu_j(y)\]</span></p>
+<p>这类似于式 <a href="chap6.html#eq:6-11">(6.11)</a> 中对数累积基线风险函数的表达式。包含样条项的比例几率模型可以表示为</p>
+<p><span class="math display">\[\begin{aligned}\log\left(\frac{S_i(t)}{1-S_i(t)}\right)&amp;=\eta_i+\gamma_0+\gamma_1y+\sum_{j=1}^m\gamma_{j+1}\nu_j(y)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\eta_i=\boldsymbol{\beta}'\boldsymbol{x}_i\)</span>。</p>
+<p>这种灵活的比例几率模型的使用方式与灵活的比例风险模型相同，特别适合风险函数为单峰的情况。该模型还可以用时间 <span class="math inline">\(t\)</span> 之前发生事件的几率 <span class="math inline">\(\log[F(t)/\{1-F(t)\}]\)</span> 来表示，其实这就是 <span class="math inline">\(-\log[S(t)/\{1-S(t)\}]\)</span>，得到的参数估计仅在符号上有所不同。</p>
+<p>该模型使用最大似然法进行拟合，并得出生存函数的估计。然后可以直接获得相应风险和累积风险函数的估计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex6-6" class="example"><strong>示例 6.6  (乳腺癌患者的无复发生存) </strong></span><br></p>
+<p><a href="chap6.html#exm:ex6-5">示例 6.5</a> 中确定的单峰风险函数表明，log-logistic 模型可能更适于拟合乳腺癌女性的无复发生存时间。表 6.4 给出了生存超过时间 <span class="math inline">\(t\)</span> 的对数几率模型的 AIC 统计量值，该模型具有灵活的基线生存函数，其中零结模型是标准的比例几率模型。如<a href="chap6.html#exm:ex6-5">示例 6.5</a> 所示，除了治疗因素 Treat 之外，模型中还包括解释变量 Age, Men, Size, Grade, Nodes, Prog 和 Oest. 请注意，对于具有 1, 2 和 3 个结的模型，AIC 统计量的值表现有些不稳定，添加第四个结时统计量的值会略有增加。当所拟合的模型几乎无法区分时，就会出现如此现象，并且由于这些模型结数增加但位置不同，因此并非所有模型都是嵌套的。在这种情况下，包含三个结的生存超过时间 <span class="math inline">\(t\)</span> 的对数几率模型提供了最好的拟合，尽管该模型的拟合非常类似于只有一个结的模型。此外，由于表 6.4 中的 AIC 统计量小于表 6.2 中相应比例风险模型的 AIC 统计量，因此选择比例几率模型。</p>
+<details><summary><font color="#8B2232">表 6.4</font>
+</summary><img src="figure/table%206.4.png#center" style="width:80.0%"></details><p><br>
+对于三结点模型，与处理效应相关的参数估计为 0.5287. 服用他莫昔芬的患者生存超过时间 <span class="math inline">\(t\)</span> 的几率与未服用他莫昔芬的患者的几率之比为 <span class="math inline">\(\exp(0.5287)=1.7\)</span>，因此服用他莫昔芬的患者生存超过任何给定时间的几率是未接受该治疗的患者的 1.7%. 这一结果与<a href="chap6.html#exm:ex6-5">示例 6.5</a> 中给出的治疗效应的相应风险比完全一致。</p>
+</div>
+</div>
+</div>
+<div id="sec6-6" class="section level2" number="6.6">
+<h2>
+<span class="header-section-number">6.6</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec6-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>分段指数模型由 Breslow (1974) 提出，并指出它等价于每次死亡时间之间风险恒定的 Cox 回归模型。Friedman (1982) 更详细地描述了该模型，而 Lawless (2002) 提供了数学处理较少的描述。用于拟合分段指数模型的有效数值优化方法包括 Dempster, Laird 和 Rubin (1977) 描述的期望最大化 (expectation-maximisation, EM) 算法、Groeneboom and Wellner (1992) 描述的 Iterative Convex Minorant (ICM) 算法以及由 Wellner and Zahn (1997) 描述的 EM 和 ICM 算法的结合。</p>
+<p>de Boor (2001) 详细介绍了样条函数，而 Racine (2021) 和 Perperoglou et al. (2019) 提供了回归模型中样条函数的易于理解的概述。Durrleman and Simon (1989) 以及 Sleeper and Harrington (1989) 描述了三次样条在回归模型中的使用。Eilers and Marx (1996) 包含了 B 样条的概述，Rosenberg (1995) 描述了基线风险函数的加性 B 样条模型。Royston and Parmar (2002) 描述了基于限制性立方样条的比例风险和比例几率模型的灵活参数模型。 Royston and Lambert (2011) 对该模型及其在 Stata 中的实现进行了全面介绍。</p>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></div>
+<div class="next"><a href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap6"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="nav-link" href="#sec6-1"><span class="header-section-number">6.1</span> 分段指数模型</a></li>
+<li>
+<a class="nav-link" href="#sec6-2"><span class="header-section-number">6.2</span> 使用样条函数建模</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec6-2-1"><span class="header-section-number">6.2.1</span> B 样条</a></li>
+<li><a class="nav-link" href="#sec6-2-2"><span class="header-section-number">6.2.2</span> 限制性立方样条</a></li>
+<li><a class="nav-link" href="#sec6-2-3"><span class="header-section-number">6.2.3</span> 结数和位置</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec6-3"><span class="header-section-number">6.3</span> 风险函数的灵活模型</a></li>
+<li><a class="nav-link" href="#sec6-4"><span class="header-section-number">6.4</span> 对数累积风险函数的灵活模型</a></li>
+<li><a class="nav-link" href="#sec6-5"><span class="header-section-number">6.5</span> 灵活的比例几率模型</a></li>
+<li><a class="nav-link" href="#sec6-6"><span class="header-section-number">6.6</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

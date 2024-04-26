@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 16 章 贝叶斯生存分析 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="本书中描述的大多数建模技术都是基于构建观测事件时间数据的似然或偏似然函数。然后，在拟合模型的未知参数上最大化该似然函数，以获得风险比等量的估计。然后使用这些估计的标准误构建区间估计并执行假设检验。这种方法将样本数据视为随机变量的观测，并支持所谓的经典统计推断方法。另一种方法是将未知的模型参数视为随机变量。这种方法称为贝叶斯推断 (Bayesian...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 16 章 贝叶斯生存分析 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="本书中描述的大多数建模技术都是基于构建观测事件时间数据的似然或偏似然函数。然后，在拟合模型的未知参数上最大化该似然函数，以获得风险比等量的估计。然后使用这些估计的标准误构建区间估计并执行假设检验。这种方法将样本数据视为随机变量的观测，并支持所谓的经典统计推断方法。另一种方法是将未知的模型参数视为随机变量。这种方法称为贝叶斯推断 (Bayesian...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 16 章 贝叶斯生存分析 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="本书中描述的大多数建模技术都是基于构建观测事件时间数据的似然或偏似然函数。然后，在拟合模型的未知参数上最大化该似然函数，以获得风险比等量的估计。然后使用这些估计的标准误构建区间估计并执行假设检验。这种方法将样本数据视为随机变量的观测，并支持所谓的经典统计推断方法。另一种方法是将未知的模型参数视为随机变量。这种方法称为贝叶斯推断 (Bayesian...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="active" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap16" class="section level1" number="16">
+<h1>
+<span class="header-section-number">第 16 章</span> 贝叶斯生存分析<a class="anchor" aria-label="anchor" href="#chap16"><i class="fas fa-link"></i></a>
+</h1>
+<p>本书中描述的大多数建模技术都是基于构建观测事件时间数据的似然或偏似然函数。然后，在拟合模型的未知参数上最大化该似然函数，以获得风险比等量的估计。然后使用这些估计的标准误构建区间估计并执行假设检验。这种方法将样本数据视为随机变量的观测，并支持所谓的经典统计推断方法。另一种方法是将未知的模型参数视为随机变量。这种方法称为<strong>贝叶斯推断</strong> (Bayesian inference)，相关方法现已广泛应用于许多应用领域，包括生物医学科学。本章描述并说明了贝叶斯生存数据建模方法的基本特征。</p>
+<div id="sec16-1" class="section level2" number="16.1">
+<h2>
+<span class="header-section-number">16.1</span> 贝叶斯定理<a class="anchor" aria-label="anchor" href="#sec16-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>支撑贝叶斯推断的是一个条件概率定理，即<strong>贝叶斯定理</strong> (Bayes’ theorem)，由 Rev. Thomas Bayes 发表于 1763 年。其简单的版本为，事件 A 发生的概率表达式，以另一个事件 D 发生为条件，由下式给出</p>
+<p><span class="math display" id="eq:16-1">\[\begin{align}
+\mathrm{P}(A\mid D)=\mathrm{P}(AD)/\mathrm{P}(D)
+\tag{16.1}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\text{P}(AD)\)</span> 是事件 <span class="math inline">\(A\)</span> 和 <span class="math inline">\(D\)</span> 发生的联合概率。类似地，给定 <span class="math inline">\(A\)</span> 时 <span class="math inline">\(D\)</span> 的条件概率为</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(D\mid A)=\text{P}(DA)/\text{P}(A)\end{aligned}\]</span></p>
+<p>将该式中的联合概率 <span class="math inline">\(\text P(DA)\)</span> 代入式 <a href="chap16.html#sec16-1">16.1</a>，我们得到</p>
+<p><span class="math display" id="eq:16-2">\[\begin{align}
+\mathrm{P}(A\mid D)&amp;=\frac{\mathrm{P}(D\mid A)\mathrm{P}(A)}{\mathrm{P}(D)}
+\tag{16.2}
+\end{align}\]</span></p>
+<p>现在将该结果扩展到 <span class="math inline">\(k\)</span> 个互斥事件 <span class="math inline">\(A_1,A_2,\ldots,A_k\)</span> 中的至少一个必然与某个其他事件 <span class="math inline">\(D\)</span> 一起发生的情况。假设 <span class="math inline">\(D\)</span> 已经发生，则这 <span class="math inline">\(k\)</span> 个事件中发生任何一个的条件概率</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(A_i\mid D)&amp;=\frac{\mathrm{P}(D\mid A_i)\mathrm{P}(A_i)}{\mathrm{P}(D)}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(i=1,2,\ldots,k\)</span>。事件 <span class="math inline">\(D\)</span> 的总概率是 <span class="math inline">\(D\)</span> 与 <span class="math inline">\(k\)</span> 个事件 <span class="math inline">\(A_1,A_2,\ldots,A_k\)</span> 中的任何一个同时发生的概率之和，因此分母为</p>
+<p><span class="math display">\[\begin{aligned}\text{P}(D)=\sum_{i=1}^k\mathrm{P}(DA_i)=\sum_{i=1}^k\mathrm{P}(D\mid A_i)\text{P}(A_i)\end{aligned}\]</span></p>
+<p>这个结果意味着条件概率 <span class="math inline">\(\mathrm{P}(A_i\mid D)\)</span> 之和为一，那么贝叶斯定理的完整版本为</p>
+<p><span class="math display" id="eq:16-3">\[\begin{align}
+\mathrm{P}(A_i\mid D)&amp;=\frac{\mathrm{P}(D\mid A_i)\mathrm{P}(A_i)}{\sum_{i=1}^k\mathrm{P}(D\mid A_i)\mathrm{P}(A_i)}
+\tag{16.3}
+\end{align}\]</span></p>
+<p>该定理为贝叶斯推断方法提供了基础。</p>
+</div>
+<div id="sec16-2" class="section level2" number="16.2">
+<h2>
+<span class="header-section-number">16.2</span> 贝叶斯推断<a class="anchor" aria-label="anchor" href="#sec16-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>在贝叶斯推断中，对式 <a href="chap16.html#eq:16-3">(16.3)</a> 进行了重新解释，以显示如何将关于未知参数 <span class="math inline">\(\theta\)</span> 的先验信息与观测数据相结合，从而给出该参数的后验概率分布。当 <span class="math inline">\(\theta\)</span> 是离散的，它可能取的特定值对应于式 <a href="chap16.html#eq:16-3">(16.3)</a> 中的事件 <span class="math inline">\(A_i\)</span>。当 <span class="math inline">\(\theta\)</span> 是连续的，通常情况下，数据外部关于 <span class="math inline">\(\theta\)</span> 的知识可以总结为先验概率密度函数 <span class="math inline">\(\pi(\theta)\)</span>。在生存分析中，数据是 <span class="math inline">\(n\)</span> 个观测生存时间 <span class="math inline">\(t_1,t_2,\ldots,t_n\)</span>，其中一些可能会删失。将这些数据组装为向量 <span class="math inline">\(\boldsymbol t\)</span>，并且对应于式 <a href="chap16.html#eq:16-3">(16.3)</a> 中的事件 <span class="math inline">\(D\)</span>。数据取决于数据生成过程所假定模型中的 <span class="math inline">\(\theta\)</span> 值，根据该模型构建似然函数 <span class="math inline">\(L(\boldsymbol{t}\mid\theta)\)</span>，对应于式 <a href="chap16.html#eq:16-3">(16.3)</a> 的 <span class="math inline">\(\mathrm{P}(D\mid A_i)\)</span>。将 <span class="math inline">\(\theta\)</span> 视为连续的，贝叶斯定理分母中的求和替换为在 <span class="math inline">\(\theta\)</span> 可能值范围内的积分。所得的数据和先验密度的组合是 <span class="math inline">\(\theta\)</span> 的后验密度函数 <span class="math inline">\(\pi(\theta\mid \boldsymbol t)\)</span>，因此根据式 <a href="chap16.html#eq:16-3">(16.3)</a> 中的贝叶斯定理</p>
+<p><span class="math display">\[\pi(\theta\mid\boldsymbol{t})=\frac{L(\boldsymbol{t}\mid\theta)\pi(\theta)}{\int_\theta L(\boldsymbol{t}\mid\theta)\pi(\theta)}\]</span></p>
+<p>通常，一个模型将取决于多个参数，例如 <span class="math inline">\(p\)</span> 个，将其集合 <span class="math inline">\(\theta_1,\theta_2,\ldots,\theta_p\)</span> 表示为向量 <span class="math inline">\(\boldsymbol \theta\)</span>。给定数据，<span class="math inline">\(\boldsymbol \theta\)</span> 的后验密度函数 <span class="math inline">\(\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span> 与样本似然函数 <span class="math inline">\(L(\boldsymbol{t}\mid\theta)\)</span> 与 <span class="math inline">\(\boldsymbol \theta\)</span> 的先验密度 <span class="math inline">\(\pi\left(\boldsymbol{\theta}\right)\)</span> 的乘积成正比，再次根据式 <a href="chap16.html#eq:16-3">(16.3)</a></p>
+<p><span class="math display" id="eq:16-4">\[\begin{align}
+\pi(\boldsymbol{\theta}\mid\boldsymbol{t})=\frac{L(\boldsymbol{t}\mid\boldsymbol{\theta})\pi(\boldsymbol{\theta})}{p(\boldsymbol{t})}
+\tag{16.4}
+\end{align}\]</span></p>
+<p>分母 <span class="math inline">\(p(\boldsymbol t)\)</span> 是一个归一化常数，以确保后验密度 <span class="math inline">\(\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span> 积分为 1，同时也是样本数据的边际分布 (marginal distribution)，由下式给出</p>
+<p><span class="math display">\[\begin{aligned}p(\boldsymbol{t})=\int_\boldsymbol{\theta}L(\boldsymbol{t}\mid\boldsymbol{\theta})\pi(\boldsymbol{\theta})\mathrm{d}\boldsymbol{\theta}\end{aligned}\]</span></p>
+<p>这种对未知模型参数可能值的多维积分通常很难计算。然而，我们将在 <a href="chap16.html#sec16-6">16.6</a> 节中看到，可以使用数值方法来估计后验分布，从而不需要获得 <span class="math inline">\(p(\boldsymbol{t})\)</span>。</p>
+<p>通常，我们对模型中的特定参数感兴趣，而其他参数只是讨厌参数 (nuisance parameters). 例如，在为生存时间拟合 Weibull 模型时，我们可能需要有关部分或全部回归系数或风险比的信息，但不一定需要 Weibull 模型的基础尺度和形状参数。<span class="math inline">\(\theta_j\)</span>（<span class="math inline">\(\boldsymbol \theta\)</span> 中的第 <span class="math inline">\(j\)</span> 个模型参数）的后验边际分布可以通过对其他 <span class="math inline">\(p − 1\)</span> 个参数积分来计算，即</p>
+<p><span class="math display">\[\pi(\theta_j\mid\boldsymbol{t})=\int_{\boldsymbol{\theta}_{(-j)}}\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\mathrm{~d}\boldsymbol{\theta}_{(-j)}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol{\theta}_{(-j)}\)</span> 表示 <span class="math inline">\(\boldsymbol \theta\)</span> 中不包括 <span class="math inline">\(\theta_j\)</span> 的参数集。</p>
+<p>在贝叶斯推断中，生存时间假定模型中的参数视为随机变量，并且对这些参数的推断基于它们的后验分布。然后，通过该后验分布可导出贝叶斯点估计、区间估计和假设检验。</p>
+</div>
+<div id="sec16-3" class="section level2" number="16.3">
+<h2>
+<span class="header-section-number">16.3</span> 生存数据的贝叶斯模型<a class="anchor" aria-label="anchor" href="#sec16-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>当可以完全指定似然函数时，可以轻松实现生存数据建模的贝叶斯方法。假设要拟合比例风险模型，其中第 <span class="math inline">\(i(i = 1, 2,...,n)\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的风险函数和生存函数由下式给出</p>
+<p><span class="math display">\[h_i(t)=\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)h_0(t),\quad\quad S_i(t)=S_0(t)^{\exp(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i)}\]</span></p>
+<p>在这些表达式中，<span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体解释变量的值向量，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数，<span class="math inline">\(S_0(t)\)</span> 是根据 <span class="math inline">\(S_0(t)=\exp\{-H_0(t)\}\)</span> 得到的基线生存函数，其中基线累积风险为 <span class="math inline">\(H_0(t)=\int_0^th_0(u)\mathrm{d}u\)</span>。在参数模型中，基线风险函数是未知参数的完全指定函数。例如，第 <a href="chap5.html#chap5">5</a> 章介绍的 Weibull 模型的基线风险取决于形状参数 <span class="math inline">\(\gamma\)</span> 和尺度参数 <span class="math inline">\(\lambda\)</span>。因此，拟合参数模型时使用的似然函数取决于参数 <span class="math inline">\(\boldsymbol \theta\)</span>，其中包括 <span class="math inline">\(\beta\)</span> 系数和基线风险中的两个参数。使用第 5 章的式 <a href="chap5.html#eq:5-15">(5.15)</a>，参数模型的似然函数由下式给出</p>
+<p><span class="math display" id="eq:16-5">\[\begin{align}
+L(\boldsymbol{\theta}\mid\boldsymbol{t})&amp;=\prod_{i=1}^n\{h_i(t_i)\}^{\delta_i}S_i(t_i)
+\tag{16.5}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\delta_i\)</span> 是指示变量，当 <span class="math inline">\(t_i\)</span> 发生事件时该变量为 1，否则为 0，<span class="math inline">\(h_i(t_i)\)</span> 和 <span class="math inline">\(S_i(t_i)\)</span> 是在时间 <span class="math inline">\(t_i\)</span> 时的风险函数和生存函数。第 5 章给出了特定模型的风险和生存函数形式的详细信息。那么，式 <a href="chap16.html#eq:16-5">(16.5)</a> 中的似然可直接用于式 <a href="chap16.html#eq:16-4">(16.4)</a> 中的后验概率表达式，并与关于模型中未知参数的任何先验知识相结合。此外，任何全参数模型，包括加速失效时间模型、比例几率模型、基于样条函数的灵活模型、区间删失数据模型等，都可以很容易地纳入贝叶斯框架。</p>
+<p>Cox 回归模型也可以使用贝叶斯方法进行拟合，使用第 3 章 3.3 节描述的、由式 <a href="chap3.html#eq:3-4">(3.4)</a> 给出的偏似然函数，可代替式 <a href="chap16.html#eq:16-4">(16.4)</a> 中的 <span class="math inline">\(L(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span>。这种似然仅取决于模型中的 <span class="math inline">\(\beta\)</span> 系数，并且也可以包含关于这些系数的先验信息。一旦获得了模型中未知 <span class="math inline">\(\beta\)</span> 参数的贝叶斯估计，就可以使用第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-10">3.10</a> 节中的结果得出基线累积风险和生存函数的估计。</p>
+<p>这种方法的缺点是它无法包含有关基线风险函数的先验信息。为此，需要针对基线风险本身建立一个模型。假设数据包含 <span class="math inline">\(r\)</span> 个有序事件时间 <span class="math inline">\(t_{(1)}&lt;t_{(2)}&lt;\cdots&lt;t_{(r)}\)</span>。Cox 回归模型假定相邻事件时间之间存在恒定的基线风险，因此相应的参数模型对于 <span class="math inline">\(t_{(j-1)}\leqslant t&lt;t_{(j)}\)</span> 将具有 <span class="math inline">\(h_0(t) = \lambda_j\)</span>，其中 <span class="math inline">\(t_{(0)} = 0\)</span> 且 <span class="math inline">\(\lambda_j &gt; 0,j = 1, 2,...,r\)</span>。该风险函数在每个时间区间内都是恒定的，并且是第 6 章 <a href="chap6.html#sec6-1">6.1</a> 节描述的分段指数模型。</p>
+<p>比例风险模型的相应似然函数</p>
+<p><span class="math display">\[h_i(t)=\exp(\eta_i)h_0(t)\]</span></p>
+<p>可根据式 <a href="chap16.html#eq:16-5">(16.5)</a> 计算，其中 <span class="math inline">\(\eta_i=\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体 <span class="math inline">\(p\)</span> 个解释变量值的线性组合。对于 <span class="math inline">\(t_{(j-1)}\leqslant t&lt;t_{(j)}\)</span>，其中 <span class="math inline">\(j=1,2,\ldots,r\)</span>，风险和生存函数可根据 <span class="math inline">\(h_i(t)=\exp(\eta_i)\lambda_j\)</span> 得出，分别为 <span class="math inline">\(S_i(t)=\exp\{-H_i(t)\}\)</span> 和 <span class="math inline">\(H_i(t)=\exp(\eta_i)H_0(t)\)</span>，其中基线累积风险由下式给出</p>
+<p><span class="math display">\[\begin{aligned}H_0(t)=\sum_{j=1}^r\lambda_j\Delta_j(t)\end{aligned}\]</span></p>
+<p>以及</p>
+<p><span class="math display">\[\left.\Delta_j(t)=\left\{\begin{array}{ll}0&amp;\quad t&lt;t_{(j-1)}\\t-t_{(j-1)}&amp;\quad t_{(j-1)}\leqslant t&lt;t_{(j)}\\t_{(j)}-t_{(j-1)}&amp;\quad t\geqslant t_{(j)}\end{array}\right.\right.\]</span></p>
+<p>对于大型数据集，<span class="math inline">\(h_0(t)\)</span> 中的区间数量和相应的参数数量大得令人望而却步。那么需要定义更宽的区间，在每个区间内假定风险恒定。大多数用于贝叶斯半参数建模的计算机软件采用分段指数基线风险模型，而不是标准的 Cox 模型。</p>
+<div id="sec16-3-1" class="section level3" number="16.3.1">
+<h3>
+<span class="header-section-number">16.3.1</span> 简单指数模型的贝叶斯版本<a class="anchor" aria-label="anchor" href="#sec16-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>在第 5 章的 <a href="chap5.html#sec5-4-1">5.4.1</a>节中，我们展示了为单一样本删失生存数据拟合均值为 <span class="math inline">\(\lambda^{−1}\)</span> 的指数分布，其中使用了经典的基于似然的方法拟合。现在描述相应的贝叶斯方法。</p>
+<p>假设观测数据由 <span class="math inline">\(n\)</span> 个指数分布的生存时间 <span class="math inline">\(t_1, t_2,...,t_n\)</span> 的样本组成，其中 <span class="math inline">\(r\)</span> 为个事件时间，其余 <span class="math inline">\(n − r\)</span> 个是右删失的。用指标 <span class="math inline">\(\delta_i\)</span> 来表示第 <span class="math inline">\(i\)</span> 个观测是否为删失的，<span class="math inline">\(\delta_i = 0\)</span> 对应删失观测，则数据的似然如第 5 章式 <a href="chap5.html#eq:5-16">(5.16)</a> 所示为</p>
+<p><span class="math display">\[\prod_{i=1}^n\lambda^{\delta_i}e^{-\lambda t_i}\]</span></p>
+<p>现在将其写为 <span class="math inline">\(L(\boldsymbol{t}\mid\lambda)\)</span> 以强调这是数据 <span class="math inline">\(\boldsymbol t\)</span> 在参数为 <span class="math inline">\(\lambda\)</span> 的指数模型下的似然，因此</p>
+<p><span class="math display" id="eq:16-6">\[\begin{align}
+L(\boldsymbol{t}\mid\lambda)=\lambda^re^{-\lambda S}
+\tag{16.6}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(r=\sum_{i=1}^n\delta_i\)</span> 以及 <span class="math inline">\(S=\sum_{i=1}^nt_i\)</span>。</p>
+<p>贝叶斯推断过程通过制定 <span class="math inline">\(\lambda\)</span> 的先验分布来进行。由于 <span class="math inline">\(\lambda\)</span> 必须为正，因此任何先验信息都必须总结在区间 <span class="math inline">\((0, \infty)\)</span> 中。如果我们对 <span class="math inline">\(\lambda\)</span> 的可能值有一个很好的了解，我们可以使用以最合理的 <span class="math inline">\(\lambda\)</span> 值为中心的分布，其范围包含该值。例如，我们可以将先验视为 gamma 分布，其均值等于 <span class="math inline">\(\lambda\)</span> 的先验估计，其方差之大小取决于我们对该估计的信心。</p>
+<p>在本例中，我们假设没有关于 <span class="math inline">\(\lambda\)</span> 的先验知识。根据 <a href="chap16.html#sec16-4">16.4</a> 节中的预期结果，<span class="math inline">\(\lambda\)</span> 的一个合适的先验密度函数 <span class="math inline">\(\pi (\lambda)\)</span> 与 <span class="math inline">\(\lambda^{−1}\)</span> 成正比，我们取 <span class="math inline">\(\pi (\lambda)=c\lambda^{−1}\)</span>。由于常数 <span class="math inline">\(c\)</span> 在式 <a href="chap16.html#eq:16-4">(16.4)</a> 中后验密度函数的分子和分母中都出现，因此该常数实际上可忽略。给定样本数据的 <span class="math inline">\(\lambda\)</span> 的后验分布由下式给出</p>
+<p><span class="math display" id="eq:16-7">\[\begin{align}
+\pi(\lambda\mid\boldsymbol{t})=\frac{L(\boldsymbol{t}\mid\lambda)\pi(\lambda)}{p(\boldsymbol{t})}
+\tag{16.7}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}p(\boldsymbol{t})=\int_0^\infty L(\boldsymbol{t}\mid\lambda)\pi(\lambda)\mathrm{d}\lambda\end{aligned}\]</span></p>
+<p>使用式 <a href="chap16.html#eq:16-6">(16.6)</a>，式 <a href="chap16.html#eq:16-7">(16.7)</a> 中的分子为</p>
+<p><span class="math display" id="eq:16-8">\[\begin{align}
+L(\boldsymbol{t}\mid\lambda)\pi(\lambda)=\lambda^{r-1}\exp(-\lambda S)
+\tag{16.8}
+\end{align}\]</span></p>
+<p>接下来，使用第 5 章式 <a href="chap5.html#eq:5-6">(5.6)</a> 中定义的 gamma 函数，其中</p>
+<p><span class="math display">\[\begin{aligned}\Gamma(r)&amp;=\int_0^\infty u^{r-1}e^{-u}\mathrm{d}u\end{aligned}\]</span></p>
+<p>设 <span class="math inline">\(u=\lambda S\)</span>，则 <span class="math inline">\(\mathrm{d}u=S\mathrm{d}\lambda\)</span>，式 <a href="chap16.html#eq:16-7">(16.7)</a> 的分母为</p>
+<p><span class="math display">\[p(\boldsymbol{t})=\int_0^\infty\lambda^{r-1}\exp(-\lambda S)\mathrm{d}\lambda=\frac{\Gamma(r)}{S^r}\]</span></p>
+<p>根据式 <a href="chap16.html#eq:16-7">(16.7)</a> 和 <a href="chap16.html#eq:16-8">(16.8)</a>，<span class="math inline">\(\lambda\)</span> 的后验密度函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}\pi(\lambda\mid\boldsymbol{t})=\frac{\lambda^{r-1}S^r\exp(-\lambda S)}{\Gamma(r)}\end{aligned}\]</span></p>
+<p>这是随机变量 <span class="math inline">\(\lambda\)</span> 的概率密度函数，与第 5 章式 <a href="chap5.html#eq:5-11">(5.11)</a> 中 gamma 分布的密度比较后表明，<span class="math inline">\(\lambda\)</span> 具有参数为 <span class="math inline">\(r\)</span> 且 <span class="math inline">\(S=\sum_it_i\)</span> 的 gamma 后验分布。只要 <span class="math inline">\(r &gt; 1\)</span>，该分布的平均值为 <span class="math inline">\(r/S\)</span>，众数为 <span class="math inline">\((r − 1)/S\)</span>。请注意，<span class="math inline">\(\lambda\)</span> 后验分布的均值与第 5 章 <a href="chap5.html#sec5-4">5.4</a> 节 <span class="math inline">\(\lambda\)</span> 的最大似然估计导出的相同。当我们使用很少或根本不传达有关未知参数信息的先验分布时，通常会出现这种情况。</p>
+<p>在这个最简单的模型中，可以获得后验分布的显式形式，以便来自先验信息和数据的有关 <span class="math inline">\(\lambda\)</span> 的所有信息都可以 gamma 分布的形式传达。然而很少是这种情况，并且通常需要用于获得后验分布的数值方法。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-1" class="example"><strong>示例 16.1  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在本示例中，使用贝叶斯方法来分析<a href="chap1.html#exm:ex1-1">示例 1.1</a> 中关于 18 名妇女的宫内节育器停用时间的数据。具体而言，停用时间将假定为具有均值 <span class="math inline">\(\lambda\)</span> 的指数分布，因此根据式 <a href="chap16.html#eq:16-6">(16.6)</a>，样本数据的似然为</p>
+<p><span class="math display">\[L(\boldsymbol{t}\mid\lambda)=\lambda^r\exp\{-\lambda S\}\]</span></p>
+<p>其中 <span class="math inline">\(r\)</span> 为事件数以及 <span class="math inline">\(S=\sum_{i=1}^nt_i\)</span>。</p>
+<p><span class="math inline">\(\lambda\)</span> 的<strong>无信息先验</strong> (non-informative prior) 将与密度 <span class="math inline">\(\pi(\lambda)\propto\lambda^{-1}\)</span> 一起使用。数据中有 <span class="math inline">\(r＝9\)</span> 个事件时间，所有 18 个停用时间之和为 1046. <span class="math inline">\(\lambda\)</span> 的后验密度与 <span class="math inline">\(\lambda\)</span> 的似然和先验密度函数之积成比例，即</p>
+<p><span class="math display" id="eq:16-9">\[\begin{align}
+\lambda^8\exp(-1046\lambda)
+\tag{16.9}
+\end{align}\]</span></p>
+<p>在这种情况下，我们可以求出这样一个比例常数，使得该表达式的积分为 1. 正如在 <a href="chap16.html#sec16-3-1">16.3.1</a> 节所述，<span class="math inline">\(\lambda\)</span> 的后验分布是 gamma 分布，并具有参数 9 和 1046，这意味着</p>
+<p><span class="math display">\[\pi(\lambda\mid\boldsymbol{t})=\frac{\lambda^81046^9\exp(-1046\lambda)}{\Gamma(9)}\]</span>
+其中 <span class="math inline">\(\lambda&gt;0\)</span>。该后验分布可用于构建贝叶斯点估计、区间估计和假设检验，我们将在 <a href="chap16.html#sec16-5">16.5</a> 节返回到这一点。</p>
+</div>
+</div>
+<p>接下来我们更详细地讨论如何指定先验信息。</p>
+</div>
+</div>
+<div id="sec16-4" class="section level2" number="16.4">
+<h2>
+<span class="header-section-number">16.4</span> 纳入先验信息<a class="anchor" aria-label="anchor" href="#sec16-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>贝叶斯推断要求量化有关未知模型参数的先验信息，以便纳入推断过程。如果此类信息可用，并且可以总结为先验密度函数，则称有关未知模型参数的先验是<strong>信息性的</strong> (informative) 另一方面，如果此类先验信息很少或没有，则先验信息分别成为为模糊的 (vague) 或<strong>无信息的</strong> (non-informative). 那么先验密度函数将基本上是平坦的。</p>
+<p>构成向量 <span class="math inline">\(\boldsymbol \theta\)</span> 的每个参数 <span class="math inline">\(\theta_1,\theta_2,\ldots,\theta_p\)</span> 都需要先验分布。当这些先验分布视为彼此独立时，总先验为</p>
+<p><span class="math display">\[\pi(\boldsymbol{\theta})=\pi_1(\theta_1)\pi_2(\theta_2)\cdots\pi_p(\theta_p)\]</span></p>
+<p>其中 <span class="math inline">\(\pi_j (\theta_j)\)</span> 是第 <span class="math inline">\(j(j=1,2,\ldots,p)\)</span> 个参数 <span class="math inline">\(\theta_j\)</span> 的先验密度。如果不能做出这种独立性假设，则可以将 <span class="math inline">\(\boldsymbol \theta\)</span> 视为具有多元分布，例如多元正态分布。然后可以考虑有关各个参数之间的任何相关性的先验信息。虽然这会增加一层复杂性，但在原则上，将 <span class="math inline">\(\boldsymbol \theta\)</span> 视为具有多元分布而非 <span class="math inline">\(p\)</span> 个独立单变量先验分布之积，并不存在根本性困难。</p>
+<p>我们现在依次考虑不同程度的先验信息。</p>
+<div id="sec16-4-1" class="section level3" number="16.4.1">
+<h3>
+<span class="header-section-number">16.4.1</span> 无信息先验信息<a class="anchor" aria-label="anchor" href="#sec16-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>即使没有关于模型未知参数的先验知识，这种知识的欠缺也必须通过无信息性先验密度函数来量化。此类先验分布会对未知参数的所有可能值赋予相似的概率密度，并具有较大的方差。那么，后验分布将由似然的形式主导，因此，由此产生的推断几乎完全由数据所驱动。</p>
+<p>用于总结参数知识欠缺的先验分布取决于其可能值的范围。对于可以取 <span class="math inline">\((−\infty, \infty)\)</span> 范围内任何值的参数，例如生存模型中解释变量的系数，先验密度函数 <span class="math inline">\(\pi (\theta)\)</span> 可视为在此范围内恒定。那么，<span class="math inline">\(\theta\)</span> 具有均匀分布，记为 <span class="math inline">\(U(−\infty, \infty)\)</span>。然而，这是一个<strong>不适当分布</strong> (improper distribution)，因为该均匀密度函数的积分 <span class="math inline">\(\int_{-\infty}^{\infty}\pi(\theta)\mathrm{d}\theta\)</span> 是没有定义的。然而，只要式 <a href="chap16.html#eq:16-4">(16.4)</a> 的分母中的积分是有限的，这就不是问题。</p>
+<p>对于只能在 <span class="math inline">\((0,\infty)\)</span> 范围内取正值的参数，例如风险比或尺度参数，可以假定 <span class="math inline">\(\pi(\theta)\)</span> 在此范围内为常数。然后可以采用 <span class="math inline">\((0,\infty)\)</span> 上的均匀先验，尽管这也是不适当先验分布。严格为正的参数 <span class="math inline">\(\theta\)</span> 意味着 <span class="math inline">\(\log \theta\)</span> 定义在 <span class="math inline">\((−\infty, \infty)\)</span> 范围内。这表明 <span class="math inline">\(\log \theta\)</span> 使用了 <span class="math inline">\((−\infty, \infty)\)</span> 上的不适当均匀分布。这对应于 <span class="math inline">\(\theta\)</span> 在 <span class="math inline">\((0,\infty)\)</span> 范围内与 <span class="math inline">\(1/\theta\)</span> 成比例的分布。请注意，通过对 <span class="math inline">\(\theta\)</span> 或其函数（如 <span class="math inline">\(\log \theta\)</span>）的无知的量化，可得到不同的先验分布。</p>
+<p>有时，对于定义在 <span class="math inline">\((0, 1)\)</span> 上的参数 <span class="math inline">\(\theta\)</span>（例如概率）需要用到先验分布。此时一个常见的先验选择是 beta 分布的形式，对于 <span class="math inline">\(0\leqslant\theta\leqslant1\)</span> 和选定的 <span class="math inline">\(\alpha\)</span>，其密度函数与 <span class="math inline">\(\theta^{\alpha-1}(1-\theta)^{\alpha-1}\)</span> 成正比。该分布的均值为 0.5，方差随 <span class="math inline">\(\alpha\)</span> 的增加而减小。当 <span class="math inline">\(\alpha=1\)</span> 时，<span class="math inline">\(\pi(\theta) = 1\)</span>，这对应于 <span class="math inline">\((0, 1)\)</span> 上的均匀先验。当 <span class="math inline">\(\alpha=0\)</span> 时，<span class="math inline">\(\pi(\theta)\propto\theta^{-1}(1-\theta)^{-1}\)</span>，这对应于 <span class="math inline">\(\theta\)</span> 的 logistic 变换，即 <span class="math inline">\(\text{logit}(\theta) = \log{\theta/(1 − \theta)}\)</span>，其分布为不适当的 <span class="math inline">\(U(−\infty, \infty)\)</span>。这两种无信息先验的选择都具有直观吸引力。</p>
+<p>以准确且不会引起争议的方式指定先验信息存在困难，再加上人们希望使用对最终推断影响较小或无影响的先验，使得无信息先验被广泛使用。然而，使用平坦的先验分布来表示缺乏先验知识可能会受到批评。例如，假设治疗效应的风险比是一个关键参数。可以使用在 <span class="math inline">\((0,\infty)\)</span> 上均匀的平坦先验来表达对风险比先验的无知。然而，这意味着我们的先验信息表明，在 0 到 10 范围内的风险比与 1000 到 1010 范围内的风险比一样合理，实际不太可能如此。</p>
+<p>相比仅使用默认的无信息先验指定，考虑未知参数的可能值范围通常是有价值的，以便可以将其总结为模糊或信息性先验分布。</p>
+</div>
+<div id="sec16-4-2" class="section level3" number="16.4.2">
+<h3>
+<span class="header-section-number">16.4.2</span> 模糊先验信息<a class="anchor" aria-label="anchor" href="#sec16-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>一个关于参数先验值提供少量信息的分布称为模糊、扩散或弱信息性的 (vague, diffuse or weakly-informative). 模糊先验基于是适当但高度扩散的分布，因此它们仍然会被数据淹没。与无信息先验一样，关于 <span class="math inline">\(\theta\)</span> 的推断将几乎完全基于观测数据。</p>
+<p>对于可以取 <span class="math inline">\((−\infty, \infty)\)</span> 范围内任意值的参数，模糊先验的常见选择是均值为零且方差较大的正态分布 <span class="math inline">\(\sigma^2\)</span>，记作 <span class="math inline">\(N(0, \sigma^2)\)</span>。<span class="math inline">\(\sigma^2\)</span> 需要有多大取决于未知参数的规模，但如果 <span class="math inline">\(\sigma\)</span> 大于 <span class="math inline">\(\theta\)</span> 预期最大值的两倍，则会得到非常平坦的先验。事实上，对于适当大的 <span class="math inline">\(\sigma^2\)</span> 值，正态分布与不适当的 <span class="math inline">\(U(−\infty, \infty)\)</span> 分布非常相似。其他常用的其他分布包括具有较小自由度的 <span class="math inline">\(t\)</span> 分布和柯西分布。当然，在 <span class="math inline">\(\theta\)</span> 的可能值范围内采用除均匀分布之外的任何分布都是在构建少量先验信息，后验分布仍绝大多数将由似然函数主导。</p>
+<p>关于正值参数 <span class="math inline">\(\theta\)</span> 的模糊先验知识可以使用 lognormal 分布来指定，该分布等价于 <span class="math inline">\(\log\theta\)</span> 的正态分布。通常用于参数模型尺度参数的先验分布为 half-normal 分布。这是通过截断具有零均值的正态分布而形成的，因此它仅在正值有定义。该分布的均值为 <span class="math inline">\(\sigma√(2/\pi)\)</span>，方差为 <span class="math inline">\(\sigma^2(1-2\pi^{-1})\)</span> ，因此扩散的 half-normal 先验具有较大的 <span class="math inline">\(\sigma^2\)</span> 值。另一种选择是具有较大方差的 gamma 分布。例如，参数为 <span class="math inline">\(r=λ=0.001\)</span> 的伽玛先验的均值为 1，方差为 1000，这也是一个扩散但适当的先验。</p>
+<p>尽管不同的先验分布必然会导致不同的后验分布，但就要得出的推断而言，任何此类差异可能没有实际意义。例如，无论对数风险比 <span class="math inline">\(\beta\)</span> 的无信息先验分布视为在 <span class="math inline">\((−∞\infty, \infty)\)</span> 上具有均匀分布，还是具有扩散的正态分布，可能都不会对关于 <span class="math inline">\(\beta\)</span> 值的推断产生实质性影响。对于较大的数据集尤其如此，但在较小的数据集中可能会有明显差异。</p>
+<p>正如不适当的先验可能是参数先验知识状态的不切实际的表示一样，模糊先验也会因类似的理由受到批评。具体来说，具有较大方差的正态先验分布仍然可能将较大概率分配给不太可能出现的参数值。例如，假设治疗效应的对数风险比 <span class="math inline">\(\beta\)</span> 的先验分布为 <span class="math inline">\(N(0,10)\)</span>，意味着 <span class="math inline">\(\beta\)</span> 有大约 20% 的可能性超出范围 <span class="math inline">\((−4,4)\)</span>，但对于一个相当不可能的值来说，这是相当大的。</p>
+</div>
+<div id="sec16-4-3" class="section level3" number="16.4.3">
+<h3>
+<span class="header-section-number">16.4.3</span> 实质的先验信息<a class="anchor" aria-label="anchor" href="#sec16-4-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>当先验信息是实质的 (substantial) 或信息性的 (informative) 时，后验分布可能在很大程度上取决于先验分布的假定形式。因此，必须仔细考虑如何获取先验信息，以确保信息的准确性。有时，模型中一些或所有未知参数的先验信息可从先前的知识中获得。在其他情况下，结合文献检索和专家意见可能会得出合适的数值总结。此外，在当前研究与先前研究相似的情况下，也可以利用先前研究得到的关键参数估计来构建合适的先验分布。</p>
+<p>通常，信息性先验基于概率分布（例如正态分布或 gamma 分布），具体取决于参数可能值的范围。信息先验可能相当主观，因为对先验的数值指定很可能因人而异。然而，人们可能会同意，对于某个解释变量（例如治疗效应）的风险比，很可能以 1.5 为中心，并且几乎不可能超过 4. 那么，可以构建一个不对称的先验分布，该分布的中位数为 1.5，并且其方差设定得较小，使得效应超过 4 的概率非常低。</p>
+<p>先验分布的选择总是存在一定程度的随意性，而且人们经常担心后验分布在多大程度上依赖于所做的选择。因此，可以在分析中使用一系列似是而非的先验，并评估后验分布对这些不同选择的敏感性。</p>
+</div>
+</div>
+<div id="sec16-5" class="section level2" number="16.5">
+<h2>
+<span class="header-section-number">16.5</span> 总结后验信息<a class="anchor" aria-label="anchor" href="#sec16-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>参数 <span class="math inline">\(\theta\)</span> 的后验分布总结了先验分布中的所有可用信息以及样本数据的似然，因此支撑了关于 <span class="math inline">\(\theta\)</span> 的推论。现在依次考虑点估计、区间估计和假设检验。</p>
+<div id="sec16-5-1" class="section level3" number="16.5.1">
+<h3>
+<span class="header-section-number">16.5.1</span> 点估计<a class="anchor" aria-label="anchor" href="#sec16-5-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>θ 最合适的点估计是使后验密度最大化的值，即分布的众数。有时可以通过将后验密度的导数或其对数设为零并求出满足该方程的 <span class="math inline">\(\theta\)</span> 值来解析获得众数。当该方法不可能时，就需要函数最大化的数值方法。</p>
+<p>如果后验分布是合理对称的，则后验分布的均值也可以用作位置的点估计。然后，可以方便地用分布的方差或标准差来总结分布的分散或离散 (spread or dispersion). 当后验分布不对称时，中位数将是一个更合适的点估计，而一个合适的分散的度量是第 2 章 <a href="chap2.html#sec2-4">2.4</a> 节定义的半四分位距。一般而言，中位数或均值是比众数更方便的位置总结。</p>
+</div>
+<div id="sec16-5-2" class="section level3" number="16.5.2">
+<h3>
+<span class="header-section-number">16.5.2</span> 区间估计<a class="anchor" aria-label="anchor" href="#sec16-5-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>区间估计通常比点估计更能提供有关参数后验分布的信息。精确的 <span class="math inline">\(100(1−\alpha)\%\)</span> 区间估计是指能以预先指定的概率 <span class="math inline">\(1−\alpha\)</span><a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;原书此处为 &lt;span class="math inline"&gt;\(\alpha\)&lt;/span&gt;。&lt;/p&gt;'><sup>31</sup></a> 包含 <span class="math inline">\(\theta\)</span> 的区间。该区间的下限和上限，<span class="math inline">\(\theta_l\)</span> 和 <span class="math inline">\(\theta_u\)</span> 满足</p>
+<p><span class="math display">\[\int_{\theta_l}^{\theta_u}\pi(\theta\mid\boldsymbol{t})\mathrm{d}\theta=1-\alpha\]</span></p>
+<p>其中 <span class="math inline">\(\alpha\)</span> 适当地小。这通常称为<strong>概率区间</strong> (probability interval)，因为它表示 <span class="math inline">\(\theta\)</span> 位于区间 <span class="math inline">\((\theta_l,\theta_u)\)</span> 中的后验概率。将 <span class="math inline">\(\alpha\)</span> 取为 0.05 或 0.01 会得到 95% 或 99% 概率区间。</p>
+<p>有许多方法可以定义区间 <span class="math inline">\((\theta_l,\theta_u)\)</span>。其中一种是确保后验概率密度在 <span class="math inline">\(\theta_l\)</span> 和 <span class="math inline">\(\theta_u\)</span> 处是相等的，使得该区间外的任何 <span class="math inline">\(\theta\)</span> 值的概率密度都不高于区间内的任何 <span class="math inline">\(\theta\)</span> 值的概率密度。以这种方式构建的区间称为<strong>最高概率密度</strong> (highest probability density, HPD) 区间，并且是在贝叶斯推断中获得区间估计的最自然的方式。</p>
+<p>HPD 区间通常需要以数值方式获得。概括地说，需要确定满足 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})=\phi\)</span> 的 <span class="math inline">\(\theta\)</span> 值，其中 <span class="math inline">\(\phi\)</span> 取一系列值。然后，可根据下式计算出与特定 <span class="math inline">\(\phi\)</span> 值相关的概率覆盖</p>
+<p><span class="math display">\[\int_\theta\pi(\theta\mid\boldsymbol{t})\mathrm{~d}\theta \]</span></p>
+<p>其中积分是对满足 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})&gt;\phi\)</span> 的 <span class="math inline">\(\theta\)</span> 值进行的。这给出了所需 <span class="math inline">\(\alpha\)</span> 的 <span class="math inline">\(\phi\)</span> 值，称为 <span class="math inline">\(\phi_\alpha\)</span>，那么 HPD 区间的上下限就是使 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})=\phi_\alpha\)</span> 的 <span class="math inline">\(\theta\)</span> 值。</p>
+<p>另一种方法是采用具有等尾面积 (equal tail areas) 的区间。那么，一个 <span class="math inline">\(100(1 − \alpha)%\)</span> 区间估计在后验分布的两个尾部都具有概率 <span class="math inline">\(\alpha/2\)</span>。从后验分布的上下 <span class="math inline">\(\alpha/2\)</span> 分位点可以很容易地得到相应的区间限。以这种方式构建的区间估计称为<strong>可信区间</strong> (credible interval)，通常比 HPD 区间更容易获得。这两个区间示于图 16.1.</p>
+<details><summary><font color="#8B2232">图 16.1</font>
+</summary><img src="figure/figure%2016.1.png#center" style="width:80.0%"></details><p><br>
+在该图中，满足 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})=\phi_\alpha\)</span> 的 <span class="math inline">\(\theta\)</span> 值形成了 <span class="math inline">\(100(1-\alpha)\%\)</span> 的 HPD 区间 <span class="math inline">\((\theta_l^H,\theta_u^H)\)</span>，并且 <span class="math inline">\(\theta\)</span> 的 <span class="math inline">\(100(1−\alpha)\%\)</span> 可信区间为 <span class="math inline">\((\theta_l^C,\theta_u^C)\)</span>。请注意，这两个区间非常不同，即使它们具有相同的概率覆盖范围。</p>
+<p>虽然贝叶斯概率区间等价于经典推断中的置信区间，但它们在解释上有非常重要的区别。置信区间是这样定义的：（随机）区间以预定概率包含未知参数真实（固定）值。然而，概率区间是这样的：随机变量 <span class="math inline">\(\theta\)</span> 有特定的概率包含在该区间内。此外，贝叶斯概率区间直接根据后验密度函数获得，不需要计算标准误。因此，它们的有效性不依赖于大样本，所以它们也是精确的区间。</p>
+</div>
+<div id="sec16-5-3" class="section level3" number="16.5.3">
+<h3>
+<span class="header-section-number">16.5.3</span> 贝叶斯假设检验<a class="anchor" aria-label="anchor" href="#sec16-5-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设检验广泛用于经典推断以评估原假设的有效性，与其相关的 <span class="math inline">\(P\)</span> 值被用作度量反对原假设证据强度的指标。如果根据来自数据的证据拒绝原假设，则备择假设将成为任何后续行动的基础。似然比检验通过使用统计量 <span class="math inline">\(-2\log\hat{L}\)</span> 来比较替代模型，为生存分析中大多数假设检验的构建奠定了基础。然而，似然比统计量仅具有已知的渐近卡方分布，并且依赖于大样本（即相对较多的事件数）以获得有效性。</p>
+<p>在贝叶斯方法中，不需要区分零假设和替代假设，我们只需使用概率区间计算 <span class="math inline">\(\theta\)</span> 具有特定值或值范围的后验概率。这得到了对假设为真的概率的直接和精确的评估。</p>
+<p>假设 (suppose) 我们假设 (hypothesise) <span class="math inline">\(\theta\)</span> 具有大于 <span class="math inline">\(\theta_0\)</span> 的某个值。该概率可使用如下公式从 <span class="math inline">\(\theta\)</span> 的后验密度 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 求出</p>
+<p><span class="math display">\[P(\theta&gt;\theta_0)=\int_{\theta_0}^\infty\pi(\theta\mid\boldsymbol{t})\mathrm{d}\theta\]</span></p>
+<p>例如，如果 <span class="math inline">\(\theta\)</span> 是一个风险比，因此 <span class="math inline">\(\theta&gt;0\)</span>，我们可以通过简单地计算 <span class="math inline">\(\theta\)</span> 的后验密度超过 2 的概率来检验风险比大于 2 的假设。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-2" class="example"><strong>示例 16.2  (停用宫内节育器的时间) </strong></span><br></p>
+<p>在<a href="chap16.html#exm:ex16-1">示例 16.1</a> 中，对于宫内节育器停用时间数据，假定 <span class="math inline">\(\lambda\)</span> 为指数分布的后验分布是具有参数 <span class="math inline">\((9,1046)\)</span> 的 gamma 分布。该分布的众数，即后验密度最高的 <span class="math inline">\(\lambda\)</span> 的值为 <span class="math inline">\(8/1046\)</span>，即 0.00765. <span class="math inline">\(\lambda\)</span> 的 95% 概率区间为满足下式的区间 <span class="math inline">\((\lambda_l,\lambda_u)\)</span></p>
+<p><span class="math display">\[\int_{\lambda_l}^{\lambda_u}\pi(\lambda\mid\boldsymbol{t})\mathrm{d}\lambda=0.95\]</span></p>
+<p>最高概率密度区间很难获得，因为满足该方程的值 <span class="math inline">\(\lambda_{l},\lambda_{u}\)</span> 无法代数地求出。使用数值方法，95% HPD 区间为 <span class="math inline">\((0.0035, 0.0143)\)</span>，这意味着 <span class="math inline">\(\lambda\)</span> 有 95% 的机会位于该区间内。与之相比，<span class="math inline">\(\lambda\)</span> 后验分布的下 2.5% 和上 2.5% 分位点更容易求出。从参数为 <span class="math inline">\((9, 1046)\)</span> 的 gamma 分布的分布函数来看，它们是 0.0039 和 0.0151。那么区间 <span class="math inline">\((0.0039, 0.0151)\)</span> 就是 <span class="math inline">\(\lambda\)</span> 的 95% 可信区间。在此示例中，HPD 和可信区间非常相似，因为 <span class="math inline">\(\lambda\)</span> 的后验密度函数非常对称。</p>
+<p>通过如下积分计算 <span class="math inline">\(\lambda\)</span> 后验概率小于 0.01 的概率，以检验 <span class="math inline">\(\lambda&lt;0.01\)</span> 的假设</p>
+<p><span class="math display">\[\int_0^{0.01}\pi(\lambda\mid\boldsymbol{t})\mathrm{d}\lambda \]</span></p>
+<p>根据 gamma 分布的分布函数，这是 0.717，因此 <span class="math inline">\(\lambda&lt;\)</span> 小于 0.01 的概率为 0.72.</p>
+</div>
+</div>
+<p>贝叶斯推断方法可以对未知参数进行点估计和精确区间估计，以及对该参数值的精确假设检验。由于这些结果可以直接以关于参数值的概率陈述形式进行解读，因此这种方法在实践中具有很大的吸引力。</p>
+</div>
+</div>
+<div id="sec16-6" class="section level2" number="16.6">
+<h2>
+<span class="header-section-number">16.6</span> 计算后验分布<a class="anchor" aria-label="anchor" href="#sec16-6"><i class="fas fa-link"></i></a>
+</h2>
+<p>尽管贝叶斯推断技术具有许多优点，但由于计算机能力的限制，它们并未得到广泛的实际应用。但现在情况已经不同了，用于数值评估后验密度函数的高效计算方法现已唾手可得。这意味着，在后验密度无法以封闭形式表示的情况下，或者当获得参数后验分布所需的积分在代数上不可能时，仍能确定后验密度的形式以及相关的总结统计量。这些技术依赖于模拟，以从后验分布中获得随机样本。</p>
+<p>假设可从 <span class="math inline">\(\theta\)</span> 的后验分布得到参数 <span class="math inline">\(\theta\)</span> 的 <span class="math inline">\(N\)</span> 个模拟值。对于足够大的 <span class="math inline">\(N\)</span> 值，这些值的直方图将逼近它们被抽取的后验分布。此外，关于该后验分布的推断也可基于这些模拟值来进行。例如，可以通过这些模拟值的样本均值来估计后验均值，并且可根据预设范围内的样本值比例来获得概率区间。随着 <span class="math inline">\(N\)</span> 值的增大，这些估计值会越来越接近相应的真值。</p>
+<p>有许多可能的模拟方法，但在这里我们描述一种非常通用的技术，称为<strong>拒绝采样</strong> (rejection sampling)，当后验分布具有复杂形式时特别有用。</p>
+<div id="sec16-6-1" class="section level3" number="16.6.1">
+<h3>
+<span class="header-section-number">16.6.1</span> 拒绝采样<a class="anchor" aria-label="anchor" href="#sec16-6-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>这种直接的模拟方法可用于从单个参数的后验密度函数 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 中抽取样本值。重要的是，当已知的与真实的 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 只相差一个常数倍时，就可以使用拒绝采样<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;Importantly, rejection sampling can be used when &lt;span class="math inline"&gt;\(\pi(\theta\mid\boldsymbol{t})\)&lt;/span&gt; is only known up to a constant.&lt;/p&gt;'><sup>32</sup></a>。因为根据式 <a href="chap16.html#eq:16-4">(16.4)</a>，<span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 与样本似然函数和先验密度之积 <span class="math inline">\(L(\boldsymbol{t}\mid\theta)\pi(\theta)\)</span> 成正比，因此无需执行必要的积分以获得归一化常数，我们就能利用拒绝采样从 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 中抽样。这是一个显著的优势。</p>
+<p>其基本思想是，我们不从 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 中采样，而是从具有密度函数 <span class="math inline">\(f(\theta\mid\boldsymbol{t})\)</span> 的分布中采样，然后对其缩放以包络 (envelope) <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span>。选择<strong>基本密度函数</strong> (base density function) <span class="math inline">\(f(\theta\mid\boldsymbol{t})\)</span> 以便可以直接从中模拟样本值。取缩放因子 <span class="math inline">\(K\)</span> 使得对于任何 <span class="math inline">\(\theta\)</span> 值 <span class="math inline">\(Kf(\theta\mid\boldsymbol{t})\)</span> 都不小于 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span>，即</p>
+<p><span class="math display" id="eq:16-10">\[\begin{align}
+K=\max_\theta\left\{\frac{\pi(\theta\mid\boldsymbol{t})}{f(\theta\mid\boldsymbol{t})}\right\}
+\tag{16.10}
+\end{align}\]</span></p>
+<p>最简单的基本密度函数是在两个值 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(b\)</span> 之间恒定的函数，即均匀密度，表示为 <span class="math inline">\(U(a, b)\)</span>。相应的基本密度函数对于 <span class="math inline">\(a \leqslant \theta \leqslant b\)</span> 为 <span class="math inline">\(f(\theta\mid\boldsymbol{t})=1/(b-a)\)</span>，否则为 0，这里选取的限 <span class="math inline">\(a\)</span> 和 <span class="math inline">\(b\)</span> 应当超出后验 <span class="math inline">\(\theta\)</span> 值的合理范围。根据式 <a href="chap16.html#eq:16-10">(16.10)</a>，缩放因子 <span class="math inline">\(K\)</span> 为：</p>
+<p><span class="math display">\[\begin{aligned}K=(b-a)\max_\theta\{\pi(\theta\mid\boldsymbol{t})\}\end{aligned}\]</span></p>
+<p>使 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 最大化的 <span class="math inline">\(\theta\)</span> 值是该后验分布的众数 <span class="math inline">\(\tilde\theta\)</span>，因此</p>
+<p><span class="math display">\[\begin{aligned}K=(b-a)\pi(\tilde{\theta}\mid\boldsymbol{t})\end{aligned}\]</span></p>
+<p><span class="math inline">\(\theta\)</span> 的值可以通过对 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 关于 <span class="math inline">\(\theta\)</span> 进行微分并令导数等于零来求出。当后验密度不容易微分时（通常如此），可能需要函数最大化的数值方法。</p>
+<p>为了说明，假设我们希望从非负参数 <span class="math inline">\(\theta\)</span> 的后验分布中采样，其密度如图 16.2 所示。在该图中，范围 <span class="math inline">\((a,b)\)</span> 内的均匀基本密度用虚线表示，它显然没有包含我们希望从中进行采样的分布。因此，通过将 <span class="math inline">\(f(\theta\mid\boldsymbol{t})\)</span> 乘以 <span class="math inline">\(K=(b-a)\pi(\theta\mid\boldsymbol{t})\)</span> 来缩放均匀密度，得到一个恒为 <span class="math inline">\(\pi(\tilde{\theta}\mid\boldsymbol{t})\)</span> 的函数。该函数如图 16.2 中的实线所示。</p>
+<details><summary><font color="#8B2232">图 16.2</font>
+</summary><img src="figure/figure%2016.2.png#center" style="width:80.0%"></details><p><br>
+下一步是根据基本密度 <span class="math inline">\(f(\theta\mid\boldsymbol{t})\)</span> 模拟随机数 <span class="math inline">\(\theta_s\)</span>。我们还根据 <span class="math inline">\(U(0, 1)\)</span> 分布模拟另一个随机数 <span class="math inline">\(u\)</span>。那么如果</p>
+<p><span class="math display">\[\begin{aligned}u\leqslant\frac{\pi(\theta_s\mid\boldsymbol{t})}{Kf(\theta_s\mid\boldsymbol{t})}\end{aligned}\]</span></p>
+<p>我们接受 <span class="math inline">\(\theta_s\)</span> 作为 <span class="math inline">\(\pi({\theta}\mid\boldsymbol{t})\)</span> 的样本值，否则拒绝 <span class="math inline">\(\theta_s\)</span>。这等价于模拟在 <span class="math inline">\((0,Kf(\theta_s\mid\boldsymbol{t}))\)</span> 中均匀分布的随机数 <span class="math inline">\(v\)</span>，并且如果 <span class="math inline">\(v\leqslant\pi(\theta_s|\boldsymbol{t})\)</span> 则接受 <span class="math inline">\(\theta_s\)</span>。因此，模拟值 <span class="math inline">\(\theta_s\)</span> 以概率 <span class="math inline">\(\pi(\theta_s\mid\boldsymbol{t})/Kf(\theta_s\mid\boldsymbol{t})\)</span> 被接受，并且是 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 的采样值。图 16.2 也对此进行了说明。由于在函数 <span class="math inline">\(f(\theta\mid\boldsymbol{t})\)</span> 图形下的均匀随机数的 x 坐标与在 <span class="math inline">\(\pi(\theta\mid\boldsymbol{t})\)</span> 图形下的均匀随机数的 x 坐标相同，因此该模拟过程适用于已知的与真实的后验密度仅相差某个常数倍的情况<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;this simulation process works with posterior densities that are only known up to a constant.&lt;/p&gt;"><sup>33</sup></a>。</p>
+<p>将该过程重复多次，直到我们从后验分布中获得足够多的 <span class="math inline">\(\theta\)</span> 值样本。然后绘制这些值的直方图，以总结后验密度。此外，采样值的均值可以用作 <span class="math inline">\(\theta\)</span> 后验分布的均值，<span class="math inline">\(\theta\)</span> 的概率区间也可从模拟值中获得。</p>
+<p>使用均匀包络（如图 16.2 所示）会导致许多采样值 <span class="math inline">\(\theta_s\)</span> 被拒绝，因为基本密度函数与 <span class="math inline">\(\pi({\theta}\mid\boldsymbol{t})\)</span> 不太接近。更好的基本密度选择可能是基于 gamma 分布，甚至是正态分布。更详细的改进将包括使用分段基函数和自适应方法，其中随着关于 <span class="math inline">\(\pi({\theta}\mid\boldsymbol{t})\)</span> 信息的积累，<span class="math inline">\(f(\theta\mid\boldsymbol{t})\)</span> 会发生变化。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-3" class="example"><strong>示例 16.3  (停用宫内节育器的时间) </strong></span><br></p>
+<p>为说明拒绝采样，将模拟<a href="chap16.html#exm:ex16-1">示例 16.1</a> 中 <span class="math inline">\(\lambda\)</span> 后验分布的值。虽然我们知道这种情况下后验分布的实际密度，但在本例中我们假设最多只知道与 <span class="math inline">\(\pi(\left.\lambda\mid\boldsymbol{t}\right)\)</span> 相差一个常数比例的函数。那么，后验密度与数据的似然 <span class="math inline">\(L(\boldsymbol{t}\mid\lambda)\)</span> 和 <span class="math inline">\(\lambda\)</span> 的先验分布 <span class="math inline">\(\pi (\lambda)\)</span> 之积成正比，因此根据 16.3 节中的式 <a href="chap16.html#eq:16-9">(16.9)</a></p>
+<p><span class="math display">\[\pi(\lambda\mid\boldsymbol{t})\propto L(\boldsymbol{t}\mid\lambda)\pi(\lambda)=\lambda^8\exp(-1046\lambda)\]</span></p>
+<p>该函数与 <span class="math inline">\(\lambda\)</span> 的关系图如图 16.3 所示。对该函数的对数求微分，并将导数设为零，我们发现它在 <span class="math inline">\(\tilde\lambda = 8/1046 = 0.00765\)</span> 处有最大值，并且在 <span class="math inline">\(\tilde\lambda\)</span> 处的密度为 <span class="math inline">\(3.927×10^{−21}\)</span>。从图 16.3 中我们还看到，当 <span class="math inline">\(\lambda &gt; 0.02\)</span> 时，该函数在实际意义上上为零，因此使用 <span class="math inline">\((0, 0.02)\)</span> 上的均匀基本密度。将其乘以 <span class="math inline">\(K=0.02\pi(\tilde{\lambda}\mid t)\)</span>，以便函数 <span class="math inline">\(\lambda^8\exp(-1046\lambda)\)</span> 被一个最大值为 <span class="math inline">\(3.927 × 10^{−21}\)</span> 的矩形包围。</p>
+<details><summary><font color="#8B2232">图 16.3</font>
+</summary><img src="figure/figure%2016.3.png#center" style="width:80.0%"></details><p><br>
+接着，模拟在 <span class="math inline">\((0,0.02)\)</span> 上均匀分布的 10,000 个值，记作 <span class="math inline">\(\lambda\)</span> 的模拟值 <span class="math inline">\(\lambda_s\)</span>，如果区间 <span class="math inline">\((0,3.927\times10^{-21})\)</span> 中的第二个均匀随机数 <span class="math inline">\(u\)</span> 不超过 <span class="math inline">\(\lambda_s^8\exp(-1046\lambda_s)\)</span>，则每个模拟值 <span class="math inline">\(\lambda_s\)</span> 被接受为 <span class="math inline">\(\lambda\)</span> 的后验分布 <span class="math inline">\(\pi(\lambda\mid\boldsymbol{t})\)</span> 的值。请注意，我们这里没有使用完整的后验密度，但模拟值将是后验分布中的一个样本。</p>
+<p>根据模拟值，我们得到了如图 16.4 所示的直方图。通过将模拟值除以它们的总和以及区间宽度（此处为 0.0005），根据模拟值的频率分布获得密度估计。</p>
+<details><summary><font color="#8B2232">图 16.4</font>
+</summary><img src="figure/figure%2016.4.png#center" style="width:80.0%"></details><p><br>
+叠加在该直方图上的是实际的 gamma 后验密度函数。它们之间有很好的一致性，并且通过大量的模拟可以进一步改善这一点。<span class="math inline">\(\lambda\)</span> 后验分布模拟值的样本均值和中位数分别为 0.00861 和 0.00832。根据模拟值分布的下/上 2.5% 分位点获得的 <span class="math inline">\(\lambda\)</span> 95% 可信区间为 <span class="math inline">\((0.0040, 0.0149)\)</span>。可以使用大于 0.01 的模拟 <span class="math inline">\(\lambda\)</span> 值的比例（即 0.284）来检验 <span class="math inline">\(\lambda&gt;0.01\)</span>的假设。后验 gamma 分布的均值和中位数对应的精确值为 0.00860 和 0.00829，95% 可信区间为 <span class="math inline">\((0.0039, 0.0151)\)</span> 且 <span class="math inline">\(P(\lambda &gt; 0.01) = 0.283\)</span>。一致性非常好。</p>
+<p>由于在抽样过程中只接受了 10,000 个模拟值中的 23%，因此该过程的效率相对较低。若选用一个与由 <span class="math inline">\(L(\boldsymbol{t}\mid\lambda)\pi(\lambda)\)</span> 形成的函数更为接近的基本密度，则预期在相同的模拟次数下能得到更好的一致性结果。</p>
+</div>
+</div>
+<p>这个例子说明了如何使用模拟方法来获得单个参数的边际后验分布。下一步是确定向量 <span class="math inline">\(\boldsymbol\theta\)</span> 中 <span class="math inline">\(p\)</span> 个未知参数的联合后验密度，这也是使用模拟来完成的。</p>
+</div>
+<div id="sec16-6-2" class="section level3" number="16.6.2">
+<h3>
+<span class="header-section-number">16.6.2</span> 使用 MCMC 从后验分布中采样<a class="anchor" aria-label="anchor" href="#sec16-6-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>参数向量 <span class="math inline">\(\boldsymbol\theta\)</span> 的后验分布 <span class="math inline">\(\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span> 可通过从 <span class="math inline">\(\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span> 中独立抽取样本的过程来模拟，该过程涉及对先前抽样的值进行更新。然后利用这些模拟出的值来识别并总结后验分布的关键特征。</p>
+<p>用 <span class="math inline">\(\boldsymbol{\theta}_{(-j)}\)</span> 表示 <span class="math inline">\(\boldsymbol\theta\)</span> 中不包括 <span class="math inline">\(\theta_j\)</span> 的参数集，并令 <span class="math inline">\(\boldsymbol{\theta}_{(-j)}^*\)</span> 为 <span class="math inline">\(\boldsymbol{\theta}_{(-j)}\)</span> 的最新采样值。那么 <span class="math inline">\(\theta_j\)</span> 的后验密度（以值 <span class="math inline">\(\boldsymbol{\theta}_{(-j)}\)</span> 和数据 <span class="math inline">\(\boldsymbol t\)</span> 为条件）为 <span class="math inline">\(\pi(\theta_j\mid\boldsymbol{\theta}_{(-j)}^*,\boldsymbol{t})\)</span>，并且使用式 <a href="chap16.html#eq:16-4">(16.4)</a>，这与下式成正比</p>
+<p><span class="math display" id="eq:16-11">\[\begin{align}
+L(\boldsymbol{t}\mid\theta_j,\boldsymbol{\theta}_{(-j)}^*)\pi(\theta_j,\boldsymbol{\theta}_{(-j)}^*)
+\tag{16.11}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(j=1,2,\ldots,p\)</span>。在此表达式中，<span class="math inline">\(L(\boldsymbol{t}\mid\theta_j,\boldsymbol{\theta}_{(-j)}^*)\)</span> 是样本似然，<span class="math inline">\(\pi(\theta_j,\boldsymbol{\theta}_{(-j)}^*)\)</span> 是 <span class="math inline">\(\boldsymbol\theta\)</span> 的先验密度函数在 <span class="math inline">\(\theta_j,\boldsymbol{\theta}_{(-j)}^*\)</span> 处计算的值。比例常数确保条件后验密度 <span class="math inline">\(\pi(\theta_j\mid\boldsymbol{\theta}_{(-j)}^*,\boldsymbol{t})\)</span> 关于 <span class="math inline">\(\theta_j\)</span> 的积分为 1. 可以在不知道比例常数的情况下，使用 <a href="chap16.html#sec16-6-1">16.6.1</a> 节描述的拒绝采样，从该后验密度来模拟 <span class="math inline">\(\boldsymbol\theta\)</span> 各分量的值。从 <span class="math inline">\(\boldsymbol{\theta}_{(-j)}^*\)</span> 分量的初始值开始，从 <span class="math inline">\(\pi(\theta_j\mid\boldsymbol{\theta}_{(-j)}^*,\boldsymbol{t})\)</span> 中采样一个值，记作 <span class="math inline">\(\theta_{j}^{*}\)</span>。然后将其用于更新 <span class="math inline">\(\boldsymbol\theta\)</span> 的其余分量，并重复该过程以给出 <span class="math inline">\(\boldsymbol\theta\)</span> 的一系列模拟值。</p>
+<p>在此模拟过程中，<span class="math inline">\(\boldsymbol\theta\)</span> 中参数的最新模拟值仅取决于最近的值。该性质称为<strong>马尔可夫性</strong> (Markov property)，并且在更新中使用固定的转移概率 (transition probabilities) <span class="math inline">\(\pi(\theta_j\mid\boldsymbol{\theta}_{(-j)},\boldsymbol{t})\)</span> 找到的连续 (consecutive) 模拟值形成<strong>马尔可夫链</strong> (Markov chain). 该模拟过程称为 <strong>Markov Chain Monte Carlo</strong> (<strong>MCMC</strong>). 根据马尔可夫链相关的理论，在某些条件下（模拟后验分布值时通常满足），模拟值序列 <span class="math inline">\(\boldsymbol{\theta^{(1)}},\boldsymbol{\theta^{(2)}},\boldsymbol{\theta^{(3)}},\ldots\)</span> 的分布将收敛于 <span class="math inline">\(\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span>。因此，一旦 <span class="math inline">\(\boldsymbol\theta\)</span> 值的流 (stream) 变得稳定，连续的值就视为从后验分布 <span class="math inline">\(\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\)</span> 中抽取的模拟值，然后这些值可用于总结后验分布的特征。此外，<span class="math inline">\(\boldsymbol\theta\)</span> 任何分量的后验密度都可以通过该参数采样值序列的直方图来估计，该直方图可以使用密度估计技术进行平滑处理。</p>
+<p>用于模拟 <span class="math inline">\(\boldsymbol\theta\)</span> 值最广泛使用的算法之一是称为 <strong>Gibbs 抽样</strong>的特定 MCMC 过程，该过程概括为以下步骤。</p>
+<ol style="list-style-type: decimal">
+<li>指定 <span class="math inline">\(\boldsymbol\theta\)</span> 中 <span class="math inline">\(p\)</span> 个未知参数的初始值，表示为 <span class="math inline">\(\theta_1^{(0)},\theta_2^{(0)},\ldots,\theta_p^{(0)}\)</span>，并组装成向量 <span class="math inline">\(\boldsymbol{\theta}^{(0)}\)</span>。</li>
+<li>每个参数依次从其条件后验分布中采样一个值，以所有其他参数的前一个值为条件。因此
+<span class="math display">\[\begin{aligned}&amp;\theta_1^{(1)}\text{ 采样于 }\pi(\theta_1\mid\theta_2^{(0)},\theta_3^{(0)},\theta_4^{(0)},\ldots,\theta_p^{(0)},\boldsymbol{t})\\&amp;\theta_2^{(1)}\text{ 采样于 }\pi(\theta_2\mid\theta_1^{(1)},\theta_3^{(0)},\theta_4^{(0)},\ldots,\theta_p^{(0)},\boldsymbol{t})\\&amp;\theta_3^{(1)}\text{ 采样于 }\pi(\theta_3\mid\theta_1^{(1)},\theta_2^{(1)},\theta_4^{(0)},\ldots,\theta_p^{(0)},\boldsymbol{t})\end{aligned}\]</span>
+</li>
+</ol>
+<p>依此类推，直到
+<span class="math display">\[\begin{aligned}&amp;\theta_p^{(1)}\text{ 采样于 }\pi(\theta_p\mid\theta_1^{(1)},\theta_2^{(1)},\theta_3^{(1)},\ldots,\theta_{p-1}^{(1)},\boldsymbol{t})\end{aligned}\]</span></p>
+<p>这给出了 <span class="math inline">\(\boldsymbol{\theta}\)</span> 分量的第一组模拟值 <span class="math inline">\(\boldsymbol{\theta}^{(1)}\)</span>。</p>
+<ol start="3" style="list-style-type: decimal">
+<li>然后重复该过程，使得
+<span class="math display">\[\begin{aligned}&amp;\theta_1^{(2)}\text{ 采样于 }\pi(\theta_1\mid\theta_2^{(1)},\theta_3^{(1)},\theta_4^{(1)},\ldots,\theta_p^{(1)},\boldsymbol{t})\\
+&amp;\theta_2^{(2)}\text{ 采样于 }\pi(\theta_2\mid\theta_1^{(2)},\theta_3^{(1)},\theta_4^{(1)},\ldots,\theta_p^{(1)},\boldsymbol{t})\\
+&amp;\theta_3^{(2)}\text{ 采样于 }\pi(\theta_3\mid\theta_1^{(2)},\theta_2^{(2)},\theta_4^{(1)},\ldots,\theta_p^{(1)},\boldsymbol{t})\end{aligned}\]</span>
+</li>
+</ol>
+<p>依此类推，直到
+<span class="math display">\[\begin{aligned}&amp;\theta_p^{(2)}\text{ 采样于 }\pi(\theta_p\mid\theta_1^{(2)},\theta_2^{(2)},\theta_3^{(2)},\ldots,\theta_{p-1}^{(2)},\boldsymbol{t})\end{aligned}\]</span>
+这给出了第二组模拟值 <span class="math inline">\(\boldsymbol{\theta}^{(2)}\)</span>。</p>
+<ol start="4" style="list-style-type: decimal">
+<li>该过程持续 <span class="math inline">\(N\)</span> 次，直到获得值为 <span class="math inline">\(\theta_1^{(N)},\theta_2^{(N)},\ldots,\theta_p^{(N)}\)</span> 的 <span class="math inline">\(p\)</span> 向量 <span class="math inline">\(\boldsymbol{\theta}^{(N)}\)</span>，其中 <span class="math inline">\(N\)</span> 需要足够大以确保序列中各参数值均已收敛。</li>
+</ol>
+<p>在该模拟过程的每个步骤，可以使用 <a href="chap16.html#sec16-6-1">16.6.1</a> 节描述的拒绝法从式 <a href="chap16.html#eq:16-11">(16.11)</a> 中的条件分布抽取样本值。</p>
+<p>模拟值序列通常需要一段时间才能稳定下来，因此 <span class="math inline">\(\boldsymbol\theta\)</span> 的前 <span class="math inline">\(M\)</span> 个样本值通常被丢弃。这一初始阶段称为热身 (burn-in). 然后再运行 <span class="math inline">\(N\)</span> 次模拟，然后将这 <span class="math inline">\(N\)</span> 个采样值视为从 <span class="math inline">\(\boldsymbol\theta\)</span> 的后验分布中抽取的，并构成后验推断的基础。具体地，每个参数 <span class="math inline">\(\theta_j,j=1,2,\ldots,p\)</span> 的后验分布由 <span class="math inline">\(N\)</span> 个模拟值 <span class="math inline">\(\theta_j^{(1)},\theta_j^{(2)},\ldots,\theta_j^{(N)}\)</span> 的直方图总结。类似地，可以求出 <span class="math inline">\(\theta_j\)</span> 后验分布的均值和中位数等贝叶斯点估计以及区间估计。关于 <span class="math inline">\(\theta_j\)</span> 的假设检验可通过计算符合特定假设的 <span class="math inline">\(N\)</span> 个模拟值的比例来进行，该比例估计了该假设成立的概率。丢弃的样本量和用作后验分布样本值的数量取决于 <span class="math inline">\(\boldsymbol\theta\)</span> 值的收敛速度。丢弃的样本数量的典型选择在 10 到 1000 之间，但也可能更大。选择的实际值取决于初始估计的准确性和序列的表现。如果将非贝叶斯方法拟合的生存模型的估计取为此处的初始估计，则序列往往会很快收敛。在热身期之后使用的样本数量通常在 1000 和 20000 之间。</p>
+<p>通过监测 <span class="math inline">\(\boldsymbol\theta\)</span> 的 <span class="math inline">\(M\)</span> 个模拟值的初始序列以及热身期后的后续 <span class="math inline">\(N\)</span> 个值，可以评估收敛性。这种监测过程可通过图形化程序来辅助进行，例如绘制每个参数的连续模拟值的图形，即所谓的<strong>轨迹图</strong> (trace plot). 该图可以直观地评估生成的参数值序列的稳定性。</p>
+<p>上述描述总结了 Gibbs sampler 的基本特征，但该算法经过了许多改进，使得其在计算上更加高效。此外，还可以将检查合并到算法中以监视并确保模拟值的收敛。以这种方式生成的特定参数的样本值将是相关的，并且这意味着可能需要比通常情况更多的值。同样，可以监控这种自相关性，并且可以评估自相关值的等效样本量 (equivalent sample size). MCMC 过程可能还需要额外的自适应阶段 (adaptive phase)，以微调算法从而优化性能。在此阶段生成的样本将被丢弃。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-4" class="example"><strong>示例 16.4  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>为了说明如何在参数模型中估计后验分布，我们回到第 1 章<a href="chap1.html#exm:ex1-2">示例 1.2</a> 首次给出的有关乳腺癌女性生存时间的数据。在第 5 章<a href="chap5.html#exm:ex5-6">示例 5.6</a> 中，对这些数据拟合了 Weibull 模型，根据该模型，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 时的死亡风险为</p>
+<p><span class="math display">\[h_i(t)=\exp(\beta x_i)h_0(t)\]</span></p>
+<p>其中，如果肿瘤染色呈阳性，则 <span class="math inline">\(x_i = 1\)</span>，否则为 0. 染色效应的对数风险比为 <span class="math inline">\(\beta\)</span>，<span class="math inline">\(h_0(t)=\lambda\gamma t^{\gamma-1}\)</span> 是尺度参数为 <span class="math inline">\(\lambda\)</span>、形状参数为 <span class="math inline">\(\gamma\)</span> 的基线 Weibull 风险。相应生存函数为 <span class="math inline">\(S_0(t)^{\exp(\beta x_i)}\)</span>，其中 <span class="math inline">\(S_0(t)=\exp\{-\lambda t^\gamma\}\)</span>。利用这些结果，可以使用式 <a href="chap16.html#eq:16-5">(16.5)</a> 直接求出样本数据的似然。将该似然函数与有关 <span class="math inline">\(\beta,\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的先验信息相结合，其中假定先验密度函数是独立的。每个参数都将使用扩散先验。具体来说，我们取 <span class="math inline">\(\beta \sim N(0, 102)\)</span> 以及 <span class="math inline">\(\log \lambda \sim N(0, 102)\)</span>，这对应于 <span class="math inline">\(\lambda\)</span> 的 lognormal 分布。<span class="math inline">\(\sigma^2 = 102\)</span> 的 half-normal 先验将用于 <span class="math inline">\(\gamma\)</span>，这是一个均值为 8、方差为 36 的分布。</p>
+<p>将使用 MCMC 模拟方法来拟合模型，进行 1000 次模拟热身并随后运行 10,000 次。模型中三个未知参数后验值的轨迹如图 16.5 所示。该轨迹图表明模拟值非常稳定，因此建模过程已成功收敛到相关的后验分布。</p>
+<details><summary><font color="#8B2232">图 16.5</font>
+</summary><img src="figure/figure%2016.5.png#center" style="width:80.0%"></details><p><br><span class="math inline">\(\beta,\lambda\)</span> 和 <span class="math inline">\(\gamma\)</span> 的中位数和 95% 可信区间可从各自后验分布的 10,000 个模拟值中找到，分别为 <span class="math inline">\(1.010 (0.060, 2.098), 0.003 (0.001, 0.018)\)</span> 和 <span class="math inline">\(0.951 (0.677, 1.287)\)</span>。阳性染色风险 <span class="math inline">\(\exp(\beta)\)</span> 的相应估计和可信区间为 <span class="math inline">\(2.745 (1.062, 8.067)\)</span>。由于这些估计是从模拟建模过程中得出的，因此它们不能精确复现。</p>
+<p>形状参数 <span class="math inline">\(\gamma\)</span> 的可信区间包括 1，这表明指数模型可能很适合。我们将在<a href="chap16.html#exm:ex16-6">示例 16.6</a> 回到这一点。风险比的全后验分布可以使用 <span class="math inline">\(\exp(\beta)\)</span> 的 10,000 个模拟值的直方图来总结，如图 16.6 所示。</p>
+<details><summary><font color="#8B2232">图 16.6</font>
+</summary><img src="figure/figure%2016.6.png#center" style="width:80.0%"></details><p><br>
+根据模拟结果，<span class="math inline">\(\exp(\beta)\)</span> 的 9,822 个值大于 1，因此染色效应的风险比大于 1 的概率为 0.98. 事实上，这一风险比大于 4 的概率为 0.24. 因此染色效应是强烈的。这些估计与使用经典方法对数据进行 Weibull 模型拟合时得到的结果大致一致，如第 5 章<a href="chap5.html#exm:ex5-5">示例 5.5</a> 所示。然而，可信区间和假设检验程序的结果现在是使用概率语句来描述的。</p>
+<p>为了进一步说明这个过程，将为数据拟合具有分段指数基线风险函数的 Cox 回归模型，使用的是贝叶斯方法（如 <a href="chap16.html#sec16-3">16.3</a> 节所述）。<span class="math inline">\(\beta\)</span> 的先验分布将取为 <span class="math inline">\(N(0, 102)\)</span>， 将用作基线风险函数中参数的先验分布取 <span class="math inline">\(r = λ = 0.001\)</span> 的 gamma. 建模中使用的似然函数如 <a href="chap6.html#sec6-1">6.1</a> 节所述。将再次使用 MCMC 模拟过程程，进行 1000 次热身并随后运行 10,000 次模拟。所得风险比 <span class="math inline">\(\exp(\beta)\)</span> 的后验值的中位数及 95% 可信区间为 <span class="math inline">\(2.504 (0.988, 7.571)\)</span>。该结果其与相应的 Weibull 分布拟合的后验估计非常相似，尽管 Cox 模型的可信区间刚刚包括 1.</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec16-7" class="section level2" number="16.7">
+<h2>
+<span class="header-section-number">16.7</span> 预测分布<a class="anchor" aria-label="anchor" href="#sec16-7"><i class="fas fa-link"></i></a>
+</h2>
+<p>一旦拟合了模型，我们可能希望使用它来获得未知参数函数的估计，例如对于具有特定解释变量值的个体，估计其生存函数或风险函数。从 MCMC 模拟过程中得到的贝叶斯模型参数点估计（如均值或中位数），可以通过直接将这些估计代入生存函数或风险函数中的未知参数，来获取这些函数的估计。</p>
+<p>例如，假设有 <span class="math inline">\(n\)</span> 个生存时间和单个解释变量 <span class="math inline">\(X\)</span> 组成的数据，该解释变量对于第 <span class="math inline">\(i(i = 1, 2,...,n)\)</span> 个个体取值 <span class="math inline">\(x_i\)</span>。为该数据拟合了指数模型，使用第 5 章 <a href="chap5.html#sec5-1-1">5.1.1</a> 节中的结果，那么第 <span class="math inline">\(i\)</span> 个个体的生存函数和风险函数为</p>
+<p><span class="math display" id="eq:16-12">\[\begin{align}
+S_i(t)=\exp\{-\exp(\beta x_i)\lambda t\},\quad\quad h_i(t)=\exp(\beta x_i)\lambda
+\tag{16.12}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol\beta\)</span> 是解释变量的系数，<span class="math inline">\(\lambda\)</span> 是该模型下的恒定基线风险，<span class="math inline">\(t&gt;0\)</span>。在 MCMC 模拟过程之后，将获得 <span class="math inline">\(N\)</span> 组 <span class="math inline">\(\beta^{(\nu)}\text{ and }\lambda^{(\nu)}\)</span> 的值，<span class="math inline">\(\nu=1,2,\ldots,N\)</span>。如果 <span class="math inline">\(\tilde{\beta}\)</span> 和 <span class="math inline">\(\tilde{\lambda}\)</span> 是来自该模拟的 <span class="math inline">\({\beta}\)</span> 和 <span class="math inline">\({\lambda}\)</span> 的贝叶斯点估计，例如它们的样本均值，则通过将这些估计代入式 <a href="chap16.html#eq:16-12">(16.12)</a> 中来获得风险和生存函数的估计，这给出</p>
+<p><span class="math display">\[\begin{aligned}\tilde{S}_i(t)=\exp\{-\exp(\tilde{\beta}x_i)\tilde{\lambda}t\},\quad\quad\tilde{h}_i(t)=\exp(\tilde{\beta}x_i)\tilde{\lambda}\end{aligned}\]</span></p>
+<p>完整的贝叶斯分析要求还考虑函数估计的不确定性，为此我们需要一个<strong>预测分布</strong> (predictive distribution). 假设我们想要预测模型中解释变量值为 <span class="math inline">\(\boldsymbol x_0\)</span> 的新个体或现有个体在某个时间 <span class="math inline">\(t\)</span> 的生存或风险函数。该个体的函数 <span class="math inline">\(g(t)\)</span> 的<strong>后验预测分布</strong> (posterior predictive distribution) 是以 <span class="math inline">\(\boldsymbol x_0\)</span> 和生存时间 <span class="math inline">\(t\)</span> 为条件的 <span class="math inline">\(g(t)\)</span> 的密度函数，，并由下式给出</p>
+<p><span class="math display">\[p\{g(t)|\boldsymbol{x}_0,\boldsymbol{t}\}=\int_\boldsymbol{\theta}p\{g(t)\mid\boldsymbol{x}_0,\boldsymbol{t},\boldsymbol{\theta}\}\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\mathrm{d}\boldsymbol{\theta}\]</span></p>
+<p>也就是说，我们将 <span class="math inline">\(g(t)\)</span> 的密度，以 <span class="math inline">\(\boldsymbol x_0,\boldsymbol t\)</span> 和未知模型参数 <span class="math inline">\(\boldsymbol \theta\)</span> 为条件，关于 <span class="math inline">\(\boldsymbol \theta\)</span> 的后验分布进行积分，使得 <span class="math inline">\(g(t)\)</span> 的分布不涉及未知数参数。这解释了 <span class="math inline">\(\boldsymbol \theta\)</span> 的不确定性。</p>
+<p>当使用 MCMC 方法模拟模型参数的值时，第 <span class="math inline">\(\nu(\nu=1,2,\ldots,N)\)</span> 组参数 <span class="math inline">\(\boldsymbol{\theta}^{(\nu)}\)</span> 可用于获得函数 <span class="math inline">\(g(t)\)</span> 在这些模拟值处的值，记作 <span class="math inline">\(g_{\nu}(t)\)</span>。那么，该积分可以通过这 <span class="math inline">\(N\)</span> 个 <span class="math inline">\(g(t)\)</span> 值的分布来近似。</p>
+<p>例如，在具有单个解释变量 <span class="math inline">\(X\)</span> 的生存时间的指数模型中，当 <span class="math inline">\(X=x_0\)</span> 时，生存函数 <span class="math inline">\(S(t)\)</span> 的预测分布为</p>
+<p><span class="math display">\[\begin{aligned}p\{S(t)\mid x_0,\boldsymbol{t}\}&amp;=\int_0^\infty\int_{-\infty}^\infty p\{S(t)\mid x_0,\boldsymbol{t},\beta,\lambda\}\,\pi(\beta,\lambda\mid \boldsymbol{t})\,\mathrm{d}\beta\,\mathrm{d}\lambda\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\pi(\beta,\lambda\mid \boldsymbol{t})\)</span> 是 <span class="math inline">\(\beta,\lambda\)</span> 的联合后验密度。为了逼近此二重积分，使用 MCMC 得到模拟值 <span class="math inline">\(\beta^{(\nu)}\)</span> 和 <span class="math inline">\(\lambda^{(\nu)}\)</span>，其中 <span class="math inline">\(\nu=1,2,\ldots,N\)</span>，并且这些将得到 <span class="math inline">\(S(t)\)</span> 的 <span class="math inline">\(N\)</span> 个模拟值，这由下式给出</p>
+<p><span class="math display">\[\begin{aligned}S^{(\nu)}(t)=\exp\{-\exp(\beta^{(\nu)}x_0)\lambda^{(\nu)}t\}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\nu=1,2,\ldots,N\)</span>。这些模拟值形成了 <span class="math inline">\(S(t)\)</span> 的预测分布。生存函数在任意值 <span class="math inline">\(t\)</span> 处的点估计是 <span class="math inline">\(S(t)\)</span> 模拟值的均值，即 <span class="math inline">\(N^{-1}\sum_{\nu}S^{(\nu)}(t)\)</span>。通过使用 <span class="math inline">\(t\)</span> 的一系列值，可以找到生存函数的贝叶斯估计。任何 <span class="math inline">\(t\)</span> 值的贝叶斯概率区间也可以按照 <a href="chap16.html#sec16-5-2">16.5.2</a> 节描述的方式直接从 <span class="math inline">\(S(t)\)</span> 的预测分布中得出。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-5" class="example"><strong>示例 16.5  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在<a href="chap16.html#exm:ex16-4">示例 16.4</a> 中，为乳腺癌妇女生存时间数据拟合了 Weibull 模型，并获得了其贝叶斯估计。我们现在使用 <a href="chap16.html#sec16-7">16.7</a> 节中的结果来获得肿瘤呈阳性和阴性染色患者的后验生存函数。第 <span class="math inline">\(i\)</span> 个患者在时间 <span class="math inline">\(t\)</span> 的生存函数估计由下式给出</p>
+<p><span class="math display">\[\tilde{S_i}(t)=\exp(-e^{\tilde{\beta}x_i}\tilde{\lambda}t\tilde{\gamma})\]</span></p>
+<p>其中，如果肿瘤呈阳性染色，<span class="math inline">\(x_i=1\)</span>，否则为 0，<span class="math inline">\(\tilde\beta,\tilde\gamma\)</span> 和 <span class="math inline">\(\tilde\gamma\)</span> 是参数的贝叶斯估计。对于给定的 <span class="math inline">\(t\)</span> 值，对于 <span class="math inline">\(\beta,\gamma\)</span> 和 <span class="math inline">\(\gamma\)</span> 的每个模拟值，<span class="math inline">\(S_i(t)\)</span> 的单独估计将形成 <span class="math inline">\(S_i(t)\)</span> 的后验预测分布。使用了 0 到 225（数据中的最长观测时间）范围内的 100 个 t 值。然后，对于每个 <span class="math inline">\(t\)</span> 值和 <span class="math inline">\(x_i=0,1\)</span>，使用生存函数 10,000 个模拟值的中位数以及上/下 2.5% 分位点，来估计阳性和阴性染色女性的生存函数以及每个 <span class="math inline">\(t\)</span> 值 95% 可信区间形成的不确定性限值。结果如图 16.7 所示。生存函数明显是分离的，清楚地表明呈阳性染色的肿瘤患者的预后较差。</p>
+<details><summary><font color="#8B2232">图 16.7</font>
+</summary><img src="figure/figure%2016.7.png#center" style="width:80.0%"></details><p><br>
+对于 Cox 回归模型也可以进行类似的分析，这得到图 16.8. 在此图中，生存函数估计在事件时间之间是恒定的，得到阶梯状 (stepwise) 函数。阶梯状生存函数与图 16.7 中的相应函数非常相似。</p>
+<details><summary><font color="#8B2232">图 16.8</font>
+</summary><img src="figure/figure%2016.8.png#center" style="width:80.0%"></details><p><br>
+下一步是正式比较这些贝叶斯模型，以检查指数参数模型是否可以像 Weibull 一样拟合得很好，并比较具有和不具有与染色效应对应的解释变量的模型。</p>
+</div>
+</div>
+</div>
+<div id="sec16-8" class="section level2" number="16.8">
+<h2>
+<span class="header-section-number">16.8</span> 贝叶斯模型比较<a class="anchor" aria-label="anchor" href="#sec16-8"><i class="fas fa-link"></i></a>
+</h2>
+<p>在生存分析的许多实际应用中，需要比较替代模型。假设正在考虑两个不同的模型，记作 <span class="math inline">\(M_1\)</span> 和 <span class="math inline">\(M_2\)</span>，这两个模型不一定需要嵌套。因为在贝叶斯框架中，在给定数据的情况下，根据各自的后验概率比较这两个模型是很自然的。根据式 <a href="chap16.html#eq:16-2">(16.2)</a>，对于 <span class="math inline">\(j=1,2\)</span>，给定数据 <span class="math inline">\(D\)</span> 的模型 <span class="math inline">\(M_j\)</span> 的概率为 <span class="math inline">\(\text{P}(M_j\mid D)=\text{P}(D\mid M_j)\text{P}(M_j)/\text{P}(D)\)</span>。那么，两个模型之间的选择可以基于每个模型的条件概率之比，即</p>
+<p><span class="math display">\[\begin{aligned}\frac{\text{P}(M_1\mid D)}{\text{P}(M_2\mid D)}&amp;=\frac{\text{P}(D\mid M_1)\text{ P}(M_1)}{\text{P}(D\mid M_2)\text{ P}(M_2)}\end{aligned}\]</span></p>
+<p>这仅是每个模型下样本数据的边际概率之比乘以先验概率之比。量</p>
+<p><span class="math display">\[\begin{aligned}B=\frac{\text{P}(D\mid M_1)}{\text{P}(D\mid M_2)}\end{aligned}\]</span></p>
+<p>称为<strong>贝叶斯因子</strong> (Bayes factor)，总结了支持模型 <span class="math inline">\(M_1\)</span> 而非模型 <span class="math inline">\(M_2\)</span> 的证据的权重。这是贝叶斯推断中模型比较的基础。通常，介于 1 和 3 之间的 <span class="math inline">\(B\)</span> 值视为有利于 <span class="math inline">\(M_1\)</span> 的弱证据 (weak evidence)，介于 3 和 20 之间的值构成合理证据 (reasonable evidence)，介于 20 和 150 之间的值表示有力证据 (strong evidence)，如果 <span class="math inline">\(B\)</span> 超过150，则有压倒性的证据 (overwhelming evidence) 支持 <span class="math inline">\(M_1\)</span> 模型。</p>
+<p>贝叶斯因子 <span class="math inline">\(B\)</span> 是在模型比较的经典方法下比较模型时使用的似然比，这在第 3 章 <a href="chap3.html#sec3-5">3.5</a> 节描述。然而，我们不是在模型 <span class="math inline">\(M_j,j=1,2\)</span> 中最大化未知模型参数 <span class="math inline">\(\boldsymbol\theta_j\)</span> 的似然来获得这些参数的估计，而是关于 <span class="math inline">\(\boldsymbol\theta_j\)</span> 积分以给出独立于 <span class="math inline">\(\boldsymbol\theta_j\)</span> 的数据的边际概率。因此，模型 <span class="math inline">\(M_j\)</span> 下的数据的边际分布 <span class="math inline">\(\mathrm{P}(D\mid M_j)\)</span> 根据下式计算</p>
+<p><span class="math display" id="eq:16-13">\[\begin{align}
+\int_{\boldsymbol{\theta}_j}L_j\left(\boldsymbol{t}\mid\boldsymbol{\theta}_j\right)\pi_j\left(\boldsymbol{\theta}_j\right)\mathrm{d}\boldsymbol{\theta}_j
+\tag{16.13}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(L_j(\boldsymbol{t}\mid\boldsymbol{\theta}_j)\)</span> 和 <span class="math inline">\(\pi_j(\boldsymbol{\theta}_j)\)</span> 为模型 <span class="math inline">\(M_j,j=1,2\)</span> 下的似然函数和先验密度函数。</p>
+<p>式 <a href="chap16.html#eq:16-13">(16.13)</a> 中的积分涉及先验密度函数，因此如果使用不适当先验分布，则无法获得贝叶斯因子。此外，由于需要对模型参数进行多重积分，贝叶斯因子通常很难或不可能计算。因此，通常采用替代统计量来总结模型的拟合。</p>
+<div id="sec16-8-1" class="section level3" number="16.8.1">
+<h3>
+<span class="header-section-number">16.8.1</span> 用于比较模型的 DIC 统计量<a class="anchor" aria-label="anchor" href="#sec16-8-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>贝叶斯模型比较中最广泛使用的统计量之一与第 3 章 <a href="chap3.html#sec3-6">3.6</a> 节中定义的贝叶斯信息准则 (BIC) 非常相似，称为<strong>偏差信息准则</strong> (Deviance Information Criterion, <strong>DIC</strong>)。与 BIC 统计量一样，它是总结模型拟合度的项和代表模型复杂性的项的组合。</p>
+<p>DIC 基于量 <span class="math inline">\(D(\boldsymbol{\theta})=-2\log L(\boldsymbol{t}\mid\boldsymbol{\theta})\)</span>，有时称为<strong>偏差</strong> (deviance). 在经典推断中，将 <span class="math inline">\(\boldsymbol\theta\)</span> 中的模型参数替换为最大似然估计，得到 <span class="math inline">\(\hat{\boldsymbol\theta}\)</span>，那么 <span class="math inline">\(D(\hat{\boldsymbol\theta})\)</span> 就是第 3 章 <a href="chap3.html#sec3-5">3.5</a> 节中介绍的 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量，并用作模型比较的基础。</p>
+<p>模型的复杂性通过模型参数有效数量 <span class="math inline">\(p_D\)</span> 的估计来度量。将 <span class="math inline">\(\boldsymbol{\theta}\)</span> 参数的后验均值向量记作 <span class="math inline">\(\bar{\boldsymbol{\theta}}\)</span>，该估计使用贝叶斯点估计获得，<span class="math inline">\(p_D\)</span> 由下式给出</p>
+<p><span class="math display" id="eq:16-14">\[\begin{align}
+p_D =\text{ E }\left\{-2\log\frac{L(\boldsymbol{t}\mid\boldsymbol{\theta})}{L(\boldsymbol{t}\mid{\bar{\boldsymbol\theta}})}\right\} \\
+=\text{ E}\left\{D(\boldsymbol{\theta})\right\}-D({\bar{\boldsymbol\theta}})
+\tag{16.14}
+\end{align}\]</span></p>
+<p>其中期望运算是关于 <span class="math inline">\(\boldsymbol{\theta}\)</span> 中的参数进行的。然后，与 BIC 统计量类似，DIC 统计量定义为</p>
+<p><span class="math display" id="eq:16-15">\[\begin{align}
+DIC=D(\bar{\boldsymbol{\theta}})+2p_D
+\tag{16.15}
+\end{align}\]</span></p>
+<p>优选具有较小 DIC 值的模型。</p>
+<p>当使用 MCMC 方法根据 <span class="math inline">\(\boldsymbol \theta\)</span> 的后验分布模拟值 <span class="math inline">\(\boldsymbol{\theta}^{(\nu)},\nu=1,2,\ldots,N\)</span> 时，可以使用 <span class="math inline">\(\boldsymbol \theta\)</span> 的模拟值的平均偏差来估计 <span class="math inline">\(\operatorname{E}\left\{D(\boldsymbol{\theta})\right\}\)</span>，这由 <span class="math inline">\(\overline{D(\boldsymbol{\theta})}=N^{-1}\sum_{{\nu}}D(\boldsymbol{\theta}^{(\nu)})\)</span> 给出。另外，式 <a href="chap16.html#eq:16-14">(16.14)</a> 中的 <span class="math inline">\(\bar{\boldsymbol \theta}\)</span> 是模拟的 <span class="math inline">\(\boldsymbol \theta\)</span> 值的均值，即 <span class="math inline">\(N^{-1}\sum_\nu\boldsymbol{\theta}^{(\nu)}\)</span>，因此 <span class="math inline">\(p_D\)</span> 计算为 <span class="math inline">\(\overline{D(\boldsymbol{\theta})}-D(\boldsymbol{\bar{\theta}})\)</span>，即后验平均偏差 (posterior mean deviance) 减去后验均值的偏差 (deviance of the posterior mean).</p>
+</div>
+<div id="sec16-8-2" class="section level3" number="16.8.2">
+<h3>
+<span class="header-section-number">16.8.2</span> 用于比较模型的 WAIC 统计量<a class="anchor" aria-label="anchor" href="#sec16-8-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>尽管 DIC 统计量被广泛使用，但它有许多局限性，例如模型的重新参数化可能导致统计量值略有不同。例如，当在 Weibull 模型的比例风险或加速失效时间表示中使用同一组解释变量时，可能会获得不同的 DIC 值（如第 <a href="chap5.html#chap5">5</a> 章所述）。此外，模型复杂性的度量 <span class="math inline">\(p_D\)</span> 可能为负。这催生了一系列其他统计量的问世，包括 <strong>Watanabe-Akaike Information Criterion</strong> (<strong>WAIC</strong>)，也称为 Widely Applicable Information Criterion.</p>
+<p>WAIC 统计量与式 <a href="chap16.html#eq:16-15">(16.15)</a> 中的 DIC 统计量类似，不同之处在于似然是在 <span class="math inline">\(\boldsymbol{\theta}\)</span> 的后验分布 <span class="math inline">\(\pi(\boldsymbol{\theta}|\boldsymbol{t})\)</span> 上进行平均，而不是将均值 <span class="math inline">\(\bar{\boldsymbol{\theta}}\)</span> 代入。这得到了统计量</p>
+<p><span class="math display" id="eq:16-16">\[\begin{align}
+WAIC&amp;=-2\sum_{i=1}^n\log p(t_i|\boldsymbol{t})+2p_W
+\tag{16.16}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(p(t_i|\boldsymbol{t})\)</span> 是 <span class="math inline">\(\boldsymbol t_i\)</span> 的<strong>后验边际密度</strong> (posterior marginal density)，由下式给出</p>
+<p><span class="math display" id="eq:16-17">\[\begin{align}
+p(t_i\mid\boldsymbol{t})=\int_\boldsymbol{\theta}L(t_i\mid\boldsymbol{\theta})\pi(\boldsymbol{\theta}\mid\boldsymbol{t})\mathrm{d}\boldsymbol{\theta}
+\tag{16.17}
+\end{align}\]</span></p>
+<p>式 <a href="chap16.html#eq:16-16">(16.16)</a> 中模型复杂性的度量 <span class="math inline">\(p_W\)</span> 为</p>
+<p><span class="math display" id="eq:16-18">\[\begin{align}
+p_W&amp;=2\sum_{i=1}^n\left[\log p(t_i\mid\boldsymbol{t})-\text{ E }\left\{\log L(t_i\mid\boldsymbol{\theta})\right\}\right]
+\tag{16.18}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(L(t_{\boldsymbol{i}}\mid\boldsymbol{\theta})\)</span> 是第 <span class="math inline">\(i\)</span> 个生存时间对似然函数的贡献，期望运算也是关于 <span class="math inline">\(\boldsymbol{\theta}\)</span> 中的参数进行的。WAIC 统计量的值越小，模型越好。请注意，WAIC 的计算中使用了个体对似然的贡献。</p>
+<p>当使用 MCMC 模拟方法从一组参数 <span class="math inline">\(\boldsymbol{\theta}\)</span> 的后验分布生成样本值时，可以通过每个观测值 <span class="math inline">\(t_i(i = 1, 2,...,n)\)</span> 在每个采样值集 <span class="math inline">\(\boldsymbol{\theta}^{(\nu)},\nu=1,2,\ldots,N\)</span> 上的似然贡献来计算 WAIC 统计量。然后可以通过这些似然贡献在 <span class="math inline">\(\boldsymbol{\theta}^{(\nu)}\)</span> 上的平均值来估计每个观测的后验边际密度，即 <span class="math inline">\(N^{-1}\sum_{{\nu}}L(t_i\mid\boldsymbol{\theta}^{(\nu)})\)</span>。此外，式 <a href="chap16.html#eq:16-18">(16.18)</a> 中的第二项可以通过 <span class="math inline">\(t_i\)</span> 的对数似然关于 <span class="math inline">\(\boldsymbol{\theta}^{(\nu)}\)</span> 的平均值来估计，即 <span class="math inline">\(N^{-1}\sum_{{\nu}}\log L(t_{{i}}\mid\boldsymbol{\theta}^{(\nu)})\)</span>。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-6" class="example"><strong>示例 16.6  (患乳腺癌妇女的预后) </strong></span><br></p>
+<p>在<a href="chap16.html#exm:ex16-5">示例 16.5</a> 中，对阳性和阴性染色肿瘤的妇女的预后数据拟合了贝叶斯 Weibull 模型。为了探索死亡风险对染色效应的依赖性，将包含染色效应的 Weibull 模型与不包含染色效应的 Weibull 模型进行比较。在拟合<a href="chap16.html#exm:ex16-5">示例 16.5</a> 中的 Weibull 模型时，用于模型比较的 WAIC 统计量值为 319.5. 模型的模型复杂性的相应度量为 <span class="math inline">\(p_W = 2.9\)</span>，非常接近 3，即模型中未知参数的数量（忽略先验分布中的参数）。当对每组女性建立一个具有共同 Weibull 分布的模型时，WAIC=321.3，<span class="math inline">\(p_W=1.7\)</span>。由于此 WAIC 统计量大于包含染色效应的模型的统计量，因此我们得出结论，包含此效应确实会改进模型。用于比较这两个模型的 DIC 统计量的相应值为 <span class="math inline">\(319.3 (p_D = 2.9)\)</span> 和 <span class="math inline">\(321.5 (p_D = 1.9)\)</span>，这与 WAIC 的值非常相似。</p>
+<p>拟合具有分段指数风险的 Cox 回归模型时（如<a href="chap16.html#exm:ex16-4">示例 16.4</a> 所述），WAIC 值为 331.9，<span class="math inline">\(p_W = 18.1\)</span>。这里 WAIC 的值比 Weibull 模型大得多，所以这个模型不太好。然而，这是因为 Cox 模型中拟合了更多参数。风险函数中阶跃较少的模型很可能会表现更好，因此会考虑参数较少的其他模型。</p>
+<p>表 16.1 给出了基线风险函数中具有不同参数数量的分段指数模型的 WAIC 和 <span class="math inline">\(p_W\)</span> 值。基线风险变化的时间位于最小和最大未删失生存时间之间的等距百分位处。具有 <span class="math inline">\(k\)</span> 个参数的分段指数模型将具有 <span class="math inline">\(k − 1\)</span> 个阶跃的基线风险。 <span class="math inline">\(k = 1\)</span> 的模型对应于恒定基线风险，即指数模型。</p>
+<details><summary><font color="#8B2232">表 16.1</font>
+</summary><img src="figure/table%2016.1.png#center" style="width:80.0%"></details><p><br>
+该表显示，具有 <span class="math inline">\(k=1,2,\ldots,5\)</span> 个区间的模型是可比较的，但添加更多区间会导致 WAIC 值较大。请注意，表 16.1 中的值均小于基线风险在每个事件时间发生变化的模型的值 331.9. 拟合的分段指数模型还表明，基线风险在时间 70 之前大致恒定，此后逐渐减小。此外，对于 <span class="math inline">\(k \leqslant 5\)</span>，WAIC 值与 Weibull 模型的值类似。由于指数模型与 Weibull 模型具有非常相似的 WAIC 值，因此具有较少结的分段指数模型具有可比性也就不足为奇了。</p>
+</div>
+</div>
+<p>我们以另一个说明贝叶斯方法在分析事件发生时间方面的应用来结束本章。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex16-7" class="example"><strong>示例 16.7  (健康评估及其初级保健的连接) </strong></span><br></p>
+<p>在一项名为 HELP 研究的健康评估及其与初级保健连接的研究中，进行了一项涉及住院戒毒计划患者的临床试验。共有 470 名接受酒精、海洛因或可卡因戒毒且没有初级保健医生的患者被随机分配接受 HELP 诊所的协助，将他们与初级医疗保健连接起来，或不接受此类协助。该计划的最终目标是使患者能够从初级保健中受益，因此响应变量是从随机化到连接的天数。有些患者从未接受过初级保健，因此对事件时间是删失的。记录了每位患者的许多其他变量，但在本例中，我们将使用年龄、性别以及患者在参加试验时是否无家可归。Samet et al. (2003) 提供了有关该研究的更详细信息，数据位于 R 数据集 <code>HELPmiss</code> 中，该数据集是 <code>mosaicData</code> 包的一部分。数据集中的变量如下</p>
+<ul>
+<li>
+<span class="math inline">\(Time\)</span>：与初级保健连接的时间（天）</li>
+<li>
+<span class="math inline">\(Status\)</span>：事件指示器（0 = 删失/无连接，1 = 未删失）</li>
+<li>
+<span class="math inline">\(Age\)</span>：患者年龄</li>
+<li>
+<span class="math inline">\(Gender\)</span>：患者性别（0 = 女性，1 = 男性）</li>
+<li>
+<span class="math inline">\(Housing\)</span>：无家可归状况（0 = 无家可归，1 = 有住房）</li>
+<li>
+<span class="math inline">\(Help\)</span>：协助连接医疗保健（0 = 无，1 = 有）</li>
+</ul>
+<p>数据集的前 15 行如表 16.2 所示。</p>
+<details><summary><font color="#8B2232">表 16.2</font>
+</summary><img src="figure/table%2016.2.png#center" style="width:80.0%"></details><p><br>
+主要关注的因素是 HELP 诊所的协助对与初级保健连接时间的影响。将使用贝叶斯方法来估计 HELP 临床效果的风险比，并调整其他三个因素。</p>
+<p>首先将考虑 Weibull 分布。模糊先验分布将用于与年龄、性别、住房状况以及 HELP 诊所是否提供协助相关的变量的系数 <span class="math inline">\(\beta_1,\beta_2,\beta_3,\beta_4\)</span>。具体来说，我们将采用 <span class="math inline">\(N(0, 1)\)</span> 分布，这意味着我们预计每个 <span class="math inline">\(\beta\)</span> 系数有 95% 的概率位于 <span class="math inline">\((−2, 2)\)</span> 范围内，并且几乎没有存在风险比超过 <span class="math inline">\(e^2 = 7.4\)</span>。</p>
+<p>Weibull 尺度参数的对数 <span class="math inline">\(\log \lambda\)</span> 将假定为扩散 <span class="math inline">\(N(0, 102)\)</span> 先验，因为该参数存在很大的不确定性。形状参数 <span class="math inline">\(\gamma\)</span> 将采用从 <span class="math inline">\(N(0, 102)\)</span> 分布导出的扩散 half-normal 先验，并且 MCMC 模拟过程将使用 1000 次模拟的热身，然后进行 10,000 次运行。</p>
+<p>在拟合包含变量 <span class="math inline">\(Help,Age,Gender\)</span> 和 <span class="math inline">\(Housing\)</span> 的贝叶斯 Weibull 模型时，模型参数的模拟后验分布得出风险比和 95% 可信区间，对于 <span class="math inline">\(Help,Age,Gender\)</span> 和 <span class="math inline">\(Housing\)</span> 分别为 <span class="math inline">\(5.155 (3.619, 7.503),1.024 (1.004, 1.045),1.404 (0.969, 2.100)\)</span> 和 <span class="math inline">\(0.864 (0.642, 1.169)\)</span>。该模型的 WAIC 统计量值为 2344.2，<span class="math inline">\(p_W = 5.6\)</span>。住房效应的风险比的可信区间包含 1，根据住房状态的 10000 个风险比模拟值，风险比小于 1.0 的后验概率为0.83. 因此，我们得出结论，住房状态不会影响获得初级保健所需的时间。当从模型中删除该变量时，WAIC = 2343.3，<span class="math inline">\(p_W = 4.6\)</span>，表明模型略有改进。其余三个项的风险比的可信区间不包含了 1，因此保留了这些变量。</p>
+<p>下一步是考察 Weibull 基线风险是否可以通过使用样条函数对风险函数进行建模来改进。为此，我们将使用具有 B 样条基函数的立方样条作为危险函数的对数。该模型在第 6 章 <a href="chap6.html#sec6-3">6.3</a> 节中进行了描述，确保了对数累积风险的最终估计将是时间的递增函数。当对数累积风险使用限制性立方样条模型时，情况不一定如此，并且它可能会导致 MCMC 模拟过程中出现困难。</p>
+<p>根据第 6 章的式 <a href="chap6.html#eq:6-10">(6.10)</a>，具有 <span class="math inline">\(m\)</span> 个内部结的模型的对数风险函数的立方 B 样条模型为</p>
+<p><span class="math display">\[\begin{aligned}\log h_i(t)=\eta_i+\sum_{j=1}^{m+4}\alpha_jB_{j,3}(t)\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(\alpha_j\)</span> 是第 <span class="math inline">\(j(j=1,2,\ldots,m+4)\)</span> 个 B 样条基函数 <span class="math inline">\(B_{j,3}(t)\)</span> 的系数，且 <span class="math inline">\(\eta_i=\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i\)</span> 是解释变量值的线性组合。要拟合的模型都包括在 Weibull 模型中发现的三个显著的解释变量，即 <span class="math inline">\(Help, Age\)</span> 和 <span class="math inline">\(Gender\)</span>。</p>
+<p>样条基函数中的系数也将使用 <span class="math inline">\(N(0,102)\)</span> 先验分布，因为它们的精确值同样存在不确定性。如第 6 章 <a href="chap6.html#sec6-2-3">6.2.3</a> 节所述，结将设置为事件时间分布的百分位数，并将使用不同数量的结，以确定拟合最优的模型。现在，从至少两个边界结且无内部结开始，拟合具有越来越多的内部结数量 <span class="math inline">\(m\)</span> 的立方样条模型。结果列于表 16.3. 在对数风险函数的 B 样条模型中，<span class="math inline">\(m=0\)</span> 不像对数累积风险的限制性立方样条模型那样对应于 Weibull 分布。</p>
+<p>所有样条模型的 WAIC 值都小于具有 Weibull 基线风险函数的相应模型的 WAIC 值（2343.3），因此它们可以更好地描述潜在基线风险。然而，当添加第二个内部结时，WAIC 统计量开始增加，并且具有三个内部结的模型的 WAIC 仍然大于仅具有一个内部结的模型的 WAIC. 这表明，模型复杂性的增加并没有被拟合的略微改进所抵消。因此对于对数基线风险，我们使用只有一个内部结的 B 样条模型。</p>
+<details><summary><font color="#8B2232">表 16.3</font>
+</summary><img src="figure/table%2016.3.png#center" style="width:80.0%"></details><p><br>
+使用 MCMC 模拟过程拟合该模型，变量 <span class="math inline">\(Help,Age\)</span> 和 <span class="math inline">\(Gender\)</span> 的风险比和 95% 可信区间分别为 <span class="math inline">\(4.846 (3.440, 7.079),1.024 (1.004, 1.045)\)</span> 和 <span class="math inline">\(1.398 (0.969, 2.074)\)</span>。因此，年龄每增加一岁，与医疗保健系统连接的机会就会增加为原来的 1.024 倍，其中男性患者与医疗系统相关的机会增加 40%，在获得医疗保健方面获得帮助的患者获得连接的机会几乎为五倍。基于样条模型的风险比估计与 Weibull 模型的风险比非常相似，但样条模型可以更好地表示潜在的连接风险。</p>
+<p>根据 MCMC 模拟，我们可以使用 <a href="chap16.html#sec16-7">16.7</a> 节描述的方法来估计接受和未接受 HELP 诊所协助的具有特定特征的患者的后验风险函数和生存函数。风险函数和生存函数的预测分布分别显示了在给定时间进行连接的风险和在该时间之后进行连接的概率。图 16.9 和 16.10 显示了一名 30 岁男性患者的这些函数。</p>
+<details><summary><font color="#8B2232">图 16.9</font>
+</summary><img src="figure/figure%2016.9.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 16.10</font>
+</summary><img src="figure/figure%2016.10.png#center" style="width:80.0%"></details><p><br>
+与医疗保健连接的机会在研究开始后 28 天左右达到峰值，此后逐渐下降。这些图形清晰地表明，那些在获得医疗保健方面得到协助的人实际获得此类保健的机会要大得多。超过 100 天后，连接的机会几乎没有变化。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec16-9" class="section level2" number="16.9">
+<h2>
+<span class="header-section-number">16.9</span> 注释<a class="anchor" aria-label="anchor" href="#sec16-9"><i class="fas fa-link"></i></a>
+</h2>
+<p>在本章中，我们了解了如何使用贝叶斯推断方法对生存数据进行建模。那么，与前面章节中描述的经典方法相比，这种方法的优点和缺点是什么？</p>
+<p>贝叶斯方法提供了一种为大型数据集拟复杂的现实模型方法，该方法使用的过程可以将新数据与来自外部知识或先前研究的任何可用信息相结合。这是通过统一的推断框架来实现的，该框架从指定将要构建似然的模型出发，通过为该模型中的所有未知参数制定先验分布，然后估计并总结用于推断的每个参数的后验分布。此外，与经典的推断程序不同，这种方法不依赖于大样本来保证点和区间估计以及假设检验的有效性。另一个优点是结果易于解释。在贝叶斯推断中，可信区间和假设检验直接基于有关参数（例如风险比）位于某个区间的概率或某些假设为真的概率的陈述。这比置信区间和 <span class="math inline">\(P\)</span> 值更容易理解。</p>
+<p>当然也有缺点。首要问题是需要通过制定先验概率分布来纳入有关每个未知参数的先验知识。尽管在确实没有先验信息的情况下可以使用模糊且无信息性的先验分布来缓解这个问题，但对于主观性的担忧仍然存在。此外，获得后验分布的过程通常涉及使用基于 MCMC 方法的模拟技术，这可能是一个计算密集型的过程。此外，还可能涉及到数值方法的选择、迭代控制选项的设定以及识别和解决收敛问题的需求。虽然现代计算机软件支持这一系列操作，但相较于经典方法（例如使用 Cox 回归模型），这一过程确实需要更高水平的专业知识。</p>
+<p>总之，生存数据分析的贝叶斯方法提供了一种强大的方法来拟合现实模型，可以解释实际研究中经常发现的那些复杂特征。</p>
+</div>
+<div id="sec16-10" class="section level2" number="16.10">
+<h2>
+<span class="header-section-number">16.10</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec16-10"><i class="fas fa-link"></i></a>
+</h2>
+<p>Ibrahim, Chen and Sinha (2001) 一书全面介绍了贝叶斯生存分析方法的理论和实践。有许多关于贝叶斯推断的通用教科书。介绍性文本包括 Bolstad and Curran (2016), Hoff (2009), Lunn et al. (2012) 和 Lambert (2018). 更高级的文本包括 Bernardo and Smith (1994), Box and Tiao (1973) 以及 O’Hagan and Forster (2004) 的文本。Gelman et al. (2013) 提供了关于贝叶斯数据分析的全面文本，而 McElreath (2020) 通过软件包 R 和 Stan 的例子说明了贝叶斯方法。Sahu (2022) 最近的文本详细讨论了贝叶斯方法的许多方面。Barnett (1999) 概述了贝叶斯推断，并将其与其他推断方法进行了比较。</p>
+<p>以下这些书都详细描述了用于模拟来自后验分布的值的 MCMC 方法。Gilks, Richardson and Spiegelholter (1996) 以及 Gamerman and Lopes (2006) 对这种方法进行了更全面的描述。有关 Gibbs sampler 的更多信息，请参阅 Geman and Geman (1984) 以及 Gelfand and Smith (1990). Casella and George (1992) 提供了关于该方法的教程，Tierney (1994) 提供了更完整更高级的总结。评估链收敛性的诊断方法包括 Brooks and Gelman (1998), Gelman and Rubin (1992) 以及 Raftery and Lewis (1992).</p>
+<p>Raftery (1995) 和 Kass and Rafteri (1995) 描述了贝叶斯模型的选择和比较。DIC 统计量源自 Spiegelholter et al. (2002)，Spiegelharter et al. (2014) 将 DIC 与其他一些指标进行了比较，并回顾了他们的统计量是如何被接受的。WAIC 统计量由 Watanabe (2010, 2013) 引入，并由 Gelman, Hwang and Vehtari (2014) 进一步发展。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></div>
+<div class="next"><a href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap16"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="nav-link" href="#sec16-1"><span class="header-section-number">16.1</span> 贝叶斯定理</a></li>
+<li><a class="nav-link" href="#sec16-2"><span class="header-section-number">16.2</span> 贝叶斯推断</a></li>
+<li>
+<a class="nav-link" href="#sec16-3"><span class="header-section-number">16.3</span> 生存数据的贝叶斯模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec16-3-1"><span class="header-section-number">16.3.1</span> 简单指数模型的贝叶斯版本</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec16-4"><span class="header-section-number">16.4</span> 纳入先验信息</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec16-4-1"><span class="header-section-number">16.4.1</span> 无信息先验信息</a></li>
+<li><a class="nav-link" href="#sec16-4-2"><span class="header-section-number">16.4.2</span> 模糊先验信息</a></li>
+<li><a class="nav-link" href="#sec16-4-3"><span class="header-section-number">16.4.3</span> 实质的先验信息</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec16-5"><span class="header-section-number">16.5</span> 总结后验信息</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec16-5-1"><span class="header-section-number">16.5.1</span> 点估计</a></li>
+<li><a class="nav-link" href="#sec16-5-2"><span class="header-section-number">16.5.2</span> 区间估计</a></li>
+<li><a class="nav-link" href="#sec16-5-3"><span class="header-section-number">16.5.3</span> 贝叶斯假设检验</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec16-6"><span class="header-section-number">16.6</span> 计算后验分布</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec16-6-1"><span class="header-section-number">16.6.1</span> 拒绝采样</a></li>
+<li><a class="nav-link" href="#sec16-6-2"><span class="header-section-number">16.6.2</span> 使用 MCMC 从后验分布中采样</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec16-7"><span class="header-section-number">16.7</span> 预测分布</a></li>
+<li>
+<a class="nav-link" href="#sec16-8"><span class="header-section-number">16.8</span> 贝叶斯模型比较</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec16-8-1"><span class="header-section-number">16.8.1</span> 用于比较模型的 DIC 统计量</a></li>
+<li><a class="nav-link" href="#sec16-8-2"><span class="header-section-number">16.8.2</span> 用于比较模型的 WAIC 统计量</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec16-9"><span class="header-section-number">16.9</span> 注释</a></li>
+<li><a class="nav-link" href="#sec16-10"><span class="header-section-number">16.10</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

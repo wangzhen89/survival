@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 11 章 非比例风险和机构的比较 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="比例风险模型广泛用于医学研究和其他应用领域的生存数据建模。这种比例性假设意味着解释变量或因素对发生事件的风险的影响不依赖于时间。这可能是一个相当强的假设，且经常会出现这种假设站不住脚的情况。尽管前面的章节已经介绍了不假设比例风险的模型，但本章还介绍了一些其他方法。非比例风险模型的一个特别重要的应用是比较机构之间的生存率，因此还描述了可以在这种情况下使用的方法。  11.1 非比例风险...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 11 章 非比例风险和机构的比较 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="比例风险模型广泛用于医学研究和其他应用领域的生存数据建模。这种比例性假设意味着解释变量或因素对发生事件的风险的影响不依赖于时间。这可能是一个相当强的假设，且经常会出现这种假设站不住脚的情况。尽管前面的章节已经介绍了不假设比例风险的模型，但本章还介绍了一些其他方法。非比例风险模型的一个特别重要的应用是比较机构之间的生存率，因此还描述了可以在这种情况下使用的方法。  11.1 非比例风险...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 11 章 非比例风险和机构的比较 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="比例风险模型广泛用于医学研究和其他应用领域的生存数据建模。这种比例性假设意味着解释变量或因素对发生事件的风险的影响不依赖于时间。这可能是一个相当强的假设，且经常会出现这种假设站不住脚的情况。尽管前面的章节已经介绍了不假设比例风险的模型，但本章还介绍了一些其他方法。非比例风险模型的一个特别重要的应用是比较机构之间的生存率，因此还描述了可以在这种情况下使用的方法。  11.1 非比例风险...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="active" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap11" class="section level1" number="11">
+<h1>
+<span class="header-section-number">第 11 章</span> 非比例风险和机构的比较<a class="anchor" aria-label="anchor" href="#chap11"><i class="fas fa-link"></i></a>
+</h1>
+<p>比例风险模型广泛用于医学研究和其他应用领域的生存数据建模。这种比例性假设意味着解释变量或因素对发生事件的风险的影响不依赖于时间。这可能是一个相当强的假设，且经常会出现这种假设站不住脚的情况。尽管前面的章节已经介绍了不假设比例风险的模型，但本章还介绍了一些其他方法。非比例风险模型的一个特别重要的应用是比较机构之间的生存率，因此还描述了可以在这种情况下使用的方法。</p>
+<div id="sec11-1" class="section level2" number="11.1">
+<h2>
+<span class="header-section-number">11.1</span> 非比例风险<a class="anchor" aria-label="anchor" href="#sec11-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>不需要比例风险假设的模型包括第 <a href="chap5.html#chap5">5</a> 章介绍的加速失效时间模型和比例几率模型，以及第 <a href="chap8.html#chap8">8</a> 章介绍的包含时依变量的 Cox 回归模型。但我们经常面临这样一种情况：不能假设比例风险，且上述模型都不能令人满意。</p>
+<p>例如考虑一项研究，比较外科手术与化疗在治疗一种特殊形式癌症中的效果。假设两种治疗的生存函数如图 11.1 所示，其中时间尺度为年。显然，风险是不成比例的。接受手术治疗的患者可能会因无法承受手术或手术引起的并发症而过早死亡。当将侵袭性化疗与标准化疗进行比较时，也会出现类似的情况。同样，积极治疗的长期优势可能是以短期死亡率过高为代价的。</p>
+<details><summary><font color="#8B2232">图 11.1</font>
+</summary><img src="figure/figure%2011.1.png#center" style="width:80.0%"></details><p><br>
+在得到图 11.1 所示生存函数的研究中，很明显，分析两年生存率将是合适的。现考虑一项研究，该研究比较了手术联合化疗与单独的手术，其生存函数如图 11.2 所示。在这里，化疗的短期效益当然可能是值得的，但对两年生存率的分析将无法确定治疗差异。两种生存率之差并不恒定，使得基于给定时间的生存率的分析难以进行。然而，假定研究的第一年内风险是成比例的，并在此时进行生存分析，可能是合理的。</p>
+<details><summary><font color="#8B2232">图 11.2</font>
+</summary><img src="figure/figure%2011.2.png#center" style="width:80.0%"></details><p><br>
+一种适用于分析本节所述情况的方法是，将研究的终点定义为存活到或超过某个特定时间。例如，在得到图 11.1 所示生存函数的研究中，治疗差异在两年后大致恒定。因此，可以建立模型来描述生存超过两年的概率与预后变量和治疗之间的关系。在其他情况下，可能适合对诸如第一年治疗复发的概率、癌症缓解期少于六个月的概率或试验开始后五年内某疾病或病症不复发的概率等量进行建模。</p>
+<p>这种方法的缺点是，所有患者都必须随访到分析生存率的时间点，并且在此之前无法使用死亡数据。此外，需要对两种治疗其一的长期益处抱有信心，以确保试验不会因为一个治疗组的死亡率过高而提前停止。</p>
+<div id="sec11-1-1" class="section level3" number="11.1.1">
+<h3>
+<span class="header-section-number">11.1.1</span> 对给定时间的事件概率建模<a class="anchor" aria-label="anchor" href="#sec11-1-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>事件在时间起点和某个特定时间点之间（或超过给定时间）发生的概率的模型，可从生存函数中导出<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;Models for the probability of an event occurring in the period between the time origin and some particular time point, or beyond a given time, can be derived from the survivor function.&lt;/p&gt;"><sup>17</sup></a>。考虑在某个指定时间 <span class="math inline">\(\tau\)</span> 之前发生事件的概率，并令 <span class="math inline">\(p_i(\tau)\)</span> 表示第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个患者发生该事件的概率。使用 Cox 回归模型，第 <span class="math inline">\(i\)</span> 个患者在时间 <span class="math inline">\(\tau\)</span> 发生事件的风险由下式给出</p>
+<p><span class="math display">\[\begin{aligned}h_i(\tau)=\exp(\eta_i)h_0(\tau)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\eta_i=\boldsymbol{\beta'x}_i=\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}\)</span>，<span class="math inline">\(\boldsymbol x_i\)</span> 是解释变量的值向量，<span class="math inline">\(h_0(\tau)\)</span> 是 <span class="math inline">\(\tau\)</span> 处的基线风险函数。第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(\tau\)</span> 后经历事件的概率是生存函数 <span class="math inline">\(S_i(\tau)\)</span>，因此 <span class="math inline">\(S_i(\tau)=1 − p_i(\tau)\)</span>。现在，根据第 3 章式 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#eq:3-26">(3.26)</a></p>
+<p><span class="math display" id="eq:11-1">\[\begin{align}
+S_i(\tau)=\{S_0(\tau)\}^{\exp(\eta_i)}
+\tag{11.1}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(S_0(\tau)\)</span> 是基线生存函数在 <span class="math inline">\(\tau\)</span> 处的值，即所有解释变量均取零值的个体的生存函数。因此，在此模型下，截至时间 <span class="math inline">\(\tau\)</span> 事件的概率为</p>
+<p><span class="math display">\[\begin{aligned}p_i(\tau)=1-\{S_0(\tau)\}^{\exp(\eta_i)}\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\log[-\log\{1-p_i(\tau)\}]=\eta_i+\log\{-\log S_0(\tau)\}\end{aligned}\]</span></p>
+<p>记 <span class="math inline">\(\beta_0=\log\{-\log S_0(\tau)\}\)</span>，该模型可表示为</p>
+<p><span class="math display" id="eq:11-2">\[\begin{align}
+\log[-\log\{1-p_i(\tau)\}]&amp;=\beta_0+\beta_1x_{1i}+\beta_2x_{2i}+\cdots+\beta_px_{pi}
+\tag{11.2}
+\end{align}\]</span></p>
+<p>这是截至时间 <span class="math inline">\(\tau\)</span> 的事件发生概率的<strong>互补双对数</strong> (complementary log-log) 变换的线性模型。该模型可以拟合二分类响应变量的数据，对于研究中在时间 <span class="math inline">\(\tau\)</span> 之前没有经历过事件的个体，该变量的值为零，否则为一。使用类似的方式可定义另一个互补双对数模型，用于刻画给定时间之后事件发生的概率 <span class="math inline">\(1 − p_i(\tau)\)</span>。</p>
+<p>与生存数据建模一样，可以基于统计量 <span class="math inline">\(-2\log\hat{L}\)</span> 来比较为二元响应变量数据拟合的模型。这里，<span class="math inline">\(\hat{L}\)</span> 是二元数据的最大似然，<span class="math inline">\(-2\log\hat{L}\)</span> 通常称为<strong>偏差</strong> (deviance). 两个嵌套模型的偏差之差具有渐近卡方分布，因此可以按照与生存分析中使用的模型相同的方式比较二元数据的拟合模型。</p>
+<p>当为观测数据拟合式 <a href="chap11.html#eq:11-2">(11.2)</a> 中的模型时，常数 <span class="math inline">\(\beta_0\)</span> 的估计是 <span class="math inline">\(\log\{-\log S_0(\tau)\}\)</span> 的估计，由此可以获得基线生存函数在 <span class="math inline">\(\tau\)</span> 处的估计。该模型中的 <span class="math inline">\(\beta\)</span> 是对数风险比，相应的风险比的置信区间可根据 <span class="math inline">\(\hat \beta_0\)</span> 的标准误按常规方法求出。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-1" class="example"><strong>示例 11.1  (溃疡复发) </strong></span><br></p>
+<p>第 9 章<a href="chap9.html#exm:ex9-1">示例 9.1</a> 给出了比较两种治疗方法（记作 A 和 B）的临床试验中溃疡复发时间的数据。在本例中，对招募到研究后 12 个月内复发的概率进行了建模。在研究的 43 名患者中，11 名患者在第一年出现复发，即患者 1, 10, 14, 15, 17, 18, 26, 27, 30, 32 和 37. 此外，三名患者在六个月时的结果为阴性，因此不知道他们在那之后是否复发。这三个患者的数据已被省略，因此本例中使用的数据集中现在有 40 个患者。</p>
+<p>为了对治疗后前 12 个月内溃疡复发的概率进行建模，定义了一个二元响应变量，如果患者在 12 个月内经历了复发，则该变量取值为 1，否则取值为 0。然后采用一种模型，其中响应概率的互补双对数变换与治疗（<span class="math inline">\(Treat\)</span>）、患者年龄（<span class="math inline">\(Age\)</span>）和疾病持续时间（<span class="math inline">\(Dur\)</span>）相关。这里，如果患者接受治疗 A，<span class="math inline">\(Treat\)</span> 取值 0，如果接受治疗 B，则取值为 1；如果疾病持续时间小于五年，则 <span class="math inline">\(Dur\)</span> 为 0，否则为 1.</p>
+<p>表 11.1 给出了为二元响应变量拟合具有各种项的互补双对数模型的偏差。所有拟合的模型都包含一个常数项。</p>
+<details><summary><font color="#8B2232">表 11.1</font>
+</summary><img src="figure/table%2011.1.png#center" style="width:80.0%"></details><p><br>
+表 11.1 中的偏差表明，没有任何证据表明治疗与变量 <span class="math inline">\(Dur\)</span> 和 <span class="math inline">\(Age\)</span> 之间存在交互作用。将 <span class="math inline">\(Treat\)</span> 添加到包含 <span class="math inline">\(Dur\)</span> 和 <span class="math inline">\(Age\)</span> 的模型时，一个自由度上的偏差变化仅为 0.102，并不显著。此外，为零模型添加 <span class="math inline">\(Dur\)</span> 或 <span class="math inline">\(Age\)</span> 都不会导致偏差显著减小。单独拟合 <span class="math inline">\(Treat\)</span> 导致的偏差变化在一个自由度上仅为 0.084，这也远远谈不上显著。由此得出的结论是，患者随机接受的治疗确实会影响第一年溃疡复发的概率。</p>
+<p>在拟合仅包含 <span class="math inline">\(Treat\)</span> 的模型时，<span class="math inline">\(Treat\)</span> 的系数估计为 0.181，标准误为 0.629. 接受治疗 B 的患者溃疡复发相对于接受治疗 A 的患者的风险比为 <span class="math inline">\(\exp(0.181)=1.20\)</span>，因此接受治疗 B 的患者的溃疡复发风险高出 20%。然而，该风险比与一没有显著差异。</p>
+<p>对数风险比的 95% 置信区间的上下限为 <span class="math inline">\(0.181\pm1.96\times0.629\)</span>，因此风险比本身的相应区间估计为 <span class="math inline">\((0.35, 4.11)\)</span>。请注意，此区间包括一，这是缺乏显著治疗效应所预示的结果。</p>
+<p>该拟合模型中的常数项估计为 −1.246。这是 <span class="math inline">\(\log\{-\log S_0(12)\}\)</span> 的估计，其中 <span class="math inline">\(S_0(12)\)</span> 是接受治疗 A 的患者在 12 个月时的生存函数。因此，接受治疗 A 的患者的复发概率估计为 <span class="math inline">\(\exp(-e^{-1.246})=0.75\)</span>。接受治疗 B 的患者的相应值为 <span class="math inline">\(0.75^{\exp(0.181)}=0.71\)</span>。这些估计假定所有患者最终都会经历复发，因此没有意义。然而，在第一年内复发的概率估计为：接受治疗 A 的患者为 0.25，接受治疗 B 的患者为 0.29。 这再次表明，在接受随机分组后的 12 个月内，接受治疗 B 的患者复发的概率略有增加。</p>
+</div>
+</div>
+<p>严格来说，基于特定时间的生存概率的分析只有在研究开始时指定了该时间时才有效，这可能很难做到。如果数据用于提出诸如生存超过两年的概率等终点，那么在解释显著性检验的结果时需要谨慎<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;If the data are used to suggest end points such as the probability of survival beyond two years, some caution will be needed in interpreting the results of a significance test.&lt;/p&gt;"><sup>18</sup></a>。</p>
+</div>
+</div>
+<div id="sec11-2" class="section level2" number="11.2">
+<h2>
+<span class="header-section-number">11.2</span> 分层比例风险模型<a class="anchor" aria-label="anchor" href="#sec11-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>有时会出现的一种情况是，风险在总体上不成比例，但在不同的数据亚组中成比例。例如，考虑将新药与特定疾病的治疗标准进行比较的情况。如果研究涉及两个中心，那么有可能在每个中心，新药都将死亡风险降低了一半，但标准药物的风险函数因中心而异。因此，使用特定药物的个体在这两个中心之间的风险不成比例。这种情况如图 11.3 所示。</p>
+<details><summary><font color="#8B2232">图 11.3</font>
+</summary><img src="figure/figure%2011.3.png#center" style="width:80.0%"></details><p><br>
+在此类问题中，可以假定每个亚组或<strong>层</strong> (strata) 中的患者具有不同的基线风险函数，但所有其他解释变量在每层内都满足比例风险假设。假设第 <span class="math inline">\(j\)</span> 层中的患者具有基线风险函数 <span class="math inline">\(h_{0j} (t)\)</span>，其中 <span class="math inline">\(j = 1, 2,...,g\)</span>，其中 <span class="math inline">\(g\)</span> 是层数。解释变量对风险函数的效应可用 <span class="math inline">\(h_{ij}(t)\)</span> 的比例风险模型来表示，即，第 <span class="math inline">\(j\)</span> 层中第 <span class="math inline">\(i\)</span> 个个体的风险函数，其中 <span class="math inline">\(i = 1, 2,...,n_j\)</span> ，比如，<span class="math inline">\(n_j\)</span> 是第 <span class="math inline">\(j\)</span> 层的个体数。然后我们就有了<strong>分层比例风险模型</strong> (stratified proportional hazards model)</p>
+<p><span class="math display">\[h_{ij}(t)=\exp(\boldsymbol{\beta'x}_{ij})h_{0j}(t)\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_{ij}\)</span> 是第 <span class="math inline">\(i\)</span> 个个体记录的 <span class="math inline">\(p\)</span> 个解释变量 <span class="math inline">\(X_1,X_2,\ldots,X_p\)</span> 的值向量。该模型是结合风险调整的生存函数引入的，如第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-11-1">3.11.1</a> 节所述。</p>
+<p>作为该模型的一个例子，考虑一个特殊情况，在每个中心都有两种需比较的治疗，并且没有其他解释变量。令 <span class="math inline">\(x_{ij}\)</span> 为指示变量 <span class="math inline">\(X\)</span> 的值，如果第 <span class="math inline">\(j\)</span> 个中心第 <span class="math inline">\(i\)</span> 名患者接受标准治疗，则为零，如果接受新治疗，则为一。则个体风险函数为</p>
+<p><span class="math display">\[\begin{aligned}h_{ij}(t)=e^{\beta x_{ij}}h_{0j}(t)\end{aligned}\]</span></p>
+<p>在拟合该模型时，<span class="math inline">\(\beta\)</span> 的估计是每个中心接受新治疗的患者相对于标准治疗的患者的对数风险比。</p>
+<p>这种分层比例风险模型可以很容易使用标准软件包进行生存分析，并可使用 <span class="math inline">\(-2\log\hat{L}\)</span> 统计量来比较嵌套模型。除了分层变量不能包含在模型的线性部分之外，不涉及任何新的原理。当比较两组或多组生存数据时，分层比例风险模型实际上相当于第 2 章 <a href="chap2.html#sec2-8">2.8</a> 节中描述的分层 log-rank 检验。</p>
+<div id="sec11-2-1" class="section level3" number="11.2.1">
+<h3>
+<span class="header-section-number">11.2.1</span> 治疗之间的非比例风险<a class="anchor" aria-label="anchor" href="#sec11-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>如果两种治疗之间存在不成比例的风险，忽视这一现象可能会得出误导性的推断。为了说明这一点，假设两组个体在新的标准治疗中的风险函数如图 11.4 (i) 所示。如果拟合了比例风险模型，则所得拟合的风险函数可能如图 11.4 (ii) 所示。那么，就会对两种治疗的相对优势得出错误的结论。</p>
+<details><summary><font color="#8B2232">图 11.4</font>
+</summary><img src="figure/figure%2011.4.png#center" style="width:80.0%"></details><p><br>
+治疗之间的非比例风险可以通过假定一系列连续时间区间中的比例风险来建模。这是使用<strong>分段 Cox 模型</strong> (piecewise Cox model) 实现的，该模型类似于第 <a href="chap6.html#chap6">6</a> 章介绍的分段指数模型。为了说明模型的使用，假设图 11.4 中给出风险函数的时间段分为三个区间，即 <span class="math inline">\((0,t_1],(t_1,t_2]\)</span> 和 <span class="math inline">\((t_2,t_3]\)</span>。在每一个时间区间内，可以假定风险成比例。</p>
+<p>现在，令 <span class="math inline">\(X\)</span> 是与两种治疗相关的指标变量，如果个体接受标准治疗，则 <span class="math inline">\(X=0\)</span>，如果个体接受新治疗，则 <span class="math inline">\(X=1\)</span>。那么可以通过定义两个时依变量 <span class="math inline">\(X_2(t)\)</span> 和 <span class="math inline">\(X_3(t)\)</span> 来拟合分段 Cox 回归模型，这两个变量如下所示</p>
+<p><span class="math display">\[\left.X_2(t)=\left\{\begin{array}{l}1\text{ if }t\in(t_1,t_2]\text{ and }X=1,\\0\text{ otherwise};\end{array}\right.\right.\\
+\left.X_3(t)=\left\{\begin{array}{l}1\text{ if }t\in(t_2,t_3]\text{ and }X=1,\\0\text{ otherwise};\end{array}\right.\right.\]</span></p>
+<p>在没有其他解释变量的情况下，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的风险函数模型可写为</p>
+<p><span class="math display" id="eq:11-3">\[\begin{align}
+h_i(t)=\exp\{\beta_1x_i+\beta_2x_{2i}(t)+\beta_3x_{3i}(t)\}h_0(t)
+\tag{11.3}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的 <span class="math inline">\(X\)</span> 值，<span class="math inline">\(x_{2i}(t)\)</span> 和 <span class="math inline">\(x_{3i}(t)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体两个时依变量在时间 <span class="math inline">\(t\)</span> 处的值。在此模型下，新治疗个体相对于标准治疗个体的对数风险比：当 <span class="math inline">\(t\in\left(0,t_1\right]\)</span> 时，为 <span class="math inline">\(\beta_1\)</span>；当 <span class="math inline">\(t\in\left(t_1,t_2\right]\)</span> 时，为 <span class="math inline">\(\beta_1+\beta_2\)</span>；当 <span class="math inline">\(t\in\left(t_2,t_3\right]\)</span> 时，为 <span class="math inline">\(\beta_1+\beta_3\)</span>。该模型可按照第 <a href="chap8.html#chap8">8</a> 章描述的方式进行拟合。</p>
+<p>式 <a href="chap11.html#eq:11-3">(11.3)</a> 的模型允许通过将变量 <span class="math inline">\(x_{2i}(t)\)</span> 和 <span class="math inline">\(x_{3i}(t)\)</span> 添加到仅包含 <span class="math inline">\(x_i\)</span> 的模型来检验比例风险假设。<span class="math inline">\(-2\log\hat{L}\)</span> 统计量的显著减小表明新治疗（<span class="math inline">\(X = 1\)</span>）相对于标准 治疗（<span class="math inline">\(X = 0\)</span>）的风险比不是恒定的。对于第 <span class="math inline">\(i\)</span> 个个体，将 <span class="math inline">\(x_{1i}(t)\)</span> 定义为以下值，并拟合包含 <span class="math inline">\(x_{1i}(t),x_{2i}(t)\)</span> 和 <span class="math inline">\(x_{3i}(t)\)</span> 的模型，可以获得式 <a href="chap11.html#eq:11-3">(11.3)</a> 中模型的等价公式：</p>
+<p><span class="math display">\[\left.X_1(t)=\left\{\begin{array}{l}1\text{ if }t\in(0,t_1]\text{ and }X=1,\\0\text{ otherwise},\end{array}\right.\right.\]</span></p>
+<p>该模型中三个时依变量的系数是三个区间中新治疗相对于标准的对数风险比。风险比的置信区间可以直接从该版本的模型中获得。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-2" class="example"><strong>示例 11.2  (胃癌患者的生存) </strong></span><br></p>
+<p>在 Gastrointestinal Tumor Study Group 进行的一项随机对照试验中，招募了 90 名局部晚期胃癌患者。他们被随机分配接受单独的化疗，即，5-氟尿嘧啶与 1-(2-氯乙基)-3-(4-甲基环己基)-1-亚硝基脲甲基（甲基 CCNU）的组合，或接受该化疗治疗与 5000 rad 的外部放疗的组合。患者随访 8 年以上，关注的结果是从随机分组到死于胃癌的天数，Stablein and Koutrouvelis (1985) 报告的数据见表 11.2.</p>
+<details><summary><font color="#8B2232">表 11.2</font>
+</summary><img src="figure/table%2011.2.png#center" style="width:80.0%"></details><p><br>
+每个治疗组患者的生存函数的 Kaplan-Meier 估计如图 11.5 所示。这一图形表明，在最初的两年里，接受化疗与放疗联合治疗的患者的生存率低于单独接受化疗的患者。然而，从长远来看，联合治疗更为有利。图 11.6 中对数累积风险图中的两条线不平行，再次证实了治疗效应是时依的。如果忽略数据的这一方面，并拟合 Cox 回归模型，相对于单独的化疗治疗，联合治疗的估计风险比将为 1.11，将治疗效应添加到零模型后，<span class="math inline">\(-2\log\hat{L}\)</span> 统计量变化对应的 <span class="math inline">\(P\)</span> 值为 0.64. 那么我们会得出结论，没有证据表明存在治疗效应，但由于两种治疗的死亡风险不成比例，因此该分析是不正确的。</p>
+<details><summary><font color="#8B2232">图 11.5</font>
+</summary><img src="figure/figure%2011.5.png#center" style="width:80.0%"></details><br><details><summary><font color="#8B2232">图 11.6</font>
+</summary><img src="figure/figure%2011.6.png#center" style="width:80.0%"></details><p><br>
+使用分段 Cox 回归模型可获得治疗效应更合适的总结，其中假定治疗效应在每个独立的区间中是恒定的，但在不同区间中不同。本分析将使用四个时间区间：<span class="math inline">\(1–360,~361–720,~721–1080\)</span> 和 <span class="math inline">\(1081–\)</span> 天。然后，通过定义四个变量 <span class="math inline">\(X_1(t),X_2(t),X_3(t),X_4(t)\)</span> 来设定时依治疗效应，其中，当 <span class="math inline">\(t\)</span> 在联合治疗的患者的第 <span class="math inline">\(j(j=1,2,3,4)\)</span> 个时间区间内时，<span class="math inline">\(X_j(t)=1\)</span>，否则为 0. 这相当于拟合与四个区间相关的时依变量与治疗效应之间的交互作用。如果 <span class="math inline">\(x_{ji}(t)\)</span> 是第 <span class="math inline">\(i\)</span> 个个体第 <span class="math inline">\(j\)</span> 个变量时间 <span class="math inline">\(t\)</span> 处的值，则时间 <span class="math inline">\(t\)</span> 处的死亡风险的 Cox 回归模型为</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp\left\{\beta_1x_{1i}(t)+\beta_2x_{2i}(t)+\beta_3x_{3i}(t)+\beta_4x_{4i}(t)\right\}h_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(h_0(t)\)</span> 是基线风险函数。在该模型中，四个 <span class="math inline">\(\beta\)</span> 系数是在四个区间中联合治疗相对于单独化疗的对数风险比，<span class="math inline">\(h_0(t)\)</span> 是接受化疗治疗的患者的风险函数。</p>
+<p>拟合所有四个时依变量后，<span class="math inline">\(-2\log\hat{L}\)</span> 的值为 602.372. 对于仅拟合治疗效应的模型，在比例风险假设下，第 <span class="math inline">\(i\)</span> 名患者在时间 <span class="math inline">\(t\)</span> 处的死亡风险为 <span class="math inline">\(h_i(t)=\exp(\beta x_i)h_0(t)\)</span>，其中 <span class="math inline">\(x_i\)</span> 是第 <span class="math inline">\(i\)</span> 名患者变量 <span class="math inline">\(X\)</span> 的值，其中，对于接受化疗治疗的患者，<span class="math inline">\(X = 0\)</span>，对于接受联合治疗的患者，<span class="math inline">\(X = 1\)</span>。该模型的 <span class="math inline">\(-2\log\hat{L}= 614.946\)</span>。这两个模型是嵌套的，它们的 <span class="math inline">\(-2\log\hat{L}\)</span> 值之差提供了比例风险检验。在三个自由度上，12.57 的差值具有高度显著性（<span class="math inline">\(P = 0.005\)</span>），证实有明确证据表明治疗效应的风险比不成比例，对于拟合四个时依变量的模型，风险比和 95% 置信区间见表 11.3.</p>
+<details><summary><font color="#8B2232">表 11.3</font>
+</summary><img src="figure/table%2011.3.png#center" style="width:80.0%"></details><p><br>
+该表总结了治疗效应在四个时间区间内的变化情况。在第一年，接受联合治疗的患者在任何时间的死亡风险是单独接受化疗的患者的两倍以上。在随后的几年中，接受联合治疗的患者的死亡风险降低，尽管三个区间估计值均包括 1.0，这表明这些风险比与一没有显着差异。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec11-3" class="section level2" number="11.3">
+<h2>
+<span class="header-section-number">11.3</span> 限制性平均生存<a class="anchor" aria-label="anchor" href="#sec11-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>当风险不成比例时，风险比就不是协变量或治疗效应的适当总结，因为风险比是时依的，因此对该比的单一估计可能会产生误导。另一种易于解释的总结性度量为，直到某个预定时间点的平均生存时间，称为<strong>限制性平均生存时间</strong> (restricted mean survival time).</p>
+<p>为了定义限制性平均生存时间，假设 <span class="math inline">\(T\)</span> 是与生存时间相关的随机变量。直到 <span class="math inline">\(t_0\)</span> 的限制性平均生存时间 <span class="math inline">\(\mu(t_0)\)</span> 是随访期间 <span class="math inline">\(T\)</span> 和 <span class="math inline">\(t_0\)</span> 最小值的期望值，因此 <span class="math inline">\(\mu(t_0)=\text{ E}\left(\min\{T,t_0\}\right)\)</span>。</p>
+<p>现在，</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{E}\left(\min\{T,t_0\}\right)&amp;=\operatorname{E}\left(T;T\leqslant t_0\right)+t_0\operatorname{P}(T&gt;t_0)\end{aligned}\]</span></p>
+<p>并且当 <span class="math inline">\(T\)</span> 具有密度为 <span class="math inline">\(f(t)\)</span> 的参数分布时，有</p>
+<p><span class="math display">\[\begin{aligned}\operatorname{E}\left(T;T\right.\leqslant t_0)=\int_0^{t_0}uf(u)\mathrm{d}u\end{aligned}\]</span>
+分部积分得到</p>
+<p><span class="math display">\[\begin{aligned}\int_0^{t_0}uf(u)\mathrm{d}u&amp;=uF(u)|_0^{t_0}-\int_0^{t_0}F(u)\mathrm{d}u=t_0F(t_0)-\int_0^{t_0}F(u)\mathrm{d}u\end{aligned}\]</span></p>
+<p>因此</p>
+<p><span class="math display">\[\begin{aligned}\int_0^{t_0}uf(u)\mathrm{d}u&amp;=\int_0^{t_0}S(u)\mathrm{d}u-t_0S(t_0)\end{aligned}\]</span></p>
+<p>最后，由于 <span class="math inline">\(t_0\text{P}(T&gt;t_0)=t_0S(t_0)\)</span>，有</p>
+<p><span class="math display">\[\mathrm{E}\left(\min\{T,t_0\}\right)=\int_0^{t_0}S(u)\mathrm{d}u\]</span></p>
+<p>因此，限制性平均生存时间是生存函数估计直到 <span class="math inline">\(t_0\)</span> 下的面积，并且是易于理解的总结统计量。例如，如果时间以月为单位，则 <span class="math inline">\(\mu (24)\)</span> 是 24 个月期间的平均存活月数，即两年预期寿命。该统计量也可用于总结治疗参数或其他解释变量对特定时间段预期寿命的影响。</p>
+<p>限制性平均生存可根据生存函数的 Kaplan-Meier 估计来确定。例如，在第 <span class="math inline">\(r\)</span> 个有序事件时间 <span class="math inline">\(t_{(r)}\)</span> 的限制性平均估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{\mu}(t_{(r)})&amp;=\sum_{j=1}^r\hat{S}(t_{(j-1)})(t_{(j)}-t_{(j-1)})\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{S}(t_{(j)})\)</span> 是第 <span class="math inline">\(j\)</span> 个事件时间 <span class="math inline">\(t_{(j)}\)</span> 时生存函数的 Kaplan-Meier 估计，其中 <span class="math inline">\(t_{(0)}\)</span> 定义为零。该估计的标准误由下式给出：</p>
+<p><span class="math display">\[\left(\sum_{j=1}^{r-1}A_j^2\frac{d_j}{n_j(n_j-d_j)}\right)^{\frac12}\]</span></p>
+<p>其中 <span class="math inline">\(n_j\)</span> 是处于风险的个体数，<span class="math inline">\(d_j\)</span> 是 <span class="math inline">\(t_{(j)}\)</span> 时的事件数，并且</p>
+<p><span class="math display">\[\begin{aligned}A_j=\sum_{i=j}^{r-1}\hat{S}(t_{(i)})(t_{(i+1)}-t_{(i)})\end{aligned}\]</span></p>
+<p>若需要在非事件时间处估计限制性生存，则要对这些结果进行微小的修改。</p>
+<p>当存在两组生存时间时，如在比较两种治疗的临床试验中，并预期或已发现了非比例风险时，可根据两生存函数的 Kaplan-Meier 估计下面积来确定限制性平均生存时间。直到给定时间的限制性平均生存估计的差异可作为总体治疗效应未调整的总结性度量。</p>
+<p>更一般地说，考虑两个治疗组之间风险不成比例并且可以获得其他解释变量值的情况。在这里，可以使用具有不同潜在风险的参数模型，例如每个治疗组具有不同形状参数的 Weibull 模型。该模型下的生存函数是完全参数化的，因此可对拟合的生存函数进行积分来估计限制性平均生存时间，或解析地或数值地。</p>
+<p>通过使用第 6 章 <a href="chap6.html#sec6-4">6.4</a> 节描述的 Royston and Parmar模型，可以在潜在基线风险函数建模时获得更大程度的灵活性。通过添加治疗因素与定义基线风险的限制性立方样条函数之间的交互项，可以拟合每个治疗组不同的潜在风险函数。同样，限制性平均生存时间可以通过对拟合的生存函数进行积分来获得。</p>
+<div id="sec11-3-1" class="section level3" number="11.3.1">
+<h3>
+<span class="header-section-number">11.3.1</span> 伪值的使用<a class="anchor" aria-label="anchor" href="#sec11-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>对限制性平均生存关于解释变量的依赖性进行建模的一种通用且直接的方法是基于<strong>伪值</strong> (pseudo-values)。这些值是由从 <span class="math inline">\(n\)</span> 个个体的完整集合中获得的某个量的估计与省略第 <span class="math inline">\(i(i=1,2,\ldots,b)\)</span> 个个体获得的估计之差形成的。然后使用标准回归模型对伪值关于解释变量的依赖性进行建模。</p>
+<p>为了获得限制性平均的伪值，首先确定完整生存时间集的生存函数的 Kaplan-Meier 估计，从中获得某个 <span class="math inline">\(t_0\)</span> 处的限制性平均生存，即 <span class="math inline">\(\hat \mu(t_0)\)</span>。然后，依次省略每个观测，并根据缩减数据集估计限制性平均生存，给出 <span class="math inline">\(\hat{\mu}_{(-i)}(t_0)(i=1,2,\ldots,n)\)</span>。那么第 <span class="math inline">\(i\)</span> 个伪值为</p>
+<p><span class="math display" id="eq:11-4">\[\begin{align}
+z_i=n\hat{\mu}(t_0)-(n-1)\hat{\mu}_{(-i)}(t_0)
+\tag{11.4}
+\end{align}\]</span></p>
+<p>这度量了第 <span class="math inline">\(i\)</span> 个个体对 <span class="math inline">\(t_0\)</span> 处限制性平均生存时间估计的贡献，并且无论该个体的观测生存时间是否为删失的，其定义都是如此。</p>
+<p>然后假定第 <span class="math inline">\(i\)</span> 个伪值 <span class="math inline">\(z_i\)</span> 为随机变量 <span class="math inline">\(Z_i\)</span> 的观测，则可以使用广义线性模型对 <span class="math inline">\(Z_i\)</span> 的期望值关于治疗因素和解释变量的依赖性进行建模。一个自然的选择是假定 <span class="math inline">\(Z_i\)</span> 是正态分布的，对其均值 <span class="math inline">\(\mathrm{E}\left(Z_{i}\right)\)</span> 建立对数线性模型。那么 <span class="math inline">\(\log\text{ E}\left(Z_i\right)=\beta_0+\boldsymbol{\beta'x}_i\)</span>，其中 <span class="math inline">\(\beta_0\)</span> 是一个常数，<span class="math inline">\(\boldsymbol x_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体解释变量的值向量。<span class="math inline">\(\mathrm{E}\left(Z_{{i}}\right)\)</span> 的线性回归模型通常会给出类似的结果。</p>
+<p>在实际应用中，<span class="math inline">\(t_0\)</span> 的值必须在分析之前确定。当感兴趣的是特定时间段内事件的发生时，该时间段将确定 <span class="math inline">\(t_0\)</span> 的值。例如，如果感兴趣的是在诊断出特定形式的癌症后一年内的平均生存时间，则 <span class="math inline">\(t_0\)</span> 将是 365 天。在其他情况下，<span class="math inline">\(t_0\)</span> 通常取为接近数据集中最长的观测事件时间。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-3" class="example"><strong>示例 11.3  (胃癌患者的生存) </strong></span><br></p>
+<p>对<a href="chap11.html#exm:ex11-2">示例 11.2</a> 给出的胃癌患者生存时间数据的另一种分析基于限制性平均。计算 5 年的限制性平均生存，即，每个治疗组中患者生存函数的 Kaplan-Meier 估计直到 <span class="math inline">\(t=1826\)</span> 下的面积。这对于单一化疗为 <span class="math inline">\(661.31\text{ (se = 74.45)}\)</span>，对于联合治疗为 <span class="math inline">\(571.89\text{ (se = 94.04)}\)</span>，这意味着在 5 年的时间里，患者在单独化疗时平均生存 1.8 年，在联合治疗时平均生存 1.6 年。两个治疗组直到 1826 天的限制性平均生存时间的 95% 置信区间分别为 <span class="math inline">\((515.39,807.23)\)</span> 和 <span class="math inline">\((387.57,756.21)\)</span>。由于这些区间之间存在很大的重叠，因此没有证据表明两组之间的限制性平均生存时间存在差异。</p>
+<p>接下来我们将说明如何使用伪值分析这些数据。首先，获得完整数据集的生存函数的 Kaplan-Meier 估计，由此，直到 1826 天的限制性平均估计为 616.60 天。这是对这段时间内患者平均生存时间的总体估计。然后依次省略每个观测（共 90 个），并根据每组（共 89 个观测）数据重新计算 Kaplan-Meier 估计。然后对每组（共 90 组）数据估计直到 1826 天的限制性平均，然后使用式 <a href="chap11.html#eq:11-4">(11.4)</a> 获得 90 个伪值。这些值表示每个观测对五年限制性平均总体估计的贡献。</p>
+<p>对于表 11.2 中的数据，伪值等于 1826 天之前死亡的患者的观测生存时间，而对于生存超过该时间的 10 名患者，伪值均等于 1826. 伪值出现这种模式的原因在于，删失生存时间是数据集中最长的观测随访时间。</p>
+<p>下一步是对伪值关于治疗效应的依赖性进行建模。这可以使用第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个伪观测的期望值 <span class="math inline">\(\mathrm{E}\left(Z_{{i}}\right)\)</span> 的对数线性模型来完成，即 <span class="math inline">\(\log\text{ E}\left(Z_i\right)=\beta_0+\beta_1x_i\)</span>，如果第 <span class="math inline">\(i\)</span> 名患者接受单独化疗，则 <span class="math inline">\(x_i=0\)</span>，否则 <span class="math inline">\(x_i=1\)</span>。在对数线性模型中添加治疗效应后，偏差从 28591297（自由度为 89）减小为 28411380（自由度为 88），因此用于检验治疗效应的 <span class="math inline">\(F\text{-ratio}\)</span> 为 <span class="math inline">\((28591297-28411380)/\{28411380/88\}=0.56\)</span>，这作为自由度为 1, 88 的 <span class="math inline">\(F\)</span> 统计量，并不显著（<span class="math inline">\(P=0.46\)</span>）。使用 <span class="math inline">\(\mathrm{E}\left(Z_{{i}}\right)\)</span> 的线性模型获得了大致相同的结果，这相当于使用两样本 <span class="math inline">\(t\)</span> 检验来比较每个治疗组伪值的均值。因此，为化疗增加放疗对患者 1826 天内的生存不起作用。</p>
+<p>总之，表 11.2 中的数据表明，化疗与放疗的联合治疗对患者有长期的益处，只要他们能熬过最初18个月左右的高死亡风险期。但是，在 5 年的随访期内，平均而言，联合治疗对生存没有益处。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec11-4" class="section level2" number="11.4">
+<h2>
+<span class="header-section-number">11.4</span> 机构的比较<a class="anchor" aria-label="anchor" href="#sec11-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>对卫生服务问责的需求导致了一系列绩效指标的引入，这些指标用于度量不同机构提供的护理质量。其中一项关键指标是风险调整的死亡率，该指标总结了不同医疗机构中患者的死亡率，同时考虑了接受治疗的患者特征的差异。此类统计量提供了一种在平等的基础上比较机构绩效的方法。可以为生存率、康复率和感染率定义类似的度量，本节描述的方法同样适用于其他类型组织之间的比较，如学校、大学和金融服务提供商。在本节中，我们描述并说明了如何从生存数据中获得<strong>风险调整失效率</strong> (risk-adjusted failure rate, <strong>RAFR</strong>) 的点估计和区间估计。</p>
+<p><span class="math inline">\(RAFR\)</span> 是在给定时间处下式的估计</p>
+<p><span class="math display" id="eq:11-5">\[\begin{align}
+\frac{\text{观测失效率}}{\text{预期失效率}} \times \text{总失效率}
+\tag{11.5}
+\end{align}\]</span></p>
+<p>其中，观测失效率是根据特定机构在给定时间的生存函数的 Kaplan-Meier 估计获得的，而当时的总失效率是根据所有机构的数据拟合的生存函数估计的，这忽略了它们之间的差异。机构的预期失效率可根据第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-11">3.11</a> 节中定义的风险调整的生存函数进行估计，该函数是机构在给定时间基于风险调整的个体生存函数估计的平均值。用 1 生存函数减去的相应值来获得在给定时间每个失效率的估计。一旦获得 <span class="math inline">\(RAFR\)</span>，可以简单地根据 <span class="math inline">\(RASR=1−RAFR\)</span> 得到<strong>风险调整生存率</strong> (risk-adjusted survival rate, <strong>RASR</strong>).</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-4" class="example"><strong>示例 11.4  (肾移植中心之间的比较) </strong></span><br></p>
+<p>本节介绍的方法将通过英国八家肾移植中心的数据进行说明，这些数据反映了从 2009 年 1 月至 2011 年 12 月三年期间肾移植受体的移植生存率情况。有许多因素可能会影响中心的生存率，在本示例中，考虑了供体年龄、供体是脑死亡 (DBD) 还是因循环衰竭而亡 (DCD) 的指标，移植时受体的年龄、受体的糖尿病状况（不存在、存在）以及从供体取出肾脏到移植到受体体内经历的时间（称为冷缺血时间）。还记录了移植存活时间，这定义为移植失败和患者死亡中的较早时间，以及一个事件指示符：如果在最后已知的随访日期或 2012 年 12 月，患者还存活且移植物正常工作，则为零，否则为一。变量总结如下。</p>
+<ul>
+<li>
+<span class="math inline">\(Patient\)</span>：患者标识符</li>
+<li>
+<span class="math inline">\(Centre\)</span>：移植中心 <span class="math inline">\((1,2,\ldots,8)\)</span>
+</li>
+<li>
+<span class="math inline">\(Tsurv\)</span>：移植生存期（天）</li>
+<li>
+<span class="math inline">\(Tcens\)</span>：事件指示符（0 = 删失，1 = 移植失败）</li>
+<li>
+<span class="math inline">\(Dage\)</span>：供体年龄</li>
+<li>
+<span class="math inline">\(Dtype\)</span>：供体类型（0 = DBD，1 = DCD）</li>
+<li>
+<span class="math inline">\(Rage\)</span>：受体年龄</li>
+<li>
+<span class="math inline">\(Diab\)</span>：糖尿病状态（0 = 不存在，1 = 存在）</li>
+<li>
+<span class="math inline">\(CIT\)</span>：冷缺血时间（小时）</li>
+</ul>
+<p>数据集中有 1439 名患者，前 30 名移植患者的数据如表 11.4 所示。7 号患者的移植肾脏未正常工作，因此该患者的 <span class="math inline">\(Tsurv = 0\)</span>。</p>
+<details><summary><font color="#8B2232">表 11.4</font>
+</summary><img src="figure/table%2011.4.png#center" style="width:80.0%"></details><p><br>
+我们最关注一年移植失败率，因此将使用这一指标对八个移植中心进行比较。我们首先获得了所有 1439 名患者未调整的生存函数的 Kaplan-Meier 估计，从中得到一年总失效率为 <span class="math inline">\(1−0.904=0.096\)</span>。类似地，特定于中心的一年失效率是根据每个中心患者的生存函数的 Kaplan-Meier 估计中获得。接下来，使用第 3 章 <a href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html#sec3-11-1">3.11.1</a> 节描述的方法计算每个中心的风险调整生存率。为数据拟合包含变量 <span class="math inline">\(Dage,Dtype,Rage,Diab\)</span> 和 <span class="math inline">\(CIT\)</span> 的 Cox 回归模型，根据该模型，第 <span class="math inline">\(j(j=1,2,\ldots8)\)</span> 个中心第 <span class="math inline">\(i\)</span> 名患者的生存函数估计为</p>
+<p><span class="math display" id="eq:11-6">\[\begin{align}
+\hat{S}_{{i}{j}}(t)=\{\hat{S}_0(t)\}^{\exp(\hat{\eta}_{{i}{j}})}
+\tag{11.6}
+\end{align}\]</span></p>
+<p>其中</p>
+<p><span class="math display">\[\begin{aligned}\hat{\eta}_{ij}&amp;=0.023Dage_{ij}+0.191Dtype_{ij}+0.002Rage_{ij}-0.133Diab_{ij}+0.016CIT_{ij}\end{aligned}\]</span></p>
+<p><span class="math inline">\(\hat{S}_0(t)\)</span> 为基线生存函数。在第 <span class="math inline">\(j\)</span> 个中心时间 <span class="math inline">\(t\)</span> 处的平均生存函数为</p>
+<p><span class="math display">\[\hat{S}_j(t)=\frac1{n_j}\sum_{{i}=1}^{{n}_j}\hat{S}_{{i}j}(t)\]</span></p>
+<p>其中 <span class="math inline">\(n_j\)</span> 是第 <span class="math inline">\(j\)</span> 个中心的患者数，那么可以根据该生存函数估计一年的预期移植失败率。未调整和调整的一年生存率以及 <span class="math inline">\(RAFR\)</span> 如表 11.5 所示。</p>
+<details><summary><font color="#8B2232">表 11.5</font>
+</summary><img src="figure/table%2011.5.png#center" style="width:80.0%"></details><p><br>
+为了说明计算结果，对于中心 1，未调整和调整的一年生存率分别为 0.9138 和 0.8920，由于总体未调整生存率为 0.096，因此 <span class="math inline">\(RAFR\)</span> 为</p>
+<p><span class="math display">\[\begin{aligned}\frac{1-0.9138}{1-0.8920}\times0.096&amp;=0.077\end{aligned}\]</span></p>
+<p>该中心相应的风险调整移植生存率为 0.923。在这 8 个中心中，风险调整的一年失效率在 6% 到 17% 之间。</p>
+</div>
+</div>
+<p>计算式 <a href="chap11.html#eq:11-5">(11.5)</a> 中 <span class="math inline">\(RAFR\)</span> 的另一种更方便的方法为，在给定时间内对下式进行估计</p>
+<p><span class="math display" id="eq:11-7">\[\begin{align}
+\frac{\text{观测失效数}}{\text{预期失效数}} \times \text{总失效数}
+\tag{11.7}
+\end{align}\]</span></p>
+<p>为了使用这个定义来估计 <span class="math inline">\(RAFR\)</span>，我们需要对所关注的时间段内的预期失效数进行估计。从第 1 章 <a href="chap1.html#sec1-4">1.4</a> 节可以看出，时间 <span class="math inline">\(t\)</span> 处的累积失效风险 <span class="math inline">\(H(t)\)</span> ，是假定在此之前没有发生过故障，直到 <span class="math inline">\(t\)</span> 的期间内的预期失效数。因此，对于第 <span class="math inline">\(j\)</span> 个机构生存到时间 <span class="math inline">\(t_{ij}\)</span> 的第 <span class="math inline">\(i\)</span> 个个体，<span class="math inline">\(H_{ij} (t_{ij})\)</span> 为其随访期间的预期失效数。利用第 1 章式 <a href="chap1.html#eq:1-8">(1.8)</a>的结果，中心 <span class="math inline">\(j\)</span> 的失效数估计为</p>
+<p><span class="math display" id="eq:11-8">\[\begin{align}
+\hat{e}_j=\sum_{i=1}^{n_j}\hat{H}_{ij}(t_{ij})=-\sum_{i=1}^{n_j}\log\hat{S}_{ij}(t_{ij})
+\tag{11.8}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{S}_{ij}(t_{ij})\)</span> 在式 <a href="chap11.html#eq:11-6">(11.6)</a> 中定义。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-5" class="example"><strong>示例 11.5  (肾移植中心之间的比较) </strong></span><br></p>
+<p>根据<a href="chap11.html#exm:ex11-4">示例 11.4</a> 描述的数据，现在使用式 <a href="chap11.html#eq:11-7">(11.7)</a> 来估计八个肾移植中心移植结果的 <span class="math inline">\(RAFR\)</span>. 首先确定每个中心第一年的观测移植失败数。接下来，为数据拟合 Cox 回归模型，以给出第 <span class="math inline">\(j\)</span> 个中心第 <span class="math inline">\(i\)</span> 个患者生存函数的估计 <span class="math inline">\(\hat{S}_{ij}(t)\)</span>。对于 <span class="math inline">\(Tsurv \leqslant 365\)</span> 的患者，获得了他们的生存函数在其 <span class="math inline">\(Tsurv\)</span> 值处的估计，而对于 <span class="math inline">\(Tsurv &gt; 365\)</span> 的患者，获得了他们的生存函数在 <span class="math inline">\(t = 365\)</span> 处的估计。然后获得每个患者累积风险的相应估计，并利用式 <a href="chap11.html#eq:11-8">(11.8)</a>，对第 <span class="math inline">\(j\)</span> 个中心的患者的这些估计进行求和，得出该中心预期失效数的估计。这些值如表 11.6 所示。为了说明计算结果，对于中心 1，第一年有 23 例移植失败，预期数估计为 28.96. 总体失效率为 0.096，因此该中心的 <span class="math inline">\(RAFR\)</span> 为</p>
+<p><span class="math display">\[\begin{aligned}RAFR&amp;=\frac{23}{28.96}\times0.096=0.076\end{aligned}\]</span></p>
+<p>此表中的 <span class="math inline">\(RAFR\)</span> 值与表 11.5 给出的值非常相似。</p>
+<details><summary><font color="#8B2232">表 11.6</font>
+</summary><img src="figure/table%2011.6.png#center" style="width:80.0%"></details>
+</div>
+</div>
+<div id="sec11-4-1" class="section level3" number="11.4.1">
+<h3>
+<span class="header-section-number">11.4.1</span> <span class="math inline">\(RAFR\)</span> 的区间估计<a class="anchor" aria-label="anchor" href="#sec11-4-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>为了获得风险调整的失效率的区间估计，我们使用式 <a href="chap11.html#eq:11-7">(11.7)</a> 中的定义，并假定估计预期失效数和总失效率时的误差可以忽略不计。这个假定常常是合理的，因为这些量是从涵盖所有机构的大型数据集获得的。现在，令 <span class="math inline">\(Y_j\)</span> 是与给定时间段内第 <span class="math inline">\(j\)</span> 个机构中的 <span class="math inline">\(n_j\)</span> 个个体失效数相关的随机变量，并且设 <span class="math inline">\(y_j\)</span> 是相应的观测值。另外，设 <span class="math inline">\(p_j\)</span> 是第 <span class="math inline">\(j\)</span> 个机构的失效概率，则 <span class="math inline">\(Y_j\)</span> 服从二项分布。通常，<span class="math inline">\(n_j\)</span> 将足够大，使得二项分布的泊松近似是有效的，根据该近似，当 <span class="math inline">\(n_j\rightarrow\infty,p_j\rightarrow\infty\)</span> 且 <span class="math inline">\(\mu_jp_j\)</span> 保持有限值时，参数为 <span class="math inline">\(n_j,p_j\)</span> 的二项分布趋于均值为 <span class="math inline">\(\mu_j\rightarrow\infty\)</span> 泊松分布。那么，与第 <span class="math inline">\(j\)</span> 个机构的失效数相关的随机变量 <span class="math inline">\(Y_j\)</span> 具有均值为 <span class="math inline">\(\mu_j\)</span> 的泊松分布。请注意，该结果仅在失效概率较小时有效，因为当失效不太频繁时，失效概率就会较小。此外，这一结果意味着我们不需要在下面的计算中详细考虑 <span class="math inline">\(n_j\)</span> 的值，这在个体可能具有删失生存时间时特别有用。</p>
+<p>使用第 2 章的式 <a href="chap2.html#eq:2-8">(2.8)</a> 的结果，<span class="math inline">\(\log Y_j\)</span> 近似服从均值为 <span class="math inline">\(\log \mu_j\)</span>、方差为 <span class="math inline">\(\operatorname{var}\left(\log Y_j\right)\approx\mu_j^{-2}\operatorname{var}\left(Y_j\right)\)</span> 的正态分布，利用这一结果可获得第 <span class="math inline">\(j\)</span> 个机构死亡人数的近似区间估计。 现在，泊松随机变量的方差等于其均值，因此 <span class="math inline">\(\mathrm{var}\left(Y_j\right)=\mu_j\)</span>，并且 <span class="math inline">\(\log Y_j\)</span> 的方差约为 <span class="math inline">\(1/\mu_j\)</span> 。由于 <span class="math inline">\(\mu_j\)</span> 的最佳估计仅是观测失效数 <span class="math inline">\(y_j\)</span> ，因此该方差可通过 <span class="math inline">\(1/y_j\)</span> 来估计。由此，失效数的 95% 区间估计是区间 <span class="math inline">\(\operatorname{exp}\{\operatorname{log}y_j\pm1.96/√(y_j)\}\)</span>。</p>
+<p>还可计算特定机构失效数的“精确”泊松限。假设我们观测到均值为 <span class="math inline">\(\mu\)</span> 的泊松随机变量 <span class="math inline">\(Y\)</span> 的值为 <span class="math inline">\(y\)</span>。<span class="math inline">\(\mu\)</span> 的 95% 区间的下限是 <span class="math inline">\(y_L\)</span>，满足当 <span class="math inline">\(\mu=y_L\)</span> 时 <span class="math inline">\(\mathrm{P}(Y\geqslant y)=0.025\)</span>。类似地，<span class="math inline">\(\mu\)</span> 的 95% 区间的上限是 <span class="math inline">\(y_U\)</span>，满足当 <span class="math inline">\(\mu=y_U\)</span> 时，<span class="math inline">\(\mathrm{P}(Y\leqslant y)=0.975\)</span>。这些限可证明具有理想的最优性。</p>
+<p>为了计算这些精确的限，我们可以使用一般结果：如果 <span class="math inline">\(Y\)</span> 具有均值为 <span class="math inline">\(\mu\)</span> 的泊松分布，并且 <span class="math inline">\(X\)</span> 具有形状参数为 <span class="math inline">\(y + 1\)</span> 且尺度参数为一的 gamma 分布，即 <span class="math inline">\(Y\sim P(\mu),X\sim\Gamma(y+1,1)\)</span>，那么 <span class="math inline">\(P(Y\leqslant y)=1-P(X\leqslant\mu)\)</span>。这意味着</p>
+<p><span class="math display" id="eq:11-9">\[\begin{align}
+\sum_{k=0}^y\frac{e^{-\mu}\mu^k}{k!}&amp;=1-\int_0^\mu\frac{e^{-x}x^y}{\Gamma(y+1)}\mathrm{d}x
+\tag{11.9}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\Gamma(y+1)=y!\)</span> 为 gamma 函数。gamma 分布在第 5 章 <a href="chap5.html#sec5-1-2">5.1.2</a> 节介绍过，该结果可用分部积分来验证。</p>
+<p>事件数 95% 区间的下限 <span class="math inline">\(y_L\)</span> 是泊松随机变量 <span class="math inline">\(Y\)</span> 满足 <span class="math inline">\(\text{P}(Y\geqslant y)=0.025\)</span> 的期望值。改写式 <a href="chap11.html#eq:11-9">(11.9)</a> 中的结果</p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(Y\geqslant y)&amp;=1-\mathrm{P}(Y\leqslant y-1)=1-\sum_{k=0}^{y-1}\frac{e^{-y_L}y_L^k}{k!}=\int_0^{y_L}\frac{e^{-x}x^{y-1}}{\Gamma(y)}\mathrm{d}x\end{aligned}\]</span></p>
+<p>所以 <span class="math inline">\(y_L\)</span> 满足</p>
+<p><span class="math display">\[\begin{aligned}\int_0^{\large y_L}\frac{e^{-x}x^{\large y-1}}{\Gamma(y)}\mathrm{d}x&amp;=0.025\end{aligned}\]</span></p>
+<p>这意味着 <span class="math inline">\(y_L\)</span> 是形状参数为 <span class="math inline">\(y\)</span>、尺度参数为一的 gamma 随机变量的下 2.5% 分位点，因此可以从 gamma 分布的逆累积分布函数获得。同样，95% 置信区间的上限 <span class="math inline">\(y_U\)</span> 是泊松随机变量满足 <span class="math inline">\(\mathrm{P}(Y\leqslant y)=0.025\)</span> 的期望值。再次使用式 <a href="chap11.html#eq:11-9">(11.9)</a></p>
+<p><span class="math display">\[\begin{aligned}\mathrm{P}(Y\leqslant y)&amp;=\sum_{k=0}^{y}\frac{e^{-y_U}y_U^k}{k!}=1-\int_{0}^{y_U}\frac{e^{-x}x^y}{\Gamma(y+1)}\mathrm{d}x\end{aligned}\]</span></p>
+<p>因此 <span class="math inline">\(y_U\)</span> 是形状参数为 <span class="math inline">\(y\)</span>、尺度参数为一的 gamma 随机变量的上 2.5% 分位点。</p>
+<p>作为说明，假设特定机构的观测事件数为 <span class="math inline">\(y = 9\)</span>，如<a href="chap11.html#exm:ex11-4">示例 11.4</a> 中肾移植失败率数据的中心 6. 形状参数为 9、尺度参数为 1 的 gamma 分布的下 2.5% 分位点为 <span class="math inline">\(y_L = 4.12\)</span>，因此当 <span class="math inline">\(Y\)</span> 具有均值为 <span class="math inline">\(\mu = 4.12\)</span> 的泊松分布时，<span class="math inline">\(\mathrm{P}(Y\geqslant9)=0.025\)</span>。此外，形状参数为 10、尺度参数为 1 的 gamma 分布的上 2.5% 分位点为 <span class="math inline">\(y_U = 17.08\)</span>，因此当 <span class="math inline">\(Y\)</span> 具有均值为 17.08 的泊松分布时，<span class="math inline">\(\mathrm{P}(Y\leqslant9)=0.025\)</span>。这两个分布如图 11.7 所示。均值为 4.12 的分布中 <span class="math inline">\(y = 9\)</span> 右侧的尾部面积和均值为 17.08 的分布中 <span class="math inline">\(y = 9\)</span> 左侧的尾部面积均等于 0.025。观测事件数的精确 95% 区间估计为 <span class="math inline">\((4.12, 17.08)\)</span>。</p>
+<details><summary><font color="#8B2232">图 11.7</font>
+</summary><img src="figure/figure%2011.7.png#center" style="width:80.0%"></details><p><br>
+使用近似或精确方法获得失效数的区间估计 <span class="math inline">\((y_L, y_U)\)</span> 后，<span class="math inline">\(RAFR\)</span> 的相应限为 <span class="math inline">\(\frac{y_L}{e_j}\times\)</span> 总失效率和 <span class="math inline">\(\frac{y_U}{e_j}\times\)</span> 总失效率。</p>
+<p>其中 <span class="math inline">\(e_j\)</span> 是第 <span class="math inline">\(j\)</span> 个机构的失效数估计，使用式 <a href="chap11.html#eq:11-8">(11.8)</a> 获得，误差可忽略不计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-6" class="example"><strong>示例 11.6  (肾移植中心之间的比较) </strong></span><br></p>
+<p>对于<a href="chap11.html#exm:ex11-4">示例 11.4</a> 给出的 8 个中心的肾移植结果数据，<span class="math inline">\(RAFR\)</span> 的近似和精确的 95% 置信限如表 11.7 所示。</p>
+<details><summary><font color="#8B2232">表 11.7</font>
+</summary><img src="figure/table%2011.7.png#center" style="width:80.0%"></details><p><br>
+为了说明如何计算这些区间的估计，请考虑中心 1 的数据，其中 <span class="math inline">\(y_1=23\)</span>，相应的预期死亡数在<a href="chap11.html#exm:ex11-5">示例 11.5</a> 估计为 28.96. 该中心移植失败数对数的标准误为 <span class="math inline">\(1/\sqrt{(y_1)}=1/\sqrt{(23)}=0.209\)</span>。那么，<span class="math inline">\(y_1\)</span> 的 95% 置信区间为 <span class="math inline">\(\exp(\log23\pm1.96\times0.209)\)</span>，即 <span class="math inline">\((15.28,34.61)\)</span>，并且 <span class="math inline">\(RAFR\)</span> 的相应区间为</p>
+<p><span class="math display">\[\left(\frac{15.28}{28.96}\times0.096,\quad\frac{34.61}{28.96}\times0.096\right)\]</span></p>
+<p>即 <span class="math inline">\((0.051,0.115)\)</span>。根据 <span class="math inline">\(\Gamma(23,1)\)</span> 随机变量的下 2.5% 分位点和 <span class="math inline">\(\Gamma(24,1)\)</span> 随机变量的上 2.5% 分位点可以得到该中心失效数的精确限。这得到了区间 <span class="math inline">\((14.58,34.51)\)</span>，<span class="math inline">\(RAFR\)</span> 的相应区间为</p>
+<p><span class="math display">\[\left(\frac{14.58}{28.96}\times0.096,\quad\frac{34.51}{28.96}\times0.096\right)\]</span></p>
+<p>即 <span class="math inline">\((0.048,0.115)\)</span>。</p>
+<p>表 11.7 显示，当观测失效数不小于 9 时，近似限和精确限之间的一致性非常好。</p>
+</div>
+</div>
+</div>
+<div id="sec11-4-2" class="section level3" number="11.4.2">
+<h3>
+<span class="header-section-number">11.4.2</span> 泊松回归模型的使用<a class="anchor" aria-label="anchor" href="#sec11-4-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>使用建模方法可以方便地获得 <span class="math inline">\(RAFR\)</span> 的近似区间估计。令 <span class="math inline">\(F_j\)</span> 为风险调整的失效率，<span class="math inline">\(e_j\)</span> 为中心 <span class="math inline">\(j\)</span> 的预期失效数，因此</p>
+<p><span class="math display">\[\begin{aligned}F_j=\frac{y_j}{e_j}\times\text{总失效率}\end{aligned}\]</span></p>
+<p>由于我们假设与第 <span class="math inline">\(j\)</span> 个机构失效数相关的随机变量 <span class="math inline">\(Y_j\)</span> 具有均值为 <span class="math inline">\(\mu_j\)</span> 的泊松分布，因此有</p>
+<p><span class="math display" id="eq:11-10">\[\begin{align}
+\operatorname{E}\left(F_j\right)&amp;=\frac{\mu_j}{e_j}\times\text{总失效率}
+\tag{11.10}
+\end{align}\]</span></p>
+<p>为了对中心 <span class="math inline">\(j\)</span> 的 <span class="math inline">\(RAFR\)</span>，即 <span class="math inline">\(F_j\)</span>，建模，我们取 <span class="math inline">\(\log \text{ E}\,(F_j)=c_j\)</span>，其中 <span class="math inline">\(c_j\)</span> 是第 <span class="math inline">\(j\)</span> 个机构的效应。现在，使用式 <a href="chap11.html#eq:11-10">(11.10)</a></p>
+<p><span class="math display">\[\begin{aligned}\log\text{ E}\left(F_j\right)=\log\mu_j-\log\{e_j/(\text{总失效率})\}\end{aligned}\]</span></p>
+<p>这得到了 <span class="math inline">\(\mu_j\)</span> 的对数线性模型，其中</p>
+<p><span class="math display" id="eq:11-11">\[\begin{align}
+\log\mu_j=c_j+\log\{e_j/(\text{总失效率})\}
+\tag{11.11}
+\end{align}\]</span></p>
+<p>在该模型中，项 <span class="math inline">\(\log\{e_j/(\text{总失效率})\}\)</span> 是具有已知的单位系数的变量，称为<strong>偏移</strong> (offset). 当为每个机构的观测失效数 <span class="math inline">\(y_j\)</span> 拟合式 <a href="chap11.html#eq:11-11">(11.11)</a> 中的对数线性模型时，该模型的未知参数数量等于观测数。因此，这将是对数据的完美拟合，因此拟合值 <span class="math inline">\(\hat{\mu}_{j}\)</span> 将等于观测失效数。参数估计 <span class="math inline">\(\hat{c}_{j}\)</span> 将是 <span class="math inline">\(\log\text{ E }(F_j)\)</span> 的拟合值，因此第 <span class="math inline">\(j\)</span> 个中心的 <span class="math inline">\(RAFR\)</span> 为 <span class="math inline">\(\exp(\hat{c}_j)\)</span>。那么，<span class="math inline">\(RAFR\)</span> 的 95% 置信区间为 <span class="math inline">\(\exp\{\hat{c}_j\pm1.96\text{ se}\left(\hat{c}_j\right)\}\)</span>，其中，可以从拟合的对数线性模型的计算机输出中获得 <span class="math inline">\(\hat{c}_{j}\)</span> 及其标准误。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-7" class="example"><strong>示例 11.7  (肾移植中心之间的比较) </strong></span><br></p>
+<p>表 11.8 给出了 <span class="math inline">\(RAFR\)</span> 的区间估计，该估计是通过为 8 个中心移植失败数的数据拟合式 <a href="chap11.html#eq:11-11">(11.11)</a> 中的对数线性模型得到的。</p>
+<details><summary><font color="#8B2232">表 11.8</font>
+</summary><img src="figure/table%2011.8.png#center" style="width:80.0%"></details><p><br>
+从拟合的对数线性模型中获得的 <span class="math inline">\(RAFR\)</span> 值及其相应的区间估计与表 11.7 中给出的近似区间估计完全一致。</p>
+</div>
+</div>
+</div>
+<div id="sec11-4-3" class="section level3" number="11.4.3">
+<h3>
+<span class="header-section-number">11.4.3</span> 随机机构效应<a class="anchor" aria-label="anchor" href="#sec11-4-3"><i class="fas fa-link"></i></a>
+</h3>
+<p>式 <a href="chap11.html#eq:11-11">(11.11)</a> 中关于预期事件数的对数线性模型为计算各机构 <span class="math inline">\(RAFR\)</span> 的区间估计提供了一个框架。在该模型中，与机构效应相关的参数拟合为固定效应，当机构数较少时，这是完全合适的，如<a href="chap11.html#exm:ex11-4">示例 11.4</a> 所示。当机构较多时也可以使用这种方法，但此时将机构效应作为固定效应纳入模型是不可取的。相反，将采用随机效应对机构间变异进行建模。第 10 章 <a href="chap10.html#sec10-1-1">10.1.1</a> 节在脆弱模型的背景下介绍了随机效应。</p>
+<p>假设第 <span class="math inline">\(j\)</span> 个机构的效应 <span class="math inline">\(c_j\)</span> 是从均值为 <span class="math inline">\(\alpha\)</span>、方差为 <span class="math inline">\(\sigma^2_c\)</span> 的正态分布中抽取的，表示为 <span class="math inline">\(N(\alpha,\sigma_{c}^{2})\)</span>。由于第 <span class="math inline">\(j\)</span> 个中心的 <span class="math inline">\(RAFR\)</span> 的对数线性模型满足 <span class="math inline">\(\log \text{ E }(F_j) = c_j\)</span>，因此各中心的预期 <span class="math inline">\(RAFR\)</span> 值 <span class="math inline">\(\text{E }(F_j)\)</span> 的变异隐含了对数正态分布。或者，式 <a href="chap11.html#eq:11-11">(11.11)</a> 中的模型可以写为</p>
+<p><span class="math display">\[\begin{aligned}\log\mu_j=\alpha+c_j+\log\{e_j/(\text{总失效率})\}\end{aligned}\]</span></p>
+<p>其中，<span class="math inline">\(c_j\)</span> 具有 <span class="math inline">\(N(0,\sigma^2_c)\)</span> 分布，<span class="math inline">\(\alpha\)</span> 是 <span class="math inline">\(RAFR\)</span> 的对数的总体值，因此 <span class="math inline">\(e^\alpha\)</span> 是总失效率。</p>
+<p>使用随机效应而不是固定效应会产生两个后果。首先，机构效应估计 <span class="math inline">\(\hat c_j\)</span> 向总体率 <span class="math inline">\(\hat\alpha\)</span> “收缩”，而且 <span class="math inline">\(RAFR\)</span> 越极端，收缩越大。第二，随机效应模型中对机构效应的区间估计将比使用固定效应时更短，从而提高了对未来患者的预测精度。当使用中心率来指导患者选择时，这两个特征都是令人满意的。第 3 章的 <a href="chap3.html#sec3-7">3.7</a> 节在描述变量选择的 lasso 法时提到了收缩的概念。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex11-8" class="example"><strong>示例 11.8  (肾移植中心之间的比较) </strong></span><br></p>
+<p>随机中心效应现在用于为八个肾移植中心的移植失败观测数进行建模。令 <span class="math inline">\(y_j\)</span> 为第 <span class="math inline">\(j\)</span> 个中心的观测失效数，将 <span class="math inline">\(y_j\)</span> 取为均值为 <span class="math inline">\(\mu_j\)</span> 的泊松随机变量的观测，得到模型</p>
+<p><span class="math display">\[\begin{aligned}\log\mu_j=c_j+\log\{e_j/(\text{总失效数})\}\end{aligned}\]</span></p>
+<p>且 <span class="math inline">\(c_j\sim N(\alpha,\sigma^2_c)\)</span>。</p>
+<p><span class="math inline">\(\alpha\)</span> 的估计为 <span class="math inline">\(\tilde \alpha = -2.341\)</span>，因此 <span class="math inline">\(\exp(\tilde{\alpha})=0.096\)</span>，与根据整体生存函数的 Kaplan-Meier 估计获得的失效率估计相同。中心效应的方差估计为 <span class="math inline">\(\tilde{\sigma}_c^2=0.054\)</span>，标准误为 0.054，因此没有证据表明中心间变异存在显着差异。根据中心效应的估计 <span class="math inline">\(\tilde c_j\)</span> 可得到 <span class="math inline">\(RAFR\)</span> 的估计 <span class="math inline">\(\exp(\tilde c_j)\)</span>，这些估计是作为随机效应后验分布的众数的估计获得的（见第 10 章 <a href="chap10.html#sec10-4">10.4</a> 节），展示在表 11.9 中。</p>
+<details><summary><font color="#8B2232">表 11.9</font>
+</summary><img src="figure/table%2011.9.png#center" style="width:80.0%"></details><p><br>
+使用随机效应模型对 <span class="math inline">\(RAFR\)</span> 的估计与表 11.8 所示的固定效应模型的估计相似，但更接近 0.096 的总体率。这一点在有最大 <span class="math inline">\(RAFR\)</span> 的中心 8 尤为明显。此外，<span class="math inline">\(\text{se}\left(\tilde{c}_{j}\right)\)</span> 的值通常较小，这反过来意味着相应的区间估计较窄。这两个特征说明了使用随机中心效应引起的收缩效应。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec11-5" class="section level2" number="11.5">
+<h2>
+<span class="header-section-number">11.5</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec11-5"><i class="fas fa-link"></i></a>
+</h2>
+<p>Stablein, Carter and Novak (1981) 以及 Gore, Pocock and Kerr (1984) 给出了比例风险模型不适用的情况下的生存分析示例。关于分层比例风险模型的更多细节可以在 Kalbfleisch and Prentice (2002) 以及 Lawless (2002) 中找到。Schemper (1992) 回顾了 Cox 回归模型中处理非比例风险的方法。Therneau and Grambsch (2000) 的第 6 章还讨论了处理非比例风险的策略。</p>
+<p>Royston and Parmar (2011) 描述并说明了如何使用限制性平均生存时间来总结存在非比例风险时的治疗差异。Schemper, Wakounig and Heinze (2009) 讨论了平均风险比的使用。Andersen, Hansen and Klein (2004) 展示了如何使用伪值对限制性平均进行建模，Andersen and Perme (2010) 回顾了伪值在生存分析中的应用。Klein et al. (2008) 描述了用于计算限制性平均的 SAS 宏和 R 包。</p>
+<p>Thomas、Longford and Rolph (1994) 以及 Goldstein and Spiegelhalter (1996) 描述和说明了比较机构绩效的统计方法。Spiegelhalter et al. (2002) 对多家医院进行小儿心脏手术后的手术结果进行了详细比较。Sun, Ono and Takeuchi（1996）展示了如何利用泊松分布与 gamma 分布或卡方分布之间的关系来获得标准化死亡率的精确泊松限。Spiegelhalter (2005) 描述的漏斗图提供了机构绩效的直观比较。Ohlssen, Sharples and Spiegelhalter (2007) 描述了可用于识别与其他机构表现不同的机构的技术，Spiegelhalter et al. (2012) 对医疗保健监管中使用的统计方法进行了全面回顾。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></div>
+<div class="next"><a href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap11"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li>
+<a class="nav-link" href="#sec11-1"><span class="header-section-number">11.1</span> 非比例风险</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec11-1-1"><span class="header-section-number">11.1.1</span> 对给定时间的事件概率建模</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec11-2"><span class="header-section-number">11.2</span> 分层比例风险模型</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec11-2-1"><span class="header-section-number">11.2.1</span> 治疗之间的非比例风险</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec11-3"><span class="header-section-number">11.3</span> 限制性平均生存</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec11-3-1"><span class="header-section-number">11.3.1</span> 伪值的使用</a></li></ul>
+</li>
+<li>
+<a class="nav-link" href="#sec11-4"><span class="header-section-number">11.4</span> 机构的比较</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec11-4-1"><span class="header-section-number">11.4.1</span> \(RAFR\) 的区间估计</a></li>
+<li><a class="nav-link" href="#sec11-4-2"><span class="header-section-number">11.4.2</span> 泊松回归模型的使用</a></li>
+<li><a class="nav-link" href="#sec11-4-3"><span class="header-section-number">11.4.3</span> 随机机构效应</a></li>
+</ul>
+</li>
+<li><a class="nav-link" href="#sec11-5"><span class="header-section-number">11.5</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

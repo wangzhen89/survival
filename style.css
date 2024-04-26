@@ -1,0 +1,73 @@
+p.caption {
+  color: #777;
+  margin-top: 10px;
+}
+p code {
+  white-space: inherit;
+}
+pre {
+  word-break: normal;
+  word-wrap: normal;
+}
+pre code {
+  white-space: inherit;
+}
+
+h1 {
+  color: #8B2232;
+}
+
+h2 {
+  color: #8B2252;
+}
+
+h3 {
+  color: #8B2272;
+}
+
+h4 {
+  color: #8B2282;
+}
+
+.sidebar {
+    max-width: 16.5rem;
+}
+
+.container-fluid {
+    max-width: 140rem;
+}
+.container-fluid main {
+    max-width: 50rem;
+}
+
+img[src*='#center'] {
+    display: block;
+    margin: auto;
+}
+
+/* Sidebar formating --------------------------------------------*/
+
+@media (min-width: 576px) {
+  .nav {
+    display: flex !important;
+    display: -webkit-flex !important
+  }
+  .nav:not(.nav-stacked):not(.flex-column) {
+    float: none !important
+  }
+  .nav:not(.nav-stacked):not(.flex-column)>.bslib-nav-spacer {
+    margin-left: auto !important
+  }
+  .nav:not(.nav-stacked):not(.flex-column)>.form-inline {
+    margin-top: auto;
+    margin-bottom: auto
+  }
+  .nav.nav-stacked {
+    flex-direction: column;
+    -webkit-flex-direction: column;
+    height: 100%
+  }
+  .nav.nav-stacked>.bslib-nav-spacer {
+    margin-top: auto !important
+  }
+}

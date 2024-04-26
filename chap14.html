@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>第 14 章 相依删失 | 医学研究中的生存数据建模</title>
+<meta name="author" content="Wang Zhen">
+<meta name="description" content="本书中描述的用于分析删失生存数据的方法仅在删失是独立的 (independent) 或非信息性 (non-informative)...">
+<meta name="generator" content="bookdown 0.38 with bs4_book()">
+<meta property="og:title" content="第 14 章 相依删失 | 医学研究中的生存数据建模">
+<meta property="og:type" content="book">
+<meta property="og:description" content="本书中描述的用于分析删失生存数据的方法仅在删失是独立的 (independent) 或非信息性 (non-informative)...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="第 14 章 相依删失 | 医学研究中的生存数据建模">
+<meta name="twitter:description" content="本书中描述的用于分析删失生存数据的方法仅在删失是独立的 (independent) 或非信息性 (non-informative)...">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.7.0/transition.js"></script><script src="libs/bs3compat-0.7.0/tabs.js"></script><script src="libs/bs3compat-0.7.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script>
+    /* ========================================================================
+     * Bootstrap: transition.js v3.3.7
+     * http://getbootstrap.com/javascript/#transitions
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // CSS TRANSITION SUPPORT (Shoutout: http://www.modernizr.com/)
+      // ============================================================
+
+      function transitionEnd() {
+        var el = document.createElement('bootstrap')
+
+        var transEndEventNames = {
+          WebkitTransition : 'webkitTransitionEnd',
+          MozTransition    : 'transitionend',
+          OTransition      : 'oTransitionEnd otransitionend',
+          transition       : 'transitionend'
+        }
+
+        for (var name in transEndEventNames) {
+          if (el.style[name] !== undefined) {
+            return { end: transEndEventNames[name] }
+          }
+        }
+
+        return false // explicit for ie8 (  ._.)
+      }
+
+      // http://blog.alexmaccaw.com/css-transitions
+      $.fn.emulateTransitionEnd = function (duration) {
+        var called = false
+        var $el = this
+        $(this).one('bsTransitionEnd', function () { called = true })
+        var callback = function () { if (!called) $($el).trigger($.support.transition.end) }
+        setTimeout(callback, duration)
+        return this
+      }
+
+      $(function () {
+        $.support.transition = transitionEnd()
+
+        if (!$.support.transition) return
+
+        $.event.special.bsTransitionEnd = {
+          bindType: $.support.transition.end,
+          delegateType: $.support.transition.end,
+          handle: function (e) {
+            if ($(e.target).is(this)) return e.handleObj.handler.apply(this, arguments)
+          }
+        }
+      })
+
+    }(jQuery);
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: collapse.js v3.3.7
+     * http://getbootstrap.com/javascript/#collapse
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+    /* jshint latedef: false */
+
+    +function ($) {
+      'use strict';
+
+      // COLLAPSE PUBLIC CLASS DEFINITION
+      // ================================
+
+      var Collapse = function (element, options) {
+        this.$element      = $(element)
+        this.options       = $.extend({}, Collapse.DEFAULTS, options)
+        this.$trigger      = $('[data-toggle="collapse"][href="#' + element.id + '"],' +
+                               '[data-toggle="collapse"][data-target="#' + element.id + '"]')
+        this.transitioning = null
+
+        if (this.options.parent) {
+          this.$parent = this.getParent()
+        } else {
+          this.addAriaAndCollapsedClass(this.$element, this.$trigger)
+        }
+
+        if (this.options.toggle) this.toggle()
+      }
+
+      Collapse.VERSION  = '3.3.7'
+
+      Collapse.TRANSITION_DURATION = 350
+
+      Collapse.DEFAULTS = {
+        toggle: true
+      }
+
+      Collapse.prototype.dimension = function () {
+        var hasWidth = this.$element.hasClass('width')
+        return hasWidth ? 'width' : 'height'
+      }
+
+      Collapse.prototype.show = function () {
+        if (this.transitioning || this.$element.hasClass('in')) return
+
+        var activesData
+        var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+
+        if (actives && actives.length) {
+          activesData = actives.data('bs.collapse')
+          if (activesData && activesData.transitioning) return
+        }
+
+        var startEvent = $.Event('show.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        if (actives && actives.length) {
+          Plugin.call(actives, 'hide')
+          activesData || actives.data('bs.collapse', null)
+        }
+
+        var dimension = this.dimension()
+
+        this.$element
+          .removeClass('collapse')
+          .addClass('collapsing')[dimension](0)
+          .attr('aria-expanded', true)
+
+        this.$trigger
+          .removeClass('collapsed')
+          .attr('aria-expanded', true)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse in')[dimension]('')
+          this.transitioning = 0
+          this.$element
+            .trigger('shown.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        var scrollSize = $.camelCase(['scroll', dimension].join('-'))
+
+        this.$element
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)[dimension](this.$element[0][scrollSize])
+      }
+
+      Collapse.prototype.hide = function () {
+        if (this.transitioning || !this.$element.hasClass('in')) return
+
+        var startEvent = $.Event('hide.bs.collapse')
+        this.$element.trigger(startEvent)
+        if (startEvent.isDefaultPrevented()) return
+
+        var dimension = this.dimension()
+
+        this.$element[dimension](this.$element[dimension]())[0].offsetHeight
+
+        this.$element
+          .addClass('collapsing')
+          .removeClass('collapse in')
+          .attr('aria-expanded', false)
+
+        this.$trigger
+          .addClass('collapsed')
+          .attr('aria-expanded', false)
+
+        this.transitioning = 1
+
+        var complete = function () {
+          this.transitioning = 0
+          this.$element
+            .removeClass('collapsing')
+            .addClass('collapse')
+            .trigger('hidden.bs.collapse')
+        }
+
+        if (!$.support.transition) return complete.call(this)
+
+        this.$element
+          [dimension](0)
+          .one('bsTransitionEnd', $.proxy(complete, this))
+          .emulateTransitionEnd(Collapse.TRANSITION_DURATION)
+      }
+
+      Collapse.prototype.toggle = function () {
+        this[this.$element.hasClass('in') ? 'hide' : 'show']()
+      }
+
+      Collapse.prototype.getParent = function () {
+        return $(this.options.parent)
+          .find('[data-toggle="collapse"][data-parent="' + this.options.parent + '"]')
+          .each($.proxy(function (i, element) {
+            var $element = $(element)
+            this.addAriaAndCollapsedClass(getTargetFromTrigger($element), $element)
+          }, this))
+          .end()
+      }
+
+      Collapse.prototype.addAriaAndCollapsedClass = function ($element, $trigger) {
+        var isOpen = $element.hasClass('in')
+
+        $element.attr('aria-expanded', isOpen)
+        $trigger
+          .toggleClass('collapsed', !isOpen)
+          .attr('aria-expanded', isOpen)
+      }
+
+      function getTargetFromTrigger($trigger) {
+        var href
+        var target = $trigger.attr('data-target')
+          || (href = $trigger.attr('href')) && href.replace(/.*(?=#[^\s]+$)/, '') // strip for ie7
+
+        return $(target)
+      }
+
+
+      // COLLAPSE PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this   = $(this)
+          var data    = $this.data('bs.collapse')
+          var options = $.extend({}, Collapse.DEFAULTS, $this.data(), typeof option == 'object' && option)
+
+          if (!data && options.toggle && /show|hide/.test(option)) options.toggle = false
+          if (!data) $this.data('bs.collapse', (data = new Collapse(this, options)))
+          if (typeof option == 'string') data[option]()
+        })
+      }
+
+      var old = $.fn.collapse
+
+      $.fn.collapse             = Plugin
+      $.fn.collapse.Constructor = Collapse
+
+
+      // COLLAPSE NO CONFLICT
+      // ====================
+
+      $.fn.collapse.noConflict = function () {
+        $.fn.collapse = old
+        return this
+      }
+
+
+      // COLLAPSE DATA-API
+      // =================
+
+      $(document).on('click.bs.collapse.data-api', '[data-toggle="collapse"]', function (e) {
+        var $this   = $(this)
+
+        if (!$this.attr('data-target')) e.preventDefault()
+
+        var $target = getTargetFromTrigger($this)
+        var data    = $target.data('bs.collapse')
+        var option  = data ? 'toggle' : $this.data()
+
+        Plugin.call($target, option)
+      })
+
+    }(jQuery);
+    </script><script>
+    window.initializeCodeFolding = function(show) {
+
+      // handlers for show-all and hide all
+      $("#rmd-show-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('show');
+        });
+      });
+      $("#rmd-hide-all-code").click(function() {
+        $('div.r-code-collapse').each(function() {
+          $(this).collapse('hide');
+        });
+      });
+
+      // index for unique code element ids
+      var currentIndex = 1;
+
+      // select all R code blocks
+      var rCodeBlocks = $('pre.sourceCode, pre.r, pre.python, pre.bash, pre.sql, pre.cpp, pre.stan, pre.js');
+      rCodeBlocks.each(function() {
+
+        // create a collapsable div to wrap the code in
+        var div = $('<div class="collapse r-code-collapse"></div>');
+        if (show)
+          div.addClass('in');
+        var id = 'rcode-643E0F36' + currentIndex++;
+        div.attr('id', id);
+        $(this).before(div);
+        $(this).detach().appendTo(div);
+
+        // add a show code button right above
+        var showCodeText = $('<span>' + (show ? 'Hide' : 'Code') + '</span>');
+        var showCodeButton = $('<button type="button" class="btn btn-default btn-xs code-folding-btn pull-right"></button>');
+        showCodeButton.append(showCodeText);
+        showCodeButton
+            .attr('data-toggle', 'collapse')
+            .attr('data-target', '#' + id)
+            .attr('aria-expanded', show)
+            .attr('aria-controls', id);
+
+        var buttonRow = $('<div class="row"></div>');
+        var buttonCol = $('<div class="col-md-12"></div>');
+
+        buttonCol.append(showCodeButton);
+        buttonRow.append(buttonCol);
+
+        div.before(buttonRow);
+
+        // update state of button on show/hide
+        div.on('hidden.bs.collapse', function () {
+          showCodeText.text('Code');
+        });
+        div.on('show.bs.collapse', function () {
+          showCodeText.text('Hide');
+        });
+      });
+
+    }
+    </script><script>
+    /* ========================================================================
+     * Bootstrap: dropdown.js v3.3.7
+     * http://getbootstrap.com/javascript/#dropdowns
+     * ========================================================================
+     * Copyright 2011-2016 Twitter, Inc.
+     * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+     * ======================================================================== */
+
+
+    +function ($) {
+      'use strict';
+
+      // DROPDOWN CLASS DEFINITION
+      // =========================
+
+      var backdrop = '.dropdown-backdrop'
+      var toggle   = '[data-toggle="dropdown"]'
+      var Dropdown = function (element) {
+        $(element).on('click.bs.dropdown', this.toggle)
+      }
+
+      Dropdown.VERSION = '3.3.7'
+
+      function getParent($this) {
+        var selector = $this.attr('data-target')
+
+        if (!selector) {
+          selector = $this.attr('href')
+          selector = selector && /#[A-Za-z]/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') // strip for ie7
+        }
+
+        var $parent = selector && $(selector)
+
+        return $parent && $parent.length ? $parent : $this.parent()
+      }
+
+      function clearMenus(e) {
+        if (e && e.which === 3) return
+        $(backdrop).remove()
+        $(toggle).each(function () {
+          var $this         = $(this)
+          var $parent       = getParent($this)
+          var relatedTarget = { relatedTarget: this }
+
+          if (!$parent.hasClass('open')) return
+
+          if (e && e.type == 'click' && /input|textarea/i.test(e.target.tagName) && $.contains($parent[0], e.target)) return
+
+          $parent.trigger(e = $.Event('hide.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this.attr('aria-expanded', 'false')
+          $parent.removeClass('open').trigger($.Event('hidden.bs.dropdown', relatedTarget))
+        })
+      }
+
+      Dropdown.prototype.toggle = function (e) {
+        var $this = $(this)
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        clearMenus()
+
+        if (!isActive) {
+          if ('ontouchstart' in document.documentElement && !$parent.closest('.navbar-nav').length) {
+            // if mobile we use a backdrop because click events don't delegate
+            $(document.createElement('div'))
+              .addClass('dropdown-backdrop')
+              .insertAfter($(this))
+              .on('click', clearMenus)
+          }
+
+          var relatedTarget = { relatedTarget: this }
+          $parent.trigger(e = $.Event('show.bs.dropdown', relatedTarget))
+
+          if (e.isDefaultPrevented()) return
+
+          $this
+            .trigger('focus')
+            .attr('aria-expanded', 'true')
+
+          $parent
+            .toggleClass('open')
+            .trigger($.Event('shown.bs.dropdown', relatedTarget))
+        }
+
+        return false
+      }
+
+      Dropdown.prototype.keydown = function (e) {
+        if (!/(38|40|27|32)/.test(e.which) || /input|textarea/i.test(e.target.tagName)) return
+
+        var $this = $(this)
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        if ($this.is('.disabled, :disabled')) return
+
+        var $parent  = getParent($this)
+        var isActive = $parent.hasClass('open')
+
+        if (!isActive && e.which != 27 || isActive && e.which == 27) {
+          if (e.which == 27) $parent.find(toggle).trigger('focus')
+          return $this.trigger('click')
+        }
+
+        var desc = ' li:not(.disabled):visible a'
+        var $items = $parent.find('.dropdown-menu' + desc)
+
+        if (!$items.length) return
+
+        var index = $items.index(e.target)
+
+        if (e.which == 38 && index > 0)                 index--         // up
+        if (e.which == 40 && index < $items.length - 1) index++         // down
+        if (!~index)                                    index = 0
+
+        $items.eq(index).trigger('focus')
+      }
+
+
+      // DROPDOWN PLUGIN DEFINITION
+      // ==========================
+
+      function Plugin(option) {
+        return this.each(function () {
+          var $this = $(this)
+          var data  = $this.data('bs.dropdown')
+
+          if (!data) $this.data('bs.dropdown', (data = new Dropdown(this)))
+          if (typeof option == 'string') data[option].call($this)
+        })
+      }
+
+      var old = $.fn.dropdown
+
+      $.fn.dropdown             = Plugin
+      $.fn.dropdown.Constructor = Dropdown
+
+
+      // DROPDOWN NO CONFLICT
+      // ====================
+
+      $.fn.dropdown.noConflict = function () {
+        $.fn.dropdown = old
+        return this
+      }
+
+
+      // APPLY TO STANDARD DROPDOWN ELEMENTS
+      // ===================================
+
+      $(document)
+        .on('click.bs.dropdown.data-api', clearMenus)
+        .on('click.bs.dropdown.data-api', '.dropdown form', function (e) { e.stopPropagation() })
+        .on('click.bs.dropdown.data-api', toggle, Dropdown.prototype.toggle)
+        .on('keydown.bs.dropdown.data-api', toggle, Dropdown.prototype.keydown)
+        .on('keydown.bs.dropdown.data-api', '.dropdown-menu', Dropdown.prototype.keydown)
+
+    }(jQuery);
+    </script><style type="text/css">
+    .code-folding-btn { margin-bottom: 4px; }
+    .row { display: flex; }
+    .collapse { display: none; }
+    .in { display:block }
+    .pull-right > .dropdown-menu {
+        right: 0;
+        left: auto;
+    }
+    .open > .dropdown-menu {
+        display: block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        display: none;
+        float: left;
+        min-width: 160px;
+        padding: 5px 0;
+        margin: 2px 0 0;
+        font-size: 14px;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        -webkit-background-clip: padding-box;
+        background-clip: padding-box;
+        border: 1px solid #ccc;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 4px;
+        -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+        box-shadow: 0 6px 12px rgba(0,0,0,.175);
+    }
+    </style>
+<script>
+    $(document).ready(function () {
+      window.initializeCodeFolding("show" === "show");
+    });
+    </script><script>
+    document.write('<div class="btn-group pull-right" style="position: absolute; top: 20%; right: 2%; z-index: 200"><button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-_extension-text-contrast=""><span>Code</span> <span class="caret"></span></button><ul class="dropdown-menu" style="min-width: 50px;"><li><a id="rmd-show-all-code" href="#">Show All Code</a></li><li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li></ul></div>')
+    </script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title="">医学研究中的生存数据建模</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">前言</a></li>
+<li><a class="" href="%E4%BD%9C%E8%80%85%E4%BB%8B%E7%BB%8D.html">作者介绍</a></li>
+<li><a class="" href="%E7%9B%AE%E5%BD%95.html">目录</a></li>
+<li class="book-part">正文</li>
+<li><a class="" href="chap1.html"><span class="header-section-number">1</span> 生存分析</a></li>
+<li><a class="" href="chap2.html"><span class="header-section-number">2</span> 一些非参数程序</a></li>
+<li><a class="" href="chap3.html"><span class="header-section-number">3</span> Cox 回归模型</a></li>
+<li><a class="" href="cox-%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►Cox 回归模型</a></li>
+<li><a class="" href="chap4.html"><span class="header-section-number">4</span> Cox 回归模型的模型检查</a></li>
+<li><a class="" href="chap5.html"><span class="header-section-number">5</span> 参数回归模型</a></li>
+<li><a class="" href="%E5%8F%82%E6%95%B0%E5%9B%9E%E5%BD%92%E6%A8%A1%E5%9E%8B.html">►参数回归模型</a></li>
+<li><a class="" href="chap6.html"><span class="header-section-number">6</span> 灵活的参数模型</a></li>
+<li><a class="" href="chap7.html"><span class="header-section-number">7</span> 参数模型的模型检查</a></li>
+<li><a class="" href="chap8.html"><span class="header-section-number">8</span> 时依变量</a></li>
+<li><a class="" href="chap9.html"><span class="header-section-number">9</span> 区间删失生存数据</a></li>
+<li><a class="" href="chap10.html"><span class="header-section-number">10</span> 脆弱模型</a></li>
+<li><a class="" href="chap11.html"><span class="header-section-number">11</span> 非比例风险和机构的比较</a></li>
+<li><a class="" href="chap12.html"><span class="header-section-number">12</span> 竞争风险</a></li>
+<li><a class="" href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></li>
+<li><a class="active" href="chap14.html"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="" href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></li>
+<li><a class="" href="chap16.html"><span class="header-section-number">16</span> 贝叶斯生存分析</a></li>
+<li><a class="" href="chap17.html"><span class="header-section-number">17</span> 使用 R 进行生存分析</a></li>
+<li class="book-part">附录</li>
+<li><a class="" href="A.html"><span class="header-section-number">A</span> 最大似然估计</a></li>
+<li><a class="" href="B.html"><span class="header-section-number">B</span> 额外数据集</a></li>
+<li class="book-part">—</li>
+<li><a class="" href="bib.html">参考书目</a></li>
+<li><a class="" href="exm.html">示例索引</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="chap14" class="section level1" number="14">
+<h1>
+<span class="header-section-number">第 14 章</span> 相依删失<a class="anchor" aria-label="anchor" href="#chap14"><i class="fas fa-link"></i></a>
+</h1>
+<p>本书中描述的用于分析删失生存数据的方法仅在删失是独立的 (independent) 或非信息性 (non-informative) 的情况下才有效。本质上，这意味着删失与实际生存时间无关，因此具有删失生存时间的个体代表了解释变量测量值相同且当时处于风险的所有其他个体。例如，如果患者因搬迁到该国的不同地区而退出研究，或者在预先规定的时间分析生存数据，删失时间将视为独立的。另一方面，如果患者因特定治疗出现危及生命的副作用而退出，或者如果对积极治疗没有响应的患者接受了补救药物，则删失时间不再独立于生存时间。这种删失认为是<strong>相依的</strong> (dependent) 或<strong>信息性的</strong> (informative). 本章展示了在对生存数据进行建模时如何考虑相依删失。</p>
+<div id="sec14-1" class="section level2" number="14.1">
+<h2>
+<span class="header-section-number">14.1</span> 识别相依删失<a class="anchor" aria-label="anchor" href="#sec14-1"><i class="fas fa-link"></i></a>
+</h2>
+<p>相依删失发生在死亡等事件的时间与删失发生的时间之间存在相关性的情况下。由于这两个事件都不能在给定的个体中观察到，所以不可能使用观测数据来确定数据集是否具有相依删失，也不可能确定任何此类依赖性的程度。然而，研究的背景通常可以表明是否可能存在相依删失。</p>
+<p>例如，考虑由获得性免疫缺陷综合征（AIDS）临床试验小组进行的双盲临床试验，称为 ACTG 175 试验，并由 Hammer et al. (1996) 报道。在这项试验中，2467 名患者被随机分配到四种治疗方案中的一种，主要终点是从随机化到分化簇 4 (cluster of differentiation 4, CD4) 细胞计数至少减少 50% 的时间、发展成艾滋病或死亡。有 1902 个删失事件时间，其中 933 次是由患者在随访期结束时没有经历过三种事件中的任何一种，因此反映了独立的行政删失 (administrative censoring). 此外，283 人因治疗毒性而停止治疗，380 人应患者或研究人员的要求离开研究。这可能是因为健康状况不佳的患者更有可能经历毒性，而对于这些患者来说，他们的事件时间可能更短。同样，患者可能已经离开研究以寻求替代治疗，同样，这些患者可能不能代表整个患者组。因此，在分析到主要终点的时间时，需要考虑相依删失的可能性。</p>
+<p>统计方法可以通过多种方式来检验独立删失的假设。一种方法是根据解释变量的值绘制观测生存时间，其中将删失观察与未删失观测区别开。如果在删失中表现出一种模式，例如在特定治疗的早期有更多的删失观测，或者如果解释变量的值在特定范围内的患者的删失生存时间的比例更大，则表明存在相依删失。更正式地说，可使用模型来考察删失概率是否与模型中的解释变量相关。具体来说，线性 logistic 模型可用于对二元响应变量进行建模，如果观测生存时间是删失的，则该变量取值 1，否则为 0. 如果发现删失概率取决于某些解释变量的值，则可能违反了独立删失的假设。</p>
+</div>
+<div id="sec14-2" class="section level2" number="14.2">
+<h2>
+<span class="header-section-number">14.2</span> 对相依删失的敏感性<a class="anchor" aria-label="anchor" href="#sec14-2"><i class="fas fa-link"></i></a>
+</h2>
+<p>即使存在相依删失，这一特征也不一定会影响主要兴趣的推断。因此，重要的是要确定这种推断对相依删失可能性的敏感性，这可以通过两种互补分析来考察。首先，我们假定贡献删失观测的个体实际上是那些事件风险较高的个人。因此，我们假设生存时间删失的个体会在删失时间之后立即经历事件，并将所有删失时间指定为事件时间。在第二个分析中，我们假定删失的个体是那些事件风险较低的个体。那么，我们假设具有删失时间的个体只在数据集中所有其他个体的最长生存时间之后才经历该事件。因此，被删失时间被最长的事件时间所取代。那么可以详细研究这两个假设对分析结果的影响。如果从原始分析和两个补充分析中得出基本相同的结论，则可以放心地假定结果对相依删失的可能性不敏感。</p>
+<p>确定相依删失潜在影响的另一种方法是在存在相依删失的情况下获得生存函数的界 (bounds). 目前存在许多建议，但其中许多建议的界太宽，没有实际价值，因此将不再进一步考虑这种方法。</p>
+<p>由于在没有额外信息的情况下无法识别相依删失的发生，因此分析风险评分或中位生存时间等指标对失效时间和删失时间之间关联引入的敏感程度是很有用的<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content="&lt;p&gt;Since the occurrence of dependent censoring cannot be identified without additional information, it is useful to analyse the extent to which quantities such as the risk score or median survival time are sensitive to the introduction of some association between the time to failure and the time to censoring.&lt;/p&gt;"><sup>28</sup></a>。下一部分将概述 Siannis, Copas and Lu (2005) 描述的参数比例风险模型中相依删失的敏感性分析方法。</p>
+<div id="sec14-2-1" class="section level3" number="14.2.1">
+<h3>
+<span class="header-section-number">14.2.1</span> 敏感性分析<a class="anchor" aria-label="anchor" href="#sec14-2-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设 <span class="math inline">\(T\)</span> 是与生存时间相关的随机变量，<span class="math inline">\(C\)</span> 是与删失时间相关的随机变量。我们假定一个在 <span class="math inline">\(t\)</span> 时刻死亡风险和删失风险均为 Weibull 比例风险的模型。第 <span class="math inline">\(i(i=1,2,\ldots,n)\)</span> 个个体的两个风险函数分别为 <span class="math inline">\(h_i(t)\)</span> 和 <span class="math inline">\(h_{ci}(t)\)</span>，其中</p>
+<p><span class="math display">\[\begin{aligned}h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t),\quad h_{ci}(t)=\exp(\boldsymbol{\beta}'_c\boldsymbol{x}_i)h_{c0}(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的值向量。生存时间和删失时间的基线风险函数由下式给出</p>
+<p><span class="math display">\[\begin{aligned}h_0(t)=\lambda\gamma t^{\gamma-1},\quad h_{c0}(t)=\lambda_c\gamma_ct^{\gamma_c-1}\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\lambda,\lambda_{c}\)</span> 和 <span class="math inline">\(\gamma,\gamma_{c}\)</span> 分别为潜在 Weibull 分布的尺度参数和形状参数。生存时间和删失时间的模型可以包含不同的解释变量。</p>
+<p>拟合这些模型后，<span class="math inline">\(\boldsymbol{\beta}^{\prime}\boldsymbol{x}_i\)</span> 和 <span class="math inline">\(\boldsymbol{\beta}^{\prime}_c\boldsymbol{x}_i\)</span> 的估计分别为<strong>风险评分</strong> (risk score) <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span> 和<strong>删失评分</strong> (censoring score) <span class="math inline">\(\hat{\boldsymbol{\beta}}_c^{\prime}\boldsymbol{x}_i\)</span>。风险评分值与相应删失评分值的关系图将有助于确定是否存在相依删失。具体来说，如果这两个评分存在关联，则表明存在相依删失。</p>
+<p>我们现在引入一个参数 <span class="math inline">\(\phi\)</span> 来度量 <span class="math inline">\(T\)</span> 与 <span class="math inline">\(C\)</span> 之间的依赖程度。当 <span class="math inline">\(\phi = 0\)</span> 时，删失与生存时间无关，但随着 <span class="math inline">\(\phi\)</span> 的增加，删失变得更加依赖生存时间。事实上，<span class="math inline">\(\phi\)</span> 是 <span class="math inline">\(T\)</span> 和 <span class="math inline">\(C\)</span> 之间相关性的上界。现在令 <span class="math inline">\(\hat{\boldsymbol{\eta}}(\boldsymbol{x}_0)\)</span> 表示个体的风险评分，其中 <span class="math inline">\(\boldsymbol x_0\)</span> 是模型中解释变量的值向量，并令 <span class="math inline">\(\hat{\eta}_\phi(\boldsymbol{x}_0)\)</span> 为该个体的风险评分，其中使用 <span class="math inline">\(\phi\)</span> 来度量生存时间和删失时间之间的关联。然后可以证明，在假定的 Weibull 模型中，失效时间和删失变量时间之间存在较小依赖性 <span class="math inline">\(\phi\)</span> 时，风险评分变化的近似值由下式给出</p>
+<p><span class="math display" id="eq:14-1">\[\begin{align}
+B(\boldsymbol{x}_0)=\hat{\eta}_\phi(\boldsymbol{x}_0)-\hat{\eta}(\boldsymbol{x}_0)=\phi\frac{\sum_{i=1}^n\{\hat{\lambda}_ce^{\hat{\boldsymbol{\beta}}_c^{\prime}}\boldsymbol{x}_0t_i^{\hat{\gamma}+\hat{\gamma}_c}-(1-\delta_i)t_i^{\hat{\gamma}}\}}{\sum_{i=1}^nt_i^{\hat{\gamma}}}
+\tag{14.1}
+\end{align}\]</span></p>
+<p>其中，<span class="math inline">\(\delta_i\)</span> 是第 <span class="math inline">\(i\)</span> 个个体的事件指示符，对于删失观测为 0，否则为 1.</p>
+<p><strong>敏感性指数</strong> (sensitivity index) <span class="math inline">\(B(\boldsymbol{x}_0)\)</span> 仅通过删失评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}_c^{\prime}\boldsymbol{x}_0\)</span> 取决于解释变量的值，并且式 <a href="chap14.html#eq:14-1">(14.1)</a> 表明，当删失风险最大时，风险评分对相依删失最为敏感。对于 <span class="math inline">\(\phi\)</span> 的给定值，<span class="math inline">\(B(\boldsymbol{x}_0)\)</span> 关于删失评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}_c^{\prime}\boldsymbol{x}_0\)</span> 一系列值的图形，提供了风险评分对相依删失敏感性的信息。通常，<span class="math inline">\(\phi\)</span> 取值范围选为 <span class="math inline">\((−0.3, 0.3)\)</span>。该图将指示可能导致相依删失对风险评分产生不可忽略的影响的删失评分的值。</p>
+<p>我们还可以考察其他总结统计量对相依删失的敏感性，例如生存率和中位生存时间。对于 Weibull 比例风险模型，第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的生存函数估计为</p>
+<p><span class="math display">\[\hat{S}_i(t)=\{\hat{S}_0(t)\}\mathrm{exp}(\hat{\boldsymbol{\beta}}'\boldsymbol x_i)\]</span></p>
+<p>其中，<span class="math inline">\(\hat{S}_0(t)=\hat{\lambda}t^{\hat{\gamma}}\)</span> 是基线生存函数估计。使用式 <a href="chap14.html#eq:14-1">(14.1)</a>，当存在相依删失时，生存函数估计近似于</p>
+<p><span class="math display">\[\{\hat{S}_0(t)\}^{\exp\{\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i+B(\boldsymbol{x}_i)\}}\]</span></p>
+<p>对于给定的 <span class="math inline">\(\phi\)</span> 值，可以从中确定相依删失对生存率的影响。同样，Weibull 模型中解释变量向量为 <span class="math inline">\(\boldsymbol x_i\)</span> 的个体的中位生存时间估计为</p>
+<p><span class="math display">\[\hat{t}(50)=\left\{\frac{\log2}{\hat{\lambda}\exp(\hat{\boldsymbol{\beta}}'\boldsymbol{x}_i)}\right\}^{1/\hat{\gamma}}\]</span></p>
+<p>再次使用式 <a href="chap14.html#eq:14-1">(14.1)</a>，当生存时间和删失时间之间存在一定程度的依赖性时，中位数估计为</p>
+<p><span class="math display">\[\hat{t}_\phi(50)=\left\{\frac{\log2}{\hat\lambda\exp[\hat\beta^{\prime}\boldsymbol{x}_i+B(\boldsymbol{x}_i)]}\right\}^{1/\hat\gamma}\]</span></p>
+<p>对于 <span class="math inline">\(\phi\)</span> 的某个值，该个体中位生存时间相对减小的近似值为</p>
+<p><span class="math display" id="eq:14-2">\[\begin{align}
+\frac{\hat{t}(50)-\hat{t}_\phi(50)}{\hat{t}(50)}&amp;=1-\exp\{-\hat{\gamma}^{-1}B(\boldsymbol{x}_i)\}
+\tag{14.2}
+\end{align}\]</span></p>
+<p>该量与删失评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}_c^{\prime}\boldsymbol{x}_i\)</span> 一系列可能值的关系图，显示了具有不同删失评分的个体的中位生存时间如何受到相依删失的影响。使用一系列不同的 <span class="math inline">\(\phi\)</span> 值，还可以探索中位生存时间估计对不同程度的相依删失的稳健性。</p>
+</div>
+<div id="sec14-2-2" class="section level3" number="14.2.2">
+<h3>
+<span class="header-section-number">14.2.2</span> 相依删失的影响<a class="anchor" aria-label="anchor" href="#sec14-2-2"><i class="fas fa-link"></i></a>
+</h3>
+<p>在独立删失的情况下，删失的个体代表了删失时面临风险的个体，事件时间数据的标准分析得到的风险比和生存函数的估计将是无偏的。另一方面，如果存在相依删失，但假定它是独立的，则基于模型的估计可能是有偏的。这种偏差的方向取决于事件发生时间与删失变量时间之间是正相关还是负相关。如果这两个变量之间存在正相关，那么预期那些事件时间删失的个体的实际事件时间会比那些仍处于风险中的个体短。类似地，如果存在负相关，则事件时间删失的个体可能是那些原本会在更长时间后才发生感兴趣事件的个体。那么，生存分析的标准方法将分别导致对生存函数的高估或低估，并且偏差的程度将随着相依删失观测数的增加而趋于增加。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex14-1" class="example"><strong>示例 14.1  (等待肝移植的死亡时间) </strong></span><br></p>
+<p>一旦患者被判定需接受肝移植手术，他们就会列入登记名单。然而，全国范围内的肝脏短缺意味着患者可能需要等待一段时间才能接受手术，有许多人在等待过程中去世。在一项旨在确定登记接受肝移植手术患者的死亡率以及某些因素对这一结局变量的影响的研究中，研究人员从 UK Transplant Registry 获取了患者从登记到死亡的时间数据。该研究队列包括 281 名原发性胆汁性肝硬化的成年患者。这种疾病主要影响女性，其特征是肝脏内小胆管进行性破坏，导致胆汁在肝脏内积聚、肝脏组织损伤和肝硬化。这些患者在 2006 年 1 月 1 日起的五年内首次登记进行肝移植，感兴趣的响应变量是从登记接受肝移植手术到死亡的时间。对于接受移植手术的患者，从注册到移植的时间视为删失时间。当患者因病情恶化到无法再进行移植手术而从名单上移除时，其时间视为死亡时间。</p>
+<p>除了列出的生存时间外，还提供了患者的年龄（岁）和性别（男性 = 1，女性 = 0）、体重指数 (BMI, kg/m<sup>2</sup>) 以及英国终末期肝病 (UK end-stage liver disease, UKELD) 评分，这是一种疾病严重程度的指标，值越高对应的疾病越严重。表 14.1 给出了该数据集中的前 20 个观测，其中对于等待移植期间死亡的患者，状态变量为 1；当其登记时间删失时，状态变量为 0. 数据已按生存时间排序。</p>
+<details><summary><font color="#8B2232">表 14.1</font>
+</summary><img src="figure/table%2014.1.png#center" style="width:80.0%"></details><p><br>
+肝脏通常按需分配，往往会提供给病情较重的患者。因此，接受移植的患者往往是那些更接近死亡的人。删失时间将与死亡时间相关，因此从登记到移植的时间取决于从登记到死亡且未进行移植的时间。</p>
+<p>为了说明 <a href="chap14.html#sec14-2-1">14.2.1</a> 节描述的敏感性分析，考虑时间 <span class="math inline">\(t\)</span> 时死亡风险的 Weibull 模型，其中解释变量包含表示肝脏登记名单上患者的年龄、性别、BMI 和 UKELD 值。从对数累积风险图来看，Weibull 分布对未调整的生存时间拟合得很好。考虑相同的四个解释变量，Weibull 分布对删失时间也拟合得很好。从这些拟合的模型中，可以获得 281 名患者的风险评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}\boldsymbol{x}_i\)</span> 和删失评分 <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\prime}_c\boldsymbol{x}_i\)</span>。每个患者的风险评分关于删失评分的图形示于图 14.1 中。该图表明，风险评分与删失评分呈正相关，因此死亡风险较大的个体，即风险评分较高的个体，更有可能删失。这表明该数据集存在相依删失。</p>
+<details><summary><font color="#8B2232">图 14.1</font>
+</summary><img src="figure/figure%2014.1.png#center" style="width:80.0%"></details><p><br>
+为了探索这种相依删失如何影响中位生存时间，使用式 <a href="chap14.html#eq:14-2">(14.2)</a>，对于一个适中的 <span class="math inline">\(\phi\)</span> 值，获得了中位生存时间的相对变化。即，取 <span class="math inline">\(\phi=0.3\)</span>（这对应于适中的相依删失程度），中位生存时间相对减少百分比关于取值在 <span class="math inline">\((1.5,3)\)</span> 范围内的 <span class="math inline">\(\hat{\boldsymbol{\beta}}_c^{\prime}\boldsymbol{x}_i\)</span> 的图形，如图 14.2 所示。</p>
+<details><summary><font color="#8B2232">图 14.2</font>
+</summary><img src="figure/figure%2014.2.png#center" style="width:80.0%"></details><p><br>
+该图表明，当删失评分约为 1.5 时，中位生存时间的相对减少才接近于零，这对应于删失风险最低的个体，即移植机会最小的个体。另一方面，对于删失评分为 2.2 的个体（接近数据集中 281 名患者的平均删失评分），相依删失可能会使中位数降低约 30%. 对于那些面临最大删失风险（删失评分至少为 3.0）的人，中位数降低百分比大于 50%<a class="footnote-ref" tabindex="0" data-toggle="popover" data-content='&lt;p&gt;For those at greatest risk of being censored, with a censoring score of at least 3.0, the percentage decrease in median that might occur through dependent censoring with &lt;span class="math inline"&gt;\(\phi = 0.3\)&lt;/span&gt; is greater than 50%.&lt;/p&gt;'><sup>29</sup></a>. 因此，基于独立删失假设的分析可能会产生严重误导。下一节将描述一种在生存数据建模中考虑相依删失的技术。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec14-3" class="section level2" number="14.3">
+<h2>
+<span class="header-section-number">14.3</span> 相依删失建模<a class="anchor" aria-label="anchor" href="#sec14-3"><i class="fas fa-link"></i></a>
+</h2>
+<p>在存在相依删失的情况下，必须修改生存数据分析的标准方法。当删失没有在患者时间过早发生时，分析到任何删失发生之前的时间的生存率可能是有用的。或者，可以使用第 11 章 <a href="chap11.html#sec11-1-1">11.1.1</a> 节中描述的方法对超过此时间的生存概率进行建模。但是，当相依删失发生在研究早期时，这种方法不太可能有用。更好的方法是使用直接考虑相依删失的 Cox 回归模型来分析生存数据。</p>
+<div id="sec14-3-1" class="section level3" number="14.3.1">
+<h3>
+<span class="header-section-number">14.3.1</span> 相依删失的 Cox 回归模型<a class="anchor" aria-label="anchor" href="#sec14-3-1"><i class="fas fa-link"></i></a>
+</h3>
+<p>假设对 <span class="math inline">\(n\)</span> 个个体的事件时间数据预期采用 Cox 回归模型，其中一些时间可能会删失，因此第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 的事件风险为</p>
+<p><span class="math display">\[h_i(t)=\exp(\boldsymbol{\beta'x}_i)h_0(t)\]</span></p>
+<p>其中 <span class="math inline">\(\boldsymbol x_i\)</span> 是 <span class="math inline">\(p\)</span> 个解释变量的值向量，<span class="math inline">\(\boldsymbol\beta\)</span> 是它们的系数向量，<span class="math inline">\(h_0(t)\)</span> 是基线风险函数。</p>
+<p>为在拟合该模型时考虑相依删失，我们首先开发一个删失生存时间的模型。然后将其用于在拟合 Cox 回归模型过程中，为观测生存时间对偏似然函数的贡献进行加权。</p>
+<p>为了总结这项技术的基本思想，考虑第 <span class="math inline">\(i\)</span> 个个体在事件时间 <span class="math inline">\(t\)</span> 处于风险中。假设该个体的生存时间在时间 <span class="math inline">\(t\)</span> 或之后删失的概率是 <span class="math inline">\(1/3\)</span>。这意味着，平均而言，还有两个解释变量与该个体相同的个体，他们的生存时间会在时间 <span class="math inline">\(t\)</span> 之前删失。如果他们的生存时间没有删失，他们将至少存活到 <span class="math inline">\(t\)</span>，就像第 <span class="math inline">\(i\)</span> 个个体一样。如果这三个个体都存活到 <span class="math inline">\(t\)</span> 而未删失，那么每个个体在时间 <span class="math inline">\(t\)</span> 对偏似然函数的贡献都是相同的。这可以通过将事件时间 <span class="math inline">\(t\)</span> 处第 <span class="math inline">\(i\)</span> 个个体对偏似然的贡献赋予权重 <span class="math inline">\(3\)</span>（删失概率的倒数）来建模。</p>
+<p>该过程得到了模型未知参数的<strong>逆概率删失加权</strong> (Inverse Probability of Censoring Weighted, IPCW) 估计。该加权过程的效果是，对在 <span class="math inline">\(t\)</span> 之前具有较大删失概率的个体赋予更大的权重，因此这解释了与生存时间相关的删失。</p>
+<p>为了计算用于调整相依删失的权重，需要一个模型来描述时间 <span class="math inline">\(t\)</span> 或之后的删失概率对解释变量值的依赖性。这是通过将删失时间视为终点、将实际事件时间视为删失观测，对删失观测数据进行建模获得的。如果数据包括事件指示符 <span class="math inline">\(\delta\)</span>，即对于事件其值为一、对于删失观测其值为零，则删失时间的相应指示变量为 <span class="math inline">\(1−\delta\)</span>。为删失生存时间拟合生存模型，得到的基线生存函数估计 <span class="math inline">\(\hat{S}_{c0}(t)\)</span>。由此，第 <span class="math inline">\(i\)</span> 个个体（其解释变量的值向量为 <span class="math inline">\(\boldsymbol x_i\)</span>）在时间 <span class="math inline">\(t\)</span> 或之后发生删失的概率为</p>
+<p><span class="math display" id="eq:14-3">\[\begin{align}
+\hat{S}_{ci}(t)=[\hat{S}_{c0}(t)]^{\exp(\boldsymbol{\hat{\beta}}_{c}^{\prime}\boldsymbol{x}_{i})}
+\tag{14.3}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\hat{\boldsymbol{\beta}}_c\)</span> 是删失模型中解释变量的系数向量估计。第 <span class="math inline">\(i\)</span> 个个体在时间 <span class="math inline">\(t\)</span> 处的权重为 <span class="math inline">\(w_i(t)=\{\hat{S}_{ci}(t)\}^{-1}\)</span>，然后使用这些权重来拟合事件时间的 Cox 回归模型。</p>
+<p>通过将 Cox 回归模型重新表述为计数过程以得到加权偏似然函数。根据第 13 章式 <a href="chap13.html#eq:13-2">(13.2)</a> 给出的公式的扩展以纳入权重 <span class="math inline">\(w_i(t)\)</span>，该似然函数为</p>
+<p><span class="math display" id="eq:14-4">\[\begin{align}
+\prod_{i=1}^n\prod_{\begin{array}{c}t\geqslant0\\\end{array}}\left\{\frac{w_i(t)Y_i(t)\exp\{\boldsymbol{\beta^{\prime}x}_i\}}{\sum_{l=1}^nw_l(t)Y_l(t)\exp\{\boldsymbol{\beta^{\prime}x}_l\}}\right\}^{{\mathrm{d}N_i(t)}}
+\tag{14.4}
+\end{align}\]</span></p>
+<p>其中，若个体在时间 <span class="math inline">\(t\)</span> 处于风险，则 <span class="math inline">\(Y_i(t) = 1\)</span>，否则为 0；如果事件在时间 <span class="math inline">\(t\)</span> 发生，则 <span class="math inline">\({\mathrm{d}N_i(t)}=1\)</span>，否则为 0，并且内部的乘积运算关于所有事件时间进行。该模型也可以纳入时变解释变量。</p>
+<p>使用式 <a href="chap14.html#eq:14-3">(14.3)</a> 获得的权重取决于删失模型中的解释变量，在每个事件时间具有不同的值，并且其值在个体随访期内会发生变化。因此，使用参数模型对删失时间进行建模更加方便，因为权重是 <span class="math inline">\(t\)</span> 的连续函数。所选模型的精确形式并不那么重要，建议一般使用 Weibull 模型。第 <span class="math inline">\(i\)</span>个个体在 <span class="math inline">\(t\)</span> 时刻的删失风险为 <span class="math inline">\(h_{ci}(t)=\exp(\boldsymbol{\beta'}_c\boldsymbol{x}_i)h_{c0}(t)\)</span>，其中 <span class="math inline">\(h_{c0}(t)=\lambda_{c}\gamma_{c}t^{\gamma_{c}-1}\)</span>，<span class="math inline">\(\boldsymbol x_i\)</span> 是删失模型中第 <span class="math inline">\(i\)</span> 个个体解释变量的值向量。相应的生存函数为</p>
+<p><span class="math display">\[\begin{aligned}S_{ci}(t)=\exp\{-\lambda_c\exp(\boldsymbol{\beta}'_c\boldsymbol{x}_i)t^{\gamma_c}\}\end{aligned}\]</span></p>
+<p>注意，删失生存时间模型中的变量不必与生存时间模型中的变量相同。根据第 5 章 <a href="chap5.html#sec5-6-3">5.6.3</a> 节中描述的 Weeibull 模型的对数线性公式</p>
+<p><span class="math display" id="eq:14-5">\[\begin{align}
+S_{ci}(t)=\exp\left\{-\exp\left[\frac{\log t-\mu_c-\boldsymbol{\alpha'}_c\boldsymbol{x}_i}{\sigma_c}\right]\right\}
+\tag{14.5}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(\mu_c\)</span> 是“截距”，<span class="math inline">\(\sigma_c\)</span> 是“尺度”，<span class="math inline">\(\alpha_{cj}\)</span> 是第 <span class="math inline">\(j\)</span> 个解释变量的系数，并且 <span class="math inline">\(\lambda_c=\exp(-\mu_c/\sigma_c),\gamma_c=1/\sigma_c,\beta_{cj}=-\alpha_{cj}/\sigma_c\)</span>，其中 <span class="math inline">\(j = 1, 2,...,p\)</span>。</p>
+<p>为了处理权重的时依性，需要使用第 13 章 <a href="chap13.html#sec13-1-3">13.1.3</a> 节中描述的 <span class="math inline">\((start,stop,status)\)</span> 表示法以计数过程格式表示数据。停止时间视为数据集中的事件时间。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex14-2" class="example"><strong>示例 14.2  (相依删失的数据格式) </strong></span><br></p>
+<p>假设数据集中的前三个有序事件时间为 18, 55 和 73 天。以计数过程格式表示的 73 天的观测生存时间采用区间 <span class="math inline">\((0, 18],(18, 55],(55, 73]\)</span>，其中状态指示符对于前两个区间为 0，对于第三个区间为 1. 如果对 73 天的生存时间是删失的，则第三个区间的状态将为 0. 进一步假设在 18, 55 和 73 天或之后的基于模型的删失概率分别为 0.94, 0.82 和 0.75（这是使用删失生存时间的模型获得的）。那么，基于计数过程格式，在为数据拟合 Cox 回归模型时所使用的权重分别为 1.064, 1.220 和 1.333.</p>
+</div>
+</div>
+<p>当删失超过 <span class="math inline">\(t\)</span> 的概率很小时，根据式 <a href="chap14.html#eq:14-3">(14.3)</a> 计算的权重 <span class="math inline">\(w_i(t)\)</span> 可能会相当大，这可能会导致计算问题。那么，使用<strong>稳定权重</strong> (stabilised weights) <span class="math inline">\(w^*_i (t)\)</span> 会更有效，该权重计算为 <span class="math inline">\(w_i^*(t)=\hat{S}_{KM}(t)/\hat{S}_{ci}(t)\)</span>，其中 <span class="math inline">\(\hat{S}_{KM}(t)\)</span> 是在 <span class="math inline">\(t\)</span> 之后删失的概率的 Kaplan-Meier 估计。在权重分子中使用项 <span class="math inline">\(\hat{S}_{KM}(t)\)</span> 对参数估计没有影响，因为 <span class="math inline">\(\hat{S}_{KM}(t)\)</span> 独立于模型中的解释变量，并在式 <a href="chap14.html#eq:14-4">(14.4)</a> 中偏似然函数的分子和分母中抵消。然而，它确实会提高模型拟合过程的稳定性。</p>
+<p>最后，为了解释模型指定中额外的不确定性，建议采用参数估计的方差-协方差矩阵的稳健估计，如第 13 章 <a href="chap13.html#sec13-1-4">13.1.4</a> 节中介绍的三明治估计。</p>
+<div class="rmdnote">
+<div class="example">
+<p><span id="exm:ex14-3" class="example"><strong>示例 14.3  (等待肝移植的死亡时间) </strong></span><br>
+现在我们使用一种可考虑任何相依删失的建模方法，对<a href="chap14.html#exm:ex14-1">示例 14.1</a> 中从注册到接受肝移植的生存时间数据进行分析。为了对删失概率建模，我们对从登记到删失的时间拟合了一个 Weibull 模型，其中当表 14.1 中的状态变量为 1 时，删失指示符为 0，反之亦然。使用 Weibull 模型的对数线性公式，在时间 <span class="math inline">\(t\)</span> 或之后删失的概率估计为</p>
+<p><span class="math display" id="eq:14-6">\[\begin{align}
+\hat{S}_{ci}(t)=\exp\left\{-\exp\left[\frac{\log t-\hat{\mu}_c-\hat{\alpha}_{c1}x_{1i}-\hat{\alpha}_{c2}x_{2i}-\hat{\alpha}_{c3}x_{3i}-\hat{\alpha}_{c4}x_{4i}}{\hat{\sigma}_c}\right]\right\}
+\tag{14.6}
+\end{align}\]</span></p>
+<p>其中 <span class="math inline">\(x_{1i}\)</span> 是年龄，<span class="math inline">\(x_{2i}\)</span> 是性别，<span class="math inline">\(x_{3i}\)</span> 是 BMI，<span class="math inline">\(x_{4i}\)</span> 是第 <span class="math inline">\(i\)</span> 个患者登记时的 UKELD 评分。该模型的参数估计及其标准误如表 14.2 所示。在这个阶段，可以通过排除对删失概率没有显著影响的变量（即年龄、性别和 BMI）来修改模型，但我们将继续使用包含所有四个变量的删失模型。</p>
+<details><summary><font color="#8B2232">表 14.2</font>
+</summary><img src="figure/table%2014.2.png#center" style="width:80.0%"></details><p><br>
+接下来，将表 14.1 中的数据以计数过程格式表示，并且权重是“停止”时间的删失概率的倒数（即式 <a href="chap14.html#eq:14-6">(14.6)</a> 中的删失概率估计的逆）计算得出的。表 14.1 中前 10 名患者的数据以计数过程格式显示在表 14.3 中，还包含为生存时间拟合 Cox 回归模型的删失概率和权重。</p>
+<details><summary><font color="#8B2232">表 14.3</font>
+</summary><img src="figure/table%2014.3.png#center" style="width:80.0%"></details><p><br>
+然后拟合包含相同四个解释变量的加权 Cox 回归模型，则第 <span class="math inline">\(i\)</span> 个患者在时间 <span class="math inline">\(t\)</span> 的死亡风险估计为</p>
+<p><span class="math display">\[\begin{aligned}\hat{h}_i(t)=\exp\{\hat{\beta}_1x_{1i}+\hat{\beta}_2x_{2i}+\hat{\beta}_3x_{3i}+\hat{\beta}_4x_{4i}\}\hat{h}_0(t)\end{aligned}\]</span></p>
+<p>其中 <span class="math inline">\(\hat h_0(t)\)</span> 是基线风险函数估计。考虑相依删失的加权 Cox 回归模型中的参数估计及其标准误如表 14.4 所示。还显示了不考虑相依删失时相应的未加权估计。在这两种情况下都使用了参数估计方差-协方差阵的三明治估计，但这对标准误差的影响很小。</p>
+<details><summary><font color="#8B2232">表 14.4</font>
+</summary><img src="figure/table%2014.4.png#center" style="width:80.0%"></details><p><br>
+两组估计有些不同，这表明经相依删失的调整影响了风险比的估计。在未加权分析中，年龄和 UKELD 评分均非常显著（<span class="math inline">\(P &lt; 0.001\)</span>），而在加权分析中，年龄不再显著。根据经相依删失调整的 UKELD 的风险比，UKELD 每增加一个单位，死亡风险就会增加 17%.</p>
+<p>为了说明相依删失调整的效果，图 14.3 显示了一名 50 岁、UKELD 评分为 60、BMI 为 25 的女性患者的生存函数估计，来自死亡风险的加权和未加权 Cox 回归模型。</p>
+<details><summary><font color="#8B2232">图 14.3</font>
+</summary><img src="figure/figure%2014.3.png#center" style="width:80.0%"></details><p><br>
+该图显示，如果不考虑相依删失，生存率会被高估。具体来说，如果不考虑相依删失，六个月的生存率估计为 77%，但考虑相依删失后，估计为 65%. 此外，80% 的生存率被高估了近两个月。因此，如果不考虑相依删失，可能会得出对等待肝移植患者的等待名单死亡率的误导性估计。</p>
+<p>对于本分析的扩展，我们可以分别针对不同的删失原因建立模型，具体包括移植和因病情恶化而从登记名单中移除的情况，以及任何独立的删失情况。此外，还可以将 UKELD 评分随时间的变化纳入模型，以便考虑到登记期间疾病严重程度的变化。</p>
+</div>
+</div>
+</div>
+</div>
+<div id="sec14-4" class="section level2" number="14.4">
+<h2>
+<span class="header-section-number">14.4</span> 延伸阅读<a class="anchor" aria-label="anchor" href="#sec14-4"><i class="fas fa-link"></i></a>
+</h2>
+<p>许多作者都讨论了存在相依删失时生存函数的界，包括 Peterson (1976), Slud and Rubinstein (1983) 以及 Klein and Moeschberger (1988). Tsiatis (1975) 解释了为什么无法根据观测数据来估计事件时间和删失时间之间的关联程度，Siannis (2004) 和 Siannis, Copas and Lu (2005) 描述了用于确定参数模型中推断对相依删失的敏感性的方法，该方法已扩展到 Siannis（2011）中的 Cox 比例风险模型，尽管该方法计算起来非常复杂。</p>
+<p>Wu and Carroll (1988) 以及 Schlucter (1992) 描述了具有相依删失数据的模型。Robins and Rotnitzky (1992) 以及 Robins (1993) 引入了逆概率删失加权。Robins and Finkelstein (2000) 展示了如何使用这些估计来调整 Kaplan-Meier 估计以考虑相依删失。Satten, Datta 和 Robins (2001) 以及 Scharfstein and Robins (2002) 展示了如何在存在相依删失的情况下估计 Cox 回归模型的生存函数。</p>
+
+</div>
+</div>
+
+  <div class="chapter-nav">
+<div class="prev"><a href="chap13.html"><span class="header-section-number">13</span> 多次事件和事件史分析</a></div>
+<div class="next"><a href="chap15.html"><span class="header-section-number">15</span> 生存研究的样本量要求</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#chap14"><span class="header-section-number">14</span> 相依删失</a></li>
+<li><a class="nav-link" href="#sec14-1"><span class="header-section-number">14.1</span> 识别相依删失</a></li>
+<li>
+<a class="nav-link" href="#sec14-2"><span class="header-section-number">14.2</span> 对相依删失的敏感性</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#sec14-2-1"><span class="header-section-number">14.2.1</span> 敏感性分析</a></li>
+<li><a class="nav-link" href="#sec14-2-2"><span class="header-section-number">14.2.2</span> 相依删失的影响</a></li>
+</ul>
+</li>
+<li>
+<a class="nav-link" href="#sec14-3"><span class="header-section-number">14.3</span> 相依删失建模</a><ul class="nav navbar-nav"><li><a class="nav-link" href="#sec14-3-1"><span class="header-section-number">14.3.1</span> 相依删失的 Cox 回归模型</a></li></ul>
+</li>
+<li><a class="nav-link" href="#sec14-4"><span class="header-section-number">14.4</span> 延伸阅读</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong>医学研究中的生存数据建模</strong>" was written by Wang Zhen. It was last built on 2024-04-23.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>
