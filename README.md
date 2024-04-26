@@ -4,7 +4,7 @@
 
 链接 1：https://bookdown.org/wangzhen/survival/
 
-链接 2：https://github.com/wangzhen89/survival 右侧的 release
+链接 2：https://github.com/wangzhen89/survival 右侧的 [release](https://github.com/wangzhen89/survival/releases/tag/%E5%8F%91%E5%B8%83)
 
 若链接 1 失效可尝试将链接 2 的原始文件下载并解压，打开 "index.html" 即可阅读。
 
