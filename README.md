@@ -1,10 +1,9 @@
 本书的发布页面为[这里](https://zhuanlan.zhihu.com/p/688064031)
 
-关于生存分析的中文专著屈指可数，本人献点绵薄之力。本书为 Modelling Survival Data in Medical Research 4th Edition, by David Collett 的翻译。
+关于生存分析的中文专著屈指可数，本人献点绵薄之力。本书为 [Modelling Survival Data in Medical Research 4th Edition, by David Collett](https://www.routledge.com/Modelling-Survival-Data-in-Medical-Research/Collett/p/book/9781032252858) 的翻译。
 
-链接 1：https://bookdown.org/wangzhen/survival/
-
-链接 2：https://github.com/wangzhen89/survival 右侧的 [release](https://github.com/wangzhen89/survival/releases/tag/%E5%8F%91%E5%B8%83)
++ 链接 1：https://bookdown.org/wangzhen/survival/
++ 链接 2：https://github.com/wangzhen89/survival 右侧的 [release](https://github.com/wangzhen89/survival/releases/tag/%E5%8F%91%E5%B8%83)
 
 若链接 1 失效可尝试将链接 2 的原始文件下载并解压，打开 "index.html" 即可阅读。
 
